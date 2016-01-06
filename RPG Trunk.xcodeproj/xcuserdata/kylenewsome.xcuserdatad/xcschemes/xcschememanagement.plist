@@ -9,9 +9,24 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>RPGTrunkDemo.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>758AAB181C39F6820019238C</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>758AAB211C39F6820019238C</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>75EE2C1D1C3865D100BF8437</key>
 		<dict>
 			<key>primary</key>

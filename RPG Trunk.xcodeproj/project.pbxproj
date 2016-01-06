@@ -7,12 +7,36 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		758AAB1C1C39F6820019238C /* RPGTrunkDemo.h in Headers */ = {isa = PBXBuildFile; fileRef = 758AAB1B1C39F6820019238C /* RPGTrunkDemo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		758AAB231C39F6820019238C /* RPGTrunkDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 758AAB191C39F6820019238C /* RPGTrunkDemo.framework */; };
+		758AAB281C39F6820019238C /* RPGTrunkDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 758AAB271C39F6820019238C /* RPGTrunkDemoTests.swift */; };
+		758AAB311C39F6980019238C /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 758AAB301C39F6980019238C /* Extensions.swift */; };
+		758AAB321C39F7C90019238C /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 758AAB301C39F6980019238C /* Extensions.swift */; };
 		75EE2C221C3865D100BF8437 /* RPG Trunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 75EE2C211C3865D100BF8437 /* RPG Trunk.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		75EE2C291C3865D100BF8437 /* RPG Trunk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75EE2C1E1C3865D100BF8437 /* RPG Trunk.framework */; };
+		75EE2C291C3865D100BF8437 /* RPGTrunk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75EE2C1E1C3865D100BF8437 /* RPGTrunk.framework */; };
 		75EE2C2E1C3865D100BF8437 /* RPG_TrunkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C2D1C3865D100BF8437 /* RPG_TrunkTests.swift */; };
+		75EE2C391C3865F000BF8437 /* Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C381C3865F000BF8437 /* Core.swift */; };
+		75EE2C3C1C386E6E00BF8437 /* Magics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C3B1C386E6E00BF8437 /* Magics.swift */; };
+		75EE2C3F1C386E8700BF8437 /* Stats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C3E1C386E8700BF8437 /* Stats.swift */; };
+		75EE2C411C386F1900BF8437 /* Equipment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C401C386F1900BF8437 /* Equipment.swift */; };
+		75EE2C431C38702A00BF8437 /* Component.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C421C38702A00BF8437 /* Component.swift */; };
+		75EE2C451C38722600BF8437 /* Abilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C441C38722600BF8437 /* Abilities.swift */; };
+		75EE2C471C3874F000BF8437 /* Entity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C461C3874F000BF8437 /* Entity.swift */; };
+		75EE2C491C38751A00BF8437 /* Battle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C481C38751A00BF8437 /* Battle.swift */; };
+		75EE2C4B1C387B4800BF8437 /* Conditional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C4A1C387B4800BF8437 /* Conditional.swift */; };
+		75EE2C4F1C389A1800BF8437 /* Logic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C4E1C389A1800BF8437 /* Logic.swift */; };
+		75EE2C511C389A7A00BF8437 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C501C389A7A00BF8437 /* Event.swift */; };
+		75EE2C531C389C0100BF8437 /* Buff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C521C389C0100BF8437 /* Buff.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		758AAB241C39F6820019238C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 75EE2C151C3865D100BF8437 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 758AAB181C39F6820019238C;
+			remoteInfo = RPGTrunkDemo;
+		};
 		75EE2C2A1C3865D100BF8437 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 75EE2C151C3865D100BF8437 /* Project object */;
@@ -23,15 +47,49 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		75EE2C1E1C3865D100BF8437 /* RPG Trunk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "RPG Trunk.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		758AAB191C39F6820019238C /* RPGTrunkDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RPGTrunkDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		758AAB1B1C39F6820019238C /* RPGTrunkDemo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPGTrunkDemo.h; sourceTree = "<group>"; };
+		758AAB1D1C39F6820019238C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		758AAB221C39F6820019238C /* RPGTrunkDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RPGTrunkDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		758AAB271C39F6820019238C /* RPGTrunkDemoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPGTrunkDemoTests.swift; sourceTree = "<group>"; };
+		758AAB291C39F6820019238C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		758AAB301C39F6980019238C /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Extensions.swift; path = RPGTrunkDemoTests/Extensions.swift; sourceTree = SOURCE_ROOT; };
+		75EE2C1E1C3865D100BF8437 /* RPGTrunk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RPGTrunk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EE2C211C3865D100BF8437 /* RPG Trunk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RPG Trunk.h"; sourceTree = "<group>"; };
 		75EE2C231C3865D100BF8437 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		75EE2C281C3865D100BF8437 /* RPG TrunkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "RPG TrunkTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EE2C2D1C3865D100BF8437 /* RPG_TrunkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPG_TrunkTests.swift; sourceTree = "<group>"; };
 		75EE2C2F1C3865D100BF8437 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		75EE2C381C3865F000BF8437 /* Core.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
+		75EE2C3B1C386E6E00BF8437 /* Magics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Magics.swift; sourceTree = "<group>"; };
+		75EE2C3E1C386E8700BF8437 /* Stats.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stats.swift; sourceTree = "<group>"; };
+		75EE2C401C386F1900BF8437 /* Equipment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Equipment.swift; sourceTree = "<group>"; };
+		75EE2C421C38702A00BF8437 /* Component.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Component.swift; sourceTree = "<group>"; };
+		75EE2C441C38722600BF8437 /* Abilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Abilities.swift; sourceTree = "<group>"; };
+		75EE2C461C3874F000BF8437 /* Entity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Entity.swift; sourceTree = "<group>"; };
+		75EE2C481C38751A00BF8437 /* Battle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Battle.swift; sourceTree = "<group>"; };
+		75EE2C4A1C387B4800BF8437 /* Conditional.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Conditional.swift; sourceTree = "<group>"; };
+		75EE2C4E1C389A1800BF8437 /* Logic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Logic.swift; sourceTree = "<group>"; };
+		75EE2C501C389A7A00BF8437 /* Event.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Event.swift; sourceTree = "<group>"; };
+		75EE2C521C389C0100BF8437 /* Buff.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Buff.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		758AAB151C39F6820019238C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		758AAB1F1C39F6820019238C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				758AAB231C39F6820019238C /* RPGTrunkDemo.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		75EE2C1A1C3865D100BF8437 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -43,18 +101,60 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				75EE2C291C3865D100BF8437 /* RPG Trunk.framework in Frameworks */,
+				75EE2C291C3865D100BF8437 /* RPGTrunk.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7582EE5C1C3CC79E0047B82E /* Battle */ = {
+			isa = PBXGroup;
+			children = (
+				75EE2C481C38751A00BF8437 /* Battle.swift */,
+			);
+			name = Battle;
+			sourceTree = "<group>";
+		};
+		758AAB1A1C39F6820019238C /* RPGTrunkDemo */ = {
+			isa = PBXGroup;
+			children = (
+				758AAB301C39F6980019238C /* Extensions.swift */,
+				758AAB1B1C39F6820019238C /* RPGTrunkDemo.h */,
+				758AAB1D1C39F6820019238C /* Info.plist */,
+			);
+			path = RPGTrunkDemo;
+			sourceTree = "<group>";
+		};
+		758AAB261C39F6820019238C /* RPGTrunkDemoTests */ = {
+			isa = PBXGroup;
+			children = (
+				758AAB271C39F6820019238C /* RPGTrunkDemoTests.swift */,
+				758AAB291C39F6820019238C /* Info.plist */,
+			);
+			path = RPGTrunkDemoTests;
+			sourceTree = "<group>";
+		};
+		75A05B961C3A13EF000E97B2 /* Foundation */ = {
+			isa = PBXGroup;
+			children = (
+				75EE2C461C3874F000BF8437 /* Entity.swift */,
+				75EE2C441C38722600BF8437 /* Abilities.swift */,
+				75EE2C501C389A7A00BF8437 /* Event.swift */,
+				75EE2C421C38702A00BF8437 /* Component.swift */,
+				75EE2C401C386F1900BF8437 /* Equipment.swift */,
+				75EE2C521C389C0100BF8437 /* Buff.swift */,
+			);
+			name = Foundation;
+			sourceTree = "<group>";
+		};
 		75EE2C141C3865D100BF8437 = {
 			isa = PBXGroup;
 			children = (
 				75EE2C201C3865D100BF8437 /* RPG Trunk */,
 				75EE2C2C1C3865D100BF8437 /* RPG TrunkTests */,
+				758AAB1A1C39F6820019238C /* RPGTrunkDemo */,
+				758AAB261C39F6820019238C /* RPGTrunkDemoTests */,
 				75EE2C1F1C3865D100BF8437 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -62,8 +162,10 @@
 		75EE2C1F1C3865D100BF8437 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				75EE2C1E1C3865D100BF8437 /* RPG Trunk.framework */,
+				75EE2C1E1C3865D100BF8437 /* RPGTrunk.framework */,
 				75EE2C281C3865D100BF8437 /* RPG TrunkTests.xctest */,
+				758AAB191C39F6820019238C /* RPGTrunkDemo.framework */,
+				758AAB221C39F6820019238C /* RPGTrunkDemoTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -71,6 +173,7 @@
 		75EE2C201C3865D100BF8437 /* RPG Trunk */ = {
 			isa = PBXGroup;
 			children = (
+				75EE2C3A1C386E5300BF8437 /* Core */,
 				75EE2C211C3865D100BF8437 /* RPG Trunk.h */,
 				75EE2C231C3865D100BF8437 /* Info.plist */,
 			);
@@ -86,9 +189,39 @@
 			path = "RPG TrunkTests";
 			sourceTree = "<group>";
 		};
+		75EE2C3A1C386E5300BF8437 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				75EE2C4C1C3899E100BF8437 /* AI */,
+				7582EE5C1C3CC79E0047B82E /* Battle */,
+				75A05B961C3A13EF000E97B2 /* Foundation */,
+				75EE2C3B1C386E6E00BF8437 /* Magics.swift */,
+				75EE2C3E1C386E8700BF8437 /* Stats.swift */,
+				75EE2C381C3865F000BF8437 /* Core.swift */,
+			);
+			name = Core;
+			sourceTree = "<group>";
+		};
+		75EE2C4C1C3899E100BF8437 /* AI */ = {
+			isa = PBXGroup;
+			children = (
+				75EE2C4A1C387B4800BF8437 /* Conditional.swift */,
+				75EE2C4E1C389A1800BF8437 /* Logic.swift */,
+			);
+			name = AI;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		758AAB161C39F6820019238C /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				758AAB1C1C39F6820019238C /* RPGTrunkDemo.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		75EE2C1B1C3865D100BF8437 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -100,9 +233,45 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		75EE2C1D1C3865D100BF8437 /* RPG Trunk */ = {
+		758AAB181C39F6820019238C /* RPGTrunkDemo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 75EE2C321C3865D100BF8437 /* Build configuration list for PBXNativeTarget "RPG Trunk" */;
+			buildConfigurationList = 758AAB2E1C39F6820019238C /* Build configuration list for PBXNativeTarget "RPGTrunkDemo" */;
+			buildPhases = (
+				758AAB141C39F6820019238C /* Sources */,
+				758AAB151C39F6820019238C /* Frameworks */,
+				758AAB161C39F6820019238C /* Headers */,
+				758AAB171C39F6820019238C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RPGTrunkDemo;
+			productName = RPGTrunkDemo;
+			productReference = 758AAB191C39F6820019238C /* RPGTrunkDemo.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		758AAB211C39F6820019238C /* RPGTrunkDemoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 758AAB2F1C39F6820019238C /* Build configuration list for PBXNativeTarget "RPGTrunkDemoTests" */;
+			buildPhases = (
+				758AAB1E1C39F6820019238C /* Sources */,
+				758AAB1F1C39F6820019238C /* Frameworks */,
+				758AAB201C39F6820019238C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				758AAB251C39F6820019238C /* PBXTargetDependency */,
+			);
+			name = RPGTrunkDemoTests;
+			productName = RPGTrunkDemoTests;
+			productReference = 758AAB221C39F6820019238C /* RPGTrunkDemoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		75EE2C1D1C3865D100BF8437 /* RPGTrunk */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 75EE2C321C3865D100BF8437 /* Build configuration list for PBXNativeTarget "RPGTrunk" */;
 			buildPhases = (
 				75EE2C191C3865D100BF8437 /* Sources */,
 				75EE2C1A1C3865D100BF8437 /* Frameworks */,
@@ -113,9 +282,9 @@
 			);
 			dependencies = (
 			);
-			name = "RPG Trunk";
+			name = RPGTrunk;
 			productName = "RPG Trunk";
-			productReference = 75EE2C1E1C3865D100BF8437 /* RPG Trunk.framework */;
+			productReference = 75EE2C1E1C3865D100BF8437 /* RPGTrunk.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		75EE2C271C3865D100BF8437 /* RPG TrunkTests */ = {
@@ -146,6 +315,12 @@
 				LastUpgradeCheck = 0720;
 				ORGANIZATIONNAME = "Kyle Newsome";
 				TargetAttributes = {
+					758AAB181C39F6820019238C = {
+						CreatedOnToolsVersion = 7.2;
+					};
+					758AAB211C39F6820019238C = {
+						CreatedOnToolsVersion = 7.2;
+					};
 					75EE2C1D1C3865D100BF8437 = {
 						CreatedOnToolsVersion = 7.2;
 					};
@@ -166,13 +341,29 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				75EE2C1D1C3865D100BF8437 /* RPG Trunk */,
+				75EE2C1D1C3865D100BF8437 /* RPGTrunk */,
 				75EE2C271C3865D100BF8437 /* RPG TrunkTests */,
+				758AAB181C39F6820019238C /* RPGTrunkDemo */,
+				758AAB211C39F6820019238C /* RPGTrunkDemoTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		758AAB171C39F6820019238C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		758AAB201C39F6820019238C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		75EE2C1C1C3865D100BF8437 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -190,10 +381,39 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		758AAB141C39F6820019238C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				758AAB321C39F7C90019238C /* Extensions.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		758AAB1E1C39F6820019238C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				758AAB281C39F6820019238C /* RPGTrunkDemoTests.swift in Sources */,
+				758AAB311C39F6980019238C /* Extensions.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		75EE2C191C3865D100BF8437 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				75EE2C391C3865F000BF8437 /* Core.swift in Sources */,
+				75EE2C511C389A7A00BF8437 /* Event.swift in Sources */,
+				75EE2C4B1C387B4800BF8437 /* Conditional.swift in Sources */,
+				75EE2C3F1C386E8700BF8437 /* Stats.swift in Sources */,
+				75EE2C531C389C0100BF8437 /* Buff.swift in Sources */,
+				75EE2C471C3874F000BF8437 /* Entity.swift in Sources */,
+				75EE2C491C38751A00BF8437 /* Battle.swift in Sources */,
+				75EE2C451C38722600BF8437 /* Abilities.swift in Sources */,
+				75EE2C4F1C389A1800BF8437 /* Logic.swift in Sources */,
+				75EE2C411C386F1900BF8437 /* Equipment.swift in Sources */,
+				75EE2C3C1C386E6E00BF8437 /* Magics.swift in Sources */,
+				75EE2C431C38702A00BF8437 /* Component.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -208,14 +428,71 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		758AAB251C39F6820019238C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 758AAB181C39F6820019238C /* RPGTrunkDemo */;
+			targetProxy = 758AAB241C39F6820019238C /* PBXContainerItemProxy */;
+		};
 		75EE2C2B1C3865D100BF8437 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 75EE2C1D1C3865D100BF8437 /* RPG Trunk */;
+			target = 75EE2C1D1C3865D100BF8437 /* RPGTrunk */;
 			targetProxy = 75EE2C2A1C3865D100BF8437 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		758AAB2A1C39F6820019238C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = RPGTrunkDemo/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = ca.bitwit.RPGTrunkDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		758AAB2B1C39F6820019238C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = RPGTrunkDemo/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = ca.bitwit.RPGTrunkDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		758AAB2C1C39F6820019238C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = RPGTrunkDemoTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = ca.bitwit.RPGTrunkDemoTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		758AAB2D1C39F6820019238C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = RPGTrunkDemoTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = ca.bitwit.RPGTrunkDemoTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		75EE2C301C3865D100BF8437 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -308,6 +585,7 @@
 		75EE2C331C3865D100BF8437 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -318,12 +596,14 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "ca.bitwit.RPG-Trunk";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		75EE2C341C3865D100BF8437 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -360,6 +640,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		758AAB2E1C39F6820019238C /* Build configuration list for PBXNativeTarget "RPGTrunkDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				758AAB2A1C39F6820019238C /* Debug */,
+				758AAB2B1C39F6820019238C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		758AAB2F1C39F6820019238C /* Build configuration list for PBXNativeTarget "RPGTrunkDemoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				758AAB2C1C39F6820019238C /* Debug */,
+				758AAB2D1C39F6820019238C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		75EE2C181C3865D100BF8437 /* Build configuration list for PBXProject "RPG Trunk" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -369,13 +667,14 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		75EE2C321C3865D100BF8437 /* Build configuration list for PBXNativeTarget "RPG Trunk" */ = {
+		75EE2C321C3865D100BF8437 /* Build configuration list for PBXNativeTarget "RPGTrunk" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				75EE2C331C3865D100BF8437 /* Debug */,
 				75EE2C341C3865D100BF8437 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		75EE2C351C3865D100BF8437 /* Build configuration list for PBXNativeTarget "RPG TrunkTests" */ = {
 			isa = XCConfigurationList;
@@ -384,6 +683,7 @@
 				75EE2C371C3865D100BF8437 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "75EE2C1D1C3865D100BF8437"
-               BuildableName = "RPGTrunk.framework"
-               BlueprintName = "RPGTrunk"
+               BlueprintIdentifier = "758AAB181C39F6820019238C"
+               BuildableName = "RPGTrunkDemo.framework"
+               BlueprintName = "RPGTrunkDemo"
                ReferencedContainer = "container:RPG Trunk.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "75EE2C271C3865D100BF8437"
-               BuildableName = "RPG TrunkTests.xctest"
-               BlueprintName = "RPG TrunkTests"
+               BlueprintIdentifier = "758AAB211C39F6820019238C"
+               BuildableName = "RPGTrunkDemoTests.xctest"
+               BlueprintName = "RPGTrunkDemoTests"
                ReferencedContainer = "container:RPG Trunk.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -42,9 +42,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "75EE2C1D1C3865D100BF8437"
-            BuildableName = "RPGTrunk.framework"
-            BlueprintName = "RPGTrunk"
+            BlueprintIdentifier = "758AAB181C39F6820019238C"
+            BuildableName = "RPGTrunkDemo.framework"
+            BlueprintName = "RPGTrunkDemo"
             ReferencedContainer = "container:RPG Trunk.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -64,9 +64,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "75EE2C1D1C3865D100BF8437"
-            BuildableName = "RPGTrunk.framework"
-            BlueprintName = "RPGTrunk"
+            BlueprintIdentifier = "758AAB181C39F6820019238C"
+            BuildableName = "RPGTrunkDemo.framework"
+            BlueprintName = "RPGTrunkDemo"
             ReferencedContainer = "container:RPG Trunk.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -82,9 +82,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "75EE2C1D1C3865D100BF8437"
-            BuildableName = "RPGTrunk.framework"
-            BlueprintName = "RPGTrunk"
+            BlueprintIdentifier = "758AAB181C39F6820019238C"
+            BuildableName = "RPGTrunkDemo.framework"
+            BlueprintName = "RPGTrunkDemo"
             ReferencedContainer = "container:RPG Trunk.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
