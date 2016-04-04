@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7523B43C1C409000000C843B /* PropertyResultType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7523B43B1C409000000C843B /* PropertyResultType.swift */; };
+		753EEFBC1C4AED830067FDD4 /* Interpreter_spec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 753EEFBB1C4AED830067FDD4 /* Interpreter_spec.swift */; };
+		754F04FB1CAE1DA200736752 /* Generators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754F04FA1CAE1DA200736752 /* Generators.swift */; };
+		754F04FD1CAE1DCC00736752 /* Sequences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754F04FC1CAE1DCC00736752 /* Sequences.swift */; };
+		754F04FF1CAE1E1600736752 /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754F04FE1CAE1E1600736752 /* Parser.swift */; };
+		7570CC9F1CB096EC0019459E /* Definitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7570CC9E1CB096EC0019459E /* Definitions.swift */; };
 		758AAB1C1C39F6820019238C /* RPGTrunkDemo.h in Headers */ = {isa = PBXBuildFile; fileRef = 758AAB1B1C39F6820019238C /* RPGTrunkDemo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		758AAB231C39F6820019238C /* RPGTrunkDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 758AAB191C39F6820019238C /* RPGTrunkDemo.framework */; };
 		758AAB281C39F6820019238C /* RPGTrunkDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 758AAB271C39F6820019238C /* RPGTrunkDemoTests.swift */; };
@@ -27,6 +33,9 @@
 		75EE2C4F1C389A1800BF8437 /* Logic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C4E1C389A1800BF8437 /* Logic.swift */; };
 		75EE2C511C389A7A00BF8437 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C501C389A7A00BF8437 /* Event.swift */; };
 		75EE2C531C389C0100BF8437 /* Buff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C521C389C0100BF8437 /* Buff.swift */; };
+		75F6EB541C3DBAD4000FF376 /* Interpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F6EB531C3DBAD4000FF376 /* Interpreter.swift */; };
+		75F6EB561C3DC9E7000FF376 /* Predicates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F6EB551C3DC9E7000FF376 /* Predicates.swift */; };
+		F1043CC94C6C8159336503DE /* Pods_RPG_TrunkTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B63BCDD55427D42FF404632 /* Pods_RPG_TrunkTests.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +56,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6B63BCDD55427D42FF404632 /* Pods_RPG_TrunkTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RPG_TrunkTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		7523B43B1C409000000C843B /* PropertyResultType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PropertyResultType.swift; sourceTree = "<group>"; };
+		753EEFBB1C4AED830067FDD4 /* Interpreter_spec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Interpreter_spec.swift; sourceTree = "<group>"; };
+		754F04FA1CAE1DA200736752 /* Generators.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Generators.swift; sourceTree = "<group>"; };
+		754F04FC1CAE1DCC00736752 /* Sequences.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sequences.swift; sourceTree = "<group>"; };
+		754F04FE1CAE1E1600736752 /* Parser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.swift; sourceTree = "<group>"; };
+		7570CC9E1CB096EC0019459E /* Definitions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Definitions.swift; sourceTree = "<group>"; };
 		758AAB191C39F6820019238C /* RPGTrunkDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RPGTrunkDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		758AAB1B1C39F6820019238C /* RPGTrunkDemo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RPGTrunkDemo.h; sourceTree = "<group>"; };
 		758AAB1D1C39F6820019238C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -72,6 +88,10 @@
 		75EE2C4E1C389A1800BF8437 /* Logic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Logic.swift; sourceTree = "<group>"; };
 		75EE2C501C389A7A00BF8437 /* Event.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Event.swift; sourceTree = "<group>"; };
 		75EE2C521C389C0100BF8437 /* Buff.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Buff.swift; sourceTree = "<group>"; };
+		75F6EB531C3DBAD4000FF376 /* Interpreter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Interpreter.swift; sourceTree = "<group>"; };
+		75F6EB551C3DC9E7000FF376 /* Predicates.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Predicates.swift; sourceTree = "<group>"; };
+		9EB733BF536C3D0E59E874CB /* Pods-RPG TrunkTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RPG TrunkTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-RPG TrunkTests/Pods-RPG TrunkTests.debug.xcconfig"; sourceTree = "<group>"; };
+		CEF4368BA6B0A41A7C03AA75 /* Pods-RPG TrunkTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RPG TrunkTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-RPG TrunkTests/Pods-RPG TrunkTests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,12 +122,31 @@
 			buildActionMask = 2147483647;
 			files = (
 				75EE2C291C3865D100BF8437 /* RPGTrunk.framework in Frameworks */,
+				F1043CC94C6C8159336503DE /* Pods_RPG_TrunkTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		754F04F71CAE1B7400736752 /* Functional foundation */ = {
+			isa = PBXGroup;
+			children = (
+				754F04FA1CAE1DA200736752 /* Generators.swift */,
+				754F04FC1CAE1DCC00736752 /* Sequences.swift */,
+				754F04FE1CAE1E1600736752 /* Parser.swift */,
+			);
+			name = "Functional foundation";
+			sourceTree = "<group>";
+		};
+		7570CC9D1CB096C30019459E /* Game */ = {
+			isa = PBXGroup;
+			children = (
+				7570CC9E1CB096EC0019459E /* Definitions.swift */,
+			);
+			name = Game;
+			sourceTree = "<group>";
+		};
 		7582EE5C1C3CC79E0047B82E /* Battle */ = {
 			isa = PBXGroup;
 			children = (
@@ -156,6 +195,8 @@
 				758AAB1A1C39F6820019238C /* RPGTrunkDemo */,
 				758AAB261C39F6820019238C /* RPGTrunkDemoTests */,
 				75EE2C1F1C3865D100BF8437 /* Products */,
+				7917C8A65B6845467910739B /* Pods */,
+				93F7AF03A37F5E32A04C03A8 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -174,6 +215,7 @@
 			isa = PBXGroup;
 			children = (
 				75EE2C3A1C386E5300BF8437 /* Core */,
+				7570CC9D1CB096C30019459E /* Game */,
 				75EE2C211C3865D100BF8437 /* RPG Trunk.h */,
 				75EE2C231C3865D100BF8437 /* Info.plist */,
 			);
@@ -185,6 +227,7 @@
 			children = (
 				75EE2C2D1C3865D100BF8437 /* RPG_TrunkTests.swift */,
 				75EE2C2F1C3865D100BF8437 /* Info.plist */,
+				753EEFBB1C4AED830067FDD4 /* Interpreter_spec.swift */,
 			);
 			path = "RPG TrunkTests";
 			sourceTree = "<group>";
@@ -192,6 +235,7 @@
 		75EE2C3A1C386E5300BF8437 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				754F04F71CAE1B7400736752 /* Functional foundation */,
 				75EE2C4C1C3899E100BF8437 /* AI */,
 				7582EE5C1C3CC79E0047B82E /* Battle */,
 				75A05B961C3A13EF000E97B2 /* Foundation */,
@@ -205,10 +249,30 @@
 		75EE2C4C1C3899E100BF8437 /* AI */ = {
 			isa = PBXGroup;
 			children = (
+				75F6EB551C3DC9E7000FF376 /* Predicates.swift */,
+				7523B43B1C409000000C843B /* PropertyResultType.swift */,
+				75F6EB531C3DBAD4000FF376 /* Interpreter.swift */,
 				75EE2C4A1C387B4800BF8437 /* Conditional.swift */,
 				75EE2C4E1C389A1800BF8437 /* Logic.swift */,
 			);
 			name = AI;
+			sourceTree = "<group>";
+		};
+		7917C8A65B6845467910739B /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				9EB733BF536C3D0E59E874CB /* Pods-RPG TrunkTests.debug.xcconfig */,
+				CEF4368BA6B0A41A7C03AA75 /* Pods-RPG TrunkTests.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+		93F7AF03A37F5E32A04C03A8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6B63BCDD55427D42FF404632 /* Pods_RPG_TrunkTests.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -291,9 +355,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 75EE2C351C3865D100BF8437 /* Build configuration list for PBXNativeTarget "RPG TrunkTests" */;
 			buildPhases = (
+				5822DA9EE75B2BA869E35F93 /* Check Pods Manifest.lock */,
 				75EE2C241C3865D100BF8437 /* Sources */,
 				75EE2C251C3865D100BF8437 /* Frameworks */,
 				75EE2C261C3865D100BF8437 /* Resources */,
+				E802CAA735DCD9922C33CDB7 /* Embed Pods Frameworks */,
+				CA5D3179108001E668D0BB7F /* Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -380,6 +447,54 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		5822DA9EE75B2BA869E35F93 /* Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		CA5D3179108001E668D0BB7F /* Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-RPG TrunkTests/Pods-RPG TrunkTests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		E802CAA735DCD9922C33CDB7 /* Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-RPG TrunkTests/Pods-RPG TrunkTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		758AAB141C39F6820019238C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -407,10 +522,17 @@
 				75EE2C4B1C387B4800BF8437 /* Conditional.swift in Sources */,
 				75EE2C3F1C386E8700BF8437 /* Stats.swift in Sources */,
 				75EE2C531C389C0100BF8437 /* Buff.swift in Sources */,
+				7570CC9F1CB096EC0019459E /* Definitions.swift in Sources */,
+				75F6EB541C3DBAD4000FF376 /* Interpreter.swift in Sources */,
+				754F04FB1CAE1DA200736752 /* Generators.swift in Sources */,
+				754F04FD1CAE1DCC00736752 /* Sequences.swift in Sources */,
 				75EE2C471C3874F000BF8437 /* Entity.swift in Sources */,
+				7523B43C1C409000000C843B /* PropertyResultType.swift in Sources */,
 				75EE2C491C38751A00BF8437 /* Battle.swift in Sources */,
 				75EE2C451C38722600BF8437 /* Abilities.swift in Sources */,
+				75F6EB561C3DC9E7000FF376 /* Predicates.swift in Sources */,
 				75EE2C4F1C389A1800BF8437 /* Logic.swift in Sources */,
+				754F04FF1CAE1E1600736752 /* Parser.swift in Sources */,
 				75EE2C411C386F1900BF8437 /* Equipment.swift in Sources */,
 				75EE2C3C1C386E6E00BF8437 /* Magics.swift in Sources */,
 				75EE2C431C38702A00BF8437 /* Component.swift in Sources */,
@@ -422,6 +544,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				75EE2C2E1C3865D100BF8437 /* RPG_TrunkTests.swift in Sources */,
+				753EEFBC1C4AED830067FDD4 /* Interpreter_spec.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -619,6 +742,7 @@
 		};
 		75EE2C361C3865D100BF8437 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9EB733BF536C3D0E59E874CB /* Pods-RPG TrunkTests.debug.xcconfig */;
 			buildSettings = {
 				INFOPLIST_FILE = "RPG TrunkTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -629,6 +753,7 @@
 		};
 		75EE2C371C3865D100BF8437 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CEF4368BA6B0A41A7C03AA75 /* Pods-RPG TrunkTests.release.xcconfig */;
 			buildSettings = {
 				INFOPLIST_FILE = "RPG TrunkTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";

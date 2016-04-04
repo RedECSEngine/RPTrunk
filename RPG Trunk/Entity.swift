@@ -14,15 +14,19 @@ public class Body {
     let storage = Storage()
 }
 
-public class Entity: StatsContainer {
-    public var baseStats:Stats = Stats([:])
+public class RPEntity: StatsContainer {
+    public private(set) var baseStats = RPStats([:])
+    public private(set) var currentStats = RPStats([:], asPartial: true) //when a current is nil, it means it's at max
     
     public var body = Body()
     public var executableAbilities:[Ability] = []
     public var passiveAbilities:[Ability] = []
     public var priorities:[Priority] = []
+    public var buffs: [Buff] = []
     
-    public var stats:Stats {
+    public weak var target:RPEntity?
+    
+    public var stats:RPStats {
         var totalStats = self.baseStats
         for weapon in self.body.weapons {
             totalStats = totalStats + weapon.stats;
@@ -33,14 +37,39 @@ public class Entity: StatsContainer {
         return totalStats
     }
     
-    public weak var target:Entity?
-    
-    public init(_ data:Stats) {
-        self.baseStats = data
+    public subscript(index:String) -> RPValue {
+        return currentStats.get(index) ?? stats[index]
     }
     
-    public func getStat(key:String) -> Int {
-        return self.stats.hp //TODO: fix this to be dynamic
+    public func allCurrentStats() -> RPStats {
+        var cs:[String:RPValue] = [:]
+        let maxStats = stats
+        for type in RPGameEnvironment.statTypes {
+            cs[type] = currentStats.get(type) ?? maxStats[type]
+        }
+        return RPStats(cs)
+    }
+    
+    public func setCurrentStats(newStats:RPStats) {
+        var cs:[String:RPValue] = [:]
+        let maxStats = stats
+        for type in RPGameEnvironment.statTypes {
+            cs[type] = newStats[type] < maxStats[type] ? newStats[type] : nil
+        }
+        currentStats = RPStats(cs)
+    }
+    
+    // Stored on the entity for reuse
+    public lazy var parser:Parser<String, PropertyResultType> = {
+        return valueParser() <|> entityTargetParser(self) <|> entityStatParser(self)
+    }()
+    
+    public init(_ data:[String:RPValue]) {
+        self.baseStats = RPStats(data)
+    }
+    
+    public convenience init() {
+        self.init([:])
     }
     
     public func think() -> Event? {
@@ -63,6 +92,16 @@ public class Entity: StatsContainer {
     }
 }
 
-public func getStat(entity:Entity, _ key:String) -> () -> Int {
-    return { entity.getStat(key) }
+extension RPEntity: CustomStringConvertible {
+    
+    public var description:String {
+        var o:[String:String] = [:]
+        let maxStats = stats
+        for type in RPGameEnvironment.statTypes {
+            o[type] = " \(currentStats.get(type) ?? maxStats[type])/\(maxStats[type])"
+        }
+        return "Entity:\n " + o.description
+    }
+    
 }
+

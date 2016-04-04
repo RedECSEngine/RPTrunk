@@ -9,14 +9,14 @@
 import Foundation
 
 public struct Magics {
-    let fire:Int
-    let water:Int
-    let earth:Int
-    let air:Int
-    let poison:Int
-    let healing:Int
+    let fire:RPValue
+    let water:RPValue
+    let earth:RPValue
+    let air:RPValue
+    let poison:RPValue
+    let healing:RPValue
     
-    init(_ data:[String:Int]) {
+    init(_ data:[String:RPValue]) {
         self.fire = data["fire"] ?? 0
         self.water = data["water"] ?? 0
         self.earth = data["earth"] ?? 0

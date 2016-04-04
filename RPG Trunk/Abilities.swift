@@ -9,20 +9,20 @@
 import Foundation
 
 public class Ability: StatsContainer {
-    var name = "Ability"
-    var components:[Component] = []
-    var targetType:EventTargetType = .Oneself  // RPGEventTargetType
+    public var name = "Ability"
+    public var components:[Component] = []
+    public var targetType:EventTargetType = .Oneself  // RPGEventTargetType
 
     public init(_ data:[String: AnyObject]) {
         self.name = data["name"] as? String ?? "Ability"
         self.components = data["components"] as? [Component] ?? []
     }
     
-    public var stats:Stats {
-        return self.components.reduce(Stats([:]), combine:combineComponentStatsToTotal)
+    public var stats:RPStats {
+        return self.components.reduce(RPStats([:]), combine:combineComponentStatsToTotal)
     }
 }
 
-public func combineComponentStatsToTotal(total:Stats, component:Component) -> Stats {
+public func combineComponentStatsToTotal(total:RPStats, component:Component) -> RPStats {
     return total + component.stats
 }

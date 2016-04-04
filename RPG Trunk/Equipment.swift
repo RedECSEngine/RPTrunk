@@ -23,16 +23,16 @@ public class Item: Storable {
 public class Armor: Wearable {
     public var name = "Unititled Armor"
     public var component:Component?
-    public var stats:Stats {
-        return component?.stats ?? Stats([:])
+    public var stats:RPStats {
+        return component?.stats ?? RPStats([:])
     }
 }
 
 public class Weapon: Wearable {
     public var name = "Unititled Weapon"
     public var component:Component?
-    public var stats:Stats {
-        return component?.stats ?? Stats([:])
+    public var stats:RPStats {
+        return component?.stats ?? RPStats([:])
     }
 }
 

@@ -1,36 +1,57 @@
-//
-//  RPG_TrunkTests.swift
-//  RPG TrunkTests
-//
-//  Created by Kyle Newsome on 2016-01-02.
-//  Copyright © 2016 Kyle Newsome. All rights reserved.
-//
+import Quick
+import Nimble
 
-import XCTest
-@testable import RPG_Trunk
+@testable import RPGTrunk
 
-class RPG_TrunkTests: XCTestCase {
+class InterpreterSpec: QuickSpec {
     
-    override func setUp() {
-        super.setUp()
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-    
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-        super.tearDown()
-    }
-    
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-    }
-    
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measureBlock {
-            // Put the code you want to measure the time of here.
+    override func spec() {
+        describe("Interpreter") {
+            let env = RPGameEnvironment(delegate: DefaultGame())
+            RPGameEnvironment.pushEnvironment(env)
+            
+            let entity = RPEntity()
+            let enemy = RPEntity()
+            entity.target = enemy
+            
+            context("getTarget") {
+                it("should return the entity's target") {
+                    let result = getTarget(entity)
+                    expect(result == PropertyResultType.Entity(entity: enemy)).to(beTrue())
+                }
+                
+                it("should return .Nothing when the target is nil") {
+                    let result = getTarget(enemy)
+                    expect(result == .Nothing).to(beTrue())
+                }
+            }
+            
+            /*
+            context("parseTerms") {
+                it("should return a .Target type EntityPropertyHandler") {
+                    let result = parseTerms("target")
+                    let targetResult = result[0]!(entity)
+                    expect(targetResult == PropertyResultType.Entity(entity: enemy)).to(beTrue())
+                }
+            }
+            
+            context("interpretProperties") {
+                it("should return a .Target type EntityPropertyHandler") {
+                    let result = parseTerms("target")
+                    expect(result.count).to(equal(1))
+                    
+                    let targetResult = result[0]!(entity)
+                    expect(targetResult == PropertyResultType.Entity(entity: enemy)).to(beTrue())
+                }
+            }
+            
+            context("getEntityPropertyHandler") {
+                it("should return nil when property requested is invalid") {
+                    let prop = getPropertyHandler("blahblah")
+                    expect(prop).to(beNil())
+                }
+            }
+             */
         }
     }
-    
 }

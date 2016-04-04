@@ -11,9 +11,9 @@ Depending on your own use case, you may have a way of deciding which actions to 
 */
 
 //: Let's start by recreating the foundation from our basic conflict example
-let entity1 = Entity(Stats(["hp": 50]))
-let entity2 = Entity(Stats(["hp": 50]))
-let dmgComponent = Component(Stats(["damage": 3]))
+let entity1 = RPEntity(["hp": 50])
+let entity2 = RPEntity(["hp": 50])
+let dmgComponent = Component(["damage": 3])
 let attack = Ability(["components": [dmgComponent]])
 //: This time, instead of creating an event manually though, let's ask our entity to tell us what it wants to do. Entites have a queue of priorities that they execute. A new Entity starts with an empty queue though, so let's fix that.
 let attackPriority = Priority(ability: attack, conditionals: nil)
@@ -35,8 +35,8 @@ nextEvent // returns Event
 let event = Event(initiator: entity1, targets:[entity2], ability:attack)
 performEvent(event)
 //: We see that Entity2 has lost 3 hit points
-entity1.stats.hp
-entity2.stats.hp
+entity1["hp"]
+entity2["hp"]
 
 //: [Next](@next)
       

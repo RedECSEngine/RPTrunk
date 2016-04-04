@@ -9,9 +9,9 @@
 import Foundation
 
 public class Component {
-    let stats:Stats
-    public init(_ data:Stats) {
-        self.stats = data
+    let stats:RPStats
+    public init(_ data:[String:RPValue]) {
+        self.stats = RPStats(data)
     }
 }
 

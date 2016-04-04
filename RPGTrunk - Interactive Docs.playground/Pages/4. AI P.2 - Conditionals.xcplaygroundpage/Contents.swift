@@ -1,16 +1,55 @@
+
 //: [Previous](@previous)
 import Foundation
+import XCPlayground
 import RPGTrunk
+import RPGTrunkDemo
+/*:
+ # The *AI* object
+ 
+ 
+ */
 
+//: Let's start by recreating the foundation from our basic AI example
+let entity1 = RPEntity(["hp": 50])
+let entity2 = RPEntity(["hp": 50])
 
-let joe = Entity(Stats(["hp": 30]))
+let dmgComponent = Component(["damage": 5])
 
-let conditional = buildConditional(getStat(joe, "hp"), isGreaterThan(20))
+//: ##### Our basic attack
+let attack = Ability(["components": [dmgComponent]])
+let attackPriority = Priority(ability: attack, conditionals: nil)
 
-conditional()
+//: ##### The Finishing Blow
+let finishingBlow = Ability(["components": [dmgComponent, dmgComponent, dmgComponent]]) // triple damage
 
-joe.baseStats = Stats(["hp": 10])
+//: Only execute this attack when targat below 20% hp
+let lowHPCondition = Conditional("target.hp% < 20")
+let fbPriority = Priority(ability: finishingBlow, conditionals: [lowHPCondition])
 
-conditional()
+//: Set our finishing blow priority ahead of the basic attack
+entity1.priorities = [
+    fbPriority,
+    attackPriority
+]
+
+entity1.target = entity2
+/*:
+ We know we can ask entity for events with `Entity.think()` and then manually execute them ourselves, but that's a bit boring. We're ready to let our Entities do their own bidding at a regular interval.
+ 
+ So let's create a battle and put our entities inside
+ */
+let battle = RPBattle()
+battle.entities += [entity1, entity2]
+
+//: It's going to be an unfair fight, but let's see what happens
+for _ in 0..<10 {
+    battle.tick()
+    entity1["hp"] // stays at 50
+    entity2["hp"] // loses 5 per tick, then by 15 under 20% hp
+}
 
 //: [Next](@next)
+
+
+

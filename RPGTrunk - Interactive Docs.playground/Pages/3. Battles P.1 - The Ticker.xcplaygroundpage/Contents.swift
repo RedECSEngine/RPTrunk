@@ -16,9 +16,10 @@ While it is certainly possible (and maybe even desirable) to manually build up a
 */
 
 //: Let's start by recreating the foundation from our basic AI example
-let entity1 = Entity(Stats(["hp": 50]))
-let entity2 = Entity(Stats(["hp": 50]))
-let dmgComponent = Component(Stats(["damage": 3]))
+let entity1 = RPEntity(["hp": 50])
+let entity2 = RPEntity(["hp": 50])
+
+let dmgComponent = Component(["damage": 3])
 let attack = Ability(["components": [dmgComponent]])
 let attackPriority = Priority(ability: attack, conditionals: nil)
 entity1.priorities.append(attackPriority)
@@ -28,14 +29,14 @@ We know we can ask entity for events with `Entity.think()` and then manually exe
 
 So let's create a battle and put our entities inside
 */
-let battle = Battle()
+let battle = RPBattle()
 battle.entities += [entity1, entity2]
 
 //: It's going to be an unfair fight, but let's see what happens
 for _ in 0..<10 {
     battle.tick()
-    entity1.stats.hp // stays at 50
-    entity2.stats.hp // loses 3 per tick
+    entity1["hp"] // stays at 50
+    entity2["hp"] // loses 3 per tick
 }
 
 //: [Next](@next)

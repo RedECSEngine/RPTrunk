@@ -8,9 +8,9 @@
 
 import Foundation
 
-public class Battle {
+public class RPBattle {
     
-    public var entities:[Entity] = []
+    public var entities:[RPEntity] = []
     public var queue:[Event] = []
     
     public init () {
