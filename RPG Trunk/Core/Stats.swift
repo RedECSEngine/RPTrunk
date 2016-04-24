@@ -1,14 +1,7 @@
-//
-//  Stats.swift
-//  RPG Trunk
-//
-//  Created by Kyle Newsome on 2016-01-02.
-//  Copyright © 2016 Kyle Newsome. All rights reserved.
-//
 
-import Foundation
-
-public struct RPStats {
+public struct RPStats: SequenceType {
+    
+    public typealias Generator = DictionaryGenerator<String, RPValue>
     
     private let values:[String:RPValue]
     //let affinities = Magics()
@@ -28,6 +21,21 @@ public struct RPStats {
     
     public func get(key:String) -> RPValue? {
         return values[key]
+    }
+    
+    public func nonZeroes() -> RPStats {
+        
+        var changes = [String:RPValue]()
+        values.forEach { (key, val) in
+            if val != 0 {
+                changes[key] = val
+            }
+        }
+        return RPStats(changes, asPartial: true)
+    }
+    
+    public func generate() -> RPStats.Generator {
+        return values.generate()
     }
 }
 

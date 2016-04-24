@@ -1,25 +1,10 @@
-//
-//  Event.swift
-//  RPG Trunk
-//
-//  Created by Kyle Newsome on 2016-01-02.
-//  Copyright © 2016 Kyle Newsome. All rights reserved.
-//
-
-import Foundation
 
 public typealias ConflictResult = (entity:RPEntity, change:RPStats)
 
-public class Event {
+public struct Event {
     let initiator:RPEntity
     var targets:[RPEntity]
     let ability:Ability
-
-    public init(initiator:RPEntity, targets:[RPEntity], ability:Ability) {
-        self.initiator = initiator
-        self.targets = targets
-        self.ability = ability
-    }
 }
 
 public func getResultForEvent(event:Event) -> [ConflictResult] {
@@ -31,8 +16,10 @@ public func getResultForEvent(event:Event) -> [ConflictResult] {
    return results
 }
 
-public func performEvent(event:Event) {
-    getResultForEvent(event).forEach { (result) -> () in
+public func performEvent(event:Event) -> [ConflictResult] {
+    let results = getResultForEvent(event)
+    results.forEach { (result) -> () in
         result.entity.setCurrentStats(result.entity.allCurrentStats() + result.change)
     }
+    return results
 }

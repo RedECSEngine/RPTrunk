@@ -1,12 +1,3 @@
-//
-//  Magics.swift
-//  RPG Trunk
-//
-//  Created by Kyle Newsome on 2016-01-02.
-//  Copyright © 2016 Kyle Newsome. All rights reserved.
-//
-
-import Foundation
 
 public struct Magics {
     let fire:RPValue

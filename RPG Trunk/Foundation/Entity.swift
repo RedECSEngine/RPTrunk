@@ -1,12 +1,3 @@
-//
-//  Entity.swift
-//  RPG Trunk
-//
-//  Created by Kyle Newsome on 2016-01-02.
-//  Copyright © 2016 Kyle Newsome. All rights reserved.
-//
-
-import Foundation
 
 public class Body {
     let weapons:[Weapon] = []
@@ -15,16 +6,18 @@ public class Body {
 }
 
 public class RPEntity: StatsContainer {
-    public private(set) var baseStats = RPStats([:])
-    public private(set) var currentStats = RPStats([:], asPartial: true) //when a current is nil, it means it's at max
+    public var baseStats = RPStats([:])
+    public var currentStats = RPStats([:], asPartial: true) //when a current is nil, it means it's at max
     
     public var body = Body()
     public var executableAbilities:[Ability] = []
     public var passiveAbilities:[Ability] = []
     public var priorities:[Priority] = []
-    public var buffs: [Buff] = []
+    public var buffs:[AppliedBuff] = []
     
     public weak var target:RPEntity?
+    
+    public weak var data:AnyObject?
     
     public var stats:RPStats {
         var totalStats = self.baseStats
@@ -72,6 +65,20 @@ public class RPEntity: StatsContainer {
         self.init([:])
     }
     
+    public func copy() -> RPEntity {
+        
+        let entity = RPEntity()
+        entity.baseStats = self.baseStats
+        entity.currentStats = self.currentStats
+        entity.body = self.body
+        entity.executableAbilities = self.executableAbilities
+        entity.passiveAbilities = self.passiveAbilities
+        entity.priorities = self.priorities
+        entity.buffs = self.buffs
+        
+        return entity
+    }
+    
     public func think() -> Event? {
         for priority in self.priorities {
             if priority.evaluate(self) {
@@ -83,12 +90,12 @@ public class RPEntity: StatsContainer {
         return nil
     }
     
-    func eventWillOccur(event:Event) {
-        
+    func eventWillOccur(event:Event) -> Event? {
+        return nil
     }
 
-    func eventDidOccur(event:Event) {
-    
+    func eventDidOccur(event:Event) -> Event? {
+        return nil
     }
 }
 

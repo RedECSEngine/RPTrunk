@@ -1,6 +1,4 @@
 
-import Foundation
-
 public struct Conditional {
     
     let query: (RPEntity) -> Bool

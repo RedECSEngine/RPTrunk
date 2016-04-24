@@ -1,12 +1,3 @@
-//
-//  Equipment.swift
-//  RPG Trunk
-//
-//  Created by Kyle Newsome on 2016-01-02.
-//  Copyright © 2016 Kyle Newsome. All rights reserved.
-//
-
-import Foundation
 
 public protocol Storable {
     var name:String {get}
@@ -16,11 +7,11 @@ public protocol Wearable: Storable, StatsContainer {
     var component:Component? {get set}
 }
 
-public class Item: Storable {
+public struct Item: Storable {
     public var name = "Unititled Item"
 }
 
-public class Armor: Wearable {
+public struct Armor: Wearable {
     public var name = "Unititled Armor"
     public var component:Component?
     public var stats:RPStats {
@@ -28,7 +19,7 @@ public class Armor: Wearable {
     }
 }
 
-public class Weapon: Wearable {
+public struct Weapon: Wearable {
     public var name = "Unititled Weapon"
     public var component:Component?
     public var stats:RPStats {

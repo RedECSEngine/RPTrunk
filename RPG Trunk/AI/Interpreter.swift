@@ -1,6 +1,4 @@
 
-import Foundation
-
 public enum ConditionalInterpretationError: ErrorType {
     case IncorrectComponentCount(reason:String)
     case InvalidSyntax(reason:String)

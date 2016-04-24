@@ -1,6 +1,4 @@
 
-import Foundation
-
 public enum PropertyResultType {
     case Entity(entity:RPEntity)
     case Stats(stats:RPStats)

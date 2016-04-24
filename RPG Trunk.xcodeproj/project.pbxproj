@@ -18,6 +18,7 @@
 		758AAB281C39F6820019238C /* RPGTrunkDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 758AAB271C39F6820019238C /* RPGTrunkDemoTests.swift */; };
 		758AAB311C39F6980019238C /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 758AAB301C39F6980019238C /* Extensions.swift */; };
 		758AAB321C39F7C90019238C /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 758AAB301C39F6980019238C /* Extensions.swift */; };
+		75C322881CB35F2D00441038 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 75C322871CB35F2D00441038 /* README.md */; };
 		75EE2C221C3865D100BF8437 /* RPG Trunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 75EE2C211C3865D100BF8437 /* RPG Trunk.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		75EE2C291C3865D100BF8437 /* RPGTrunk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75EE2C1E1C3865D100BF8437 /* RPGTrunk.framework */; };
 		75EE2C2E1C3865D100BF8437 /* RPG_TrunkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C2D1C3865D100BF8437 /* RPG_TrunkTests.swift */; };
@@ -70,6 +71,7 @@
 		758AAB271C39F6820019238C /* RPGTrunkDemoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPGTrunkDemoTests.swift; sourceTree = "<group>"; };
 		758AAB291C39F6820019238C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		758AAB301C39F6980019238C /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Extensions.swift; path = RPGTrunkDemoTests/Extensions.swift; sourceTree = SOURCE_ROOT; };
+		75C322871CB35F2D00441038 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		75EE2C1E1C3865D100BF8437 /* RPGTrunk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RPGTrunk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EE2C211C3865D100BF8437 /* RPG Trunk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RPG Trunk.h"; sourceTree = "<group>"; };
 		75EE2C231C3865D100BF8437 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -129,30 +131,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		754F04F71CAE1B7400736752 /* Functional foundation */ = {
+		754F04F71CAE1B7400736752 /* Functional */ = {
 			isa = PBXGroup;
 			children = (
 				754F04FA1CAE1DA200736752 /* Generators.swift */,
 				754F04FC1CAE1DCC00736752 /* Sequences.swift */,
 				754F04FE1CAE1E1600736752 /* Parser.swift */,
 			);
-			name = "Functional foundation";
+			path = Functional;
 			sourceTree = "<group>";
 		};
-		7570CC9D1CB096C30019459E /* Game */ = {
+		7570CC9D1CB096C30019459E /* Default Game */ = {
 			isa = PBXGroup;
 			children = (
 				7570CC9E1CB096EC0019459E /* Definitions.swift */,
 			);
-			name = Game;
-			sourceTree = "<group>";
-		};
-		7582EE5C1C3CC79E0047B82E /* Battle */ = {
-			isa = PBXGroup;
-			children = (
-				75EE2C481C38751A00BF8437 /* Battle.swift */,
-			);
-			name = Battle;
+			path = "Default Game";
 			sourceTree = "<group>";
 		};
 		758AAB1A1C39F6820019238C /* RPGTrunkDemo */ = {
@@ -177,6 +171,7 @@
 		75A05B961C3A13EF000E97B2 /* Foundation */ = {
 			isa = PBXGroup;
 			children = (
+				75EE2C481C38751A00BF8437 /* Battle.swift */,
 				75EE2C461C3874F000BF8437 /* Entity.swift */,
 				75EE2C441C38722600BF8437 /* Abilities.swift */,
 				75EE2C501C389A7A00BF8437 /* Event.swift */,
@@ -184,7 +179,17 @@
 				75EE2C401C386F1900BF8437 /* Equipment.swift */,
 				75EE2C521C389C0100BF8437 /* Buff.swift */,
 			);
-			name = Foundation;
+			path = Foundation;
+			sourceTree = "<group>";
+		};
+		75C322891CB363E100441038 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				75EE2C3B1C386E6E00BF8437 /* Magics.swift */,
+				75EE2C3E1C386E8700BF8437 /* Stats.swift */,
+				75EE2C381C3865F000BF8437 /* Core.swift */,
+			);
+			path = Core;
 			sourceTree = "<group>";
 		};
 		75EE2C141C3865D100BF8437 = {
@@ -214,10 +219,14 @@
 		75EE2C201C3865D100BF8437 /* RPG Trunk */ = {
 			isa = PBXGroup;
 			children = (
-				75EE2C3A1C386E5300BF8437 /* Core */,
-				7570CC9D1CB096C30019459E /* Game */,
+				754F04F71CAE1B7400736752 /* Functional */,
+				75EE2C4C1C3899E100BF8437 /* AI */,
+				75A05B961C3A13EF000E97B2 /* Foundation */,
+				75C322891CB363E100441038 /* Core */,
+				7570CC9D1CB096C30019459E /* Default Game */,
 				75EE2C211C3865D100BF8437 /* RPG Trunk.h */,
 				75EE2C231C3865D100BF8437 /* Info.plist */,
+				75C322871CB35F2D00441038 /* README.md */,
 			);
 			path = "RPG Trunk";
 			sourceTree = "<group>";
@@ -232,20 +241,6 @@
 			path = "RPG TrunkTests";
 			sourceTree = "<group>";
 		};
-		75EE2C3A1C386E5300BF8437 /* Core */ = {
-			isa = PBXGroup;
-			children = (
-				754F04F71CAE1B7400736752 /* Functional foundation */,
-				75EE2C4C1C3899E100BF8437 /* AI */,
-				7582EE5C1C3CC79E0047B82E /* Battle */,
-				75A05B961C3A13EF000E97B2 /* Foundation */,
-				75EE2C3B1C386E6E00BF8437 /* Magics.swift */,
-				75EE2C3E1C386E8700BF8437 /* Stats.swift */,
-				75EE2C381C3865F000BF8437 /* Core.swift */,
-			);
-			name = Core;
-			sourceTree = "<group>";
-		};
 		75EE2C4C1C3899E100BF8437 /* AI */ = {
 			isa = PBXGroup;
 			children = (
@@ -255,7 +250,7 @@
 				75EE2C4A1C387B4800BF8437 /* Conditional.swift */,
 				75EE2C4E1C389A1800BF8437 /* Logic.swift */,
 			);
-			name = AI;
+			path = AI;
 			sourceTree = "<group>";
 		};
 		7917C8A65B6845467910739B /* Pods */ = {
@@ -519,6 +514,7 @@
 			files = (
 				75EE2C391C3865F000BF8437 /* Core.swift in Sources */,
 				75EE2C511C389A7A00BF8437 /* Event.swift in Sources */,
+				75C322881CB35F2D00441038 /* README.md in Sources */,
 				75EE2C4B1C387B4800BF8437 /* Conditional.swift in Sources */,
 				75EE2C3F1C386E8700BF8437 /* Stats.swift in Sources */,
 				75EE2C531C389C0100BF8437 /* Buff.swift in Sources */,

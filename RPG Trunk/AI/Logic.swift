@@ -1,6 +1,4 @@
 
-import Foundation
-
 public struct Priority {
     
     public let ability:Ability  // Executable Ability
