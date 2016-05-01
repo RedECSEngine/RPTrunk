@@ -1,11 +1,6 @@
 
-public struct Body {
-    let weapons:[Weapon] = []
-    let equipment:[Armor] = []
-    let storage = Storage()
-}
-
 public class RPEntity: StatsContainer {
+    
     public var baseStats = RPStats([:])
     public var currentStats = RPStats([:], asPartial: true) //when a current is nil, it means it's at max
     
@@ -18,6 +13,14 @@ public class RPEntity: StatsContainer {
     public weak var target:RPEntity?
     
     public weak var data:AnyObject?
+    
+    // Stored on the entity for reuse
+    public lazy var parser:Parser<String, PropertyResultType> = {
+        return valueParser() <|> entityTargetParser(self) <|> entityStatParser(self)
+    }()
+    
+    
+    //MARK: - Computed properties
     
     public var stats:RPStats {
         var totalStats = self.baseStats
@@ -52,10 +55,8 @@ public class RPEntity: StatsContainer {
         currentStats = RPStats(cs, asPartial: true)
     }
     
-    // Stored on the entity for reuse
-    public lazy var parser:Parser<String, PropertyResultType> = {
-        return valueParser() <|> entityTargetParser(self) <|> entityStatParser(self)
-    }()
+    
+    //MARK: - Initialization
     
     public init(_ data:[String:RPValue]) {
         self.baseStats = RPStats(data)
@@ -65,19 +66,8 @@ public class RPEntity: StatsContainer {
         self.init([:])
     }
     
-    public func copy() -> RPEntity {
-        
-        let entity = RPEntity()
-        entity.baseStats = self.baseStats
-        entity.currentStats = self.currentStats
-        entity.body = self.body
-        entity.executableAbilities = self.executableAbilities
-        entity.passiveAbilities = self.passiveAbilities
-        entity.priorities = self.priorities
-        entity.buffs = self.buffs
-        
-        return entity
-    }
+    
+    //MARK: - Event/Battle handling
     
     public func tick() -> [Event] {
         
@@ -101,11 +91,28 @@ public class RPEntity: StatsContainer {
     }
     
     func eventWillOccur(event:Event) -> Event? {
-        return nil
+        return nil //TODO: Check for passive abilities that would trigger based on this event
     }
 
     func eventDidOccur(event:Event) -> Event? {
-        return nil
+        return nil //TODO: Check for passive abiliies that would trigger etc..
+    }
+}
+
+extension RPEntity {
+
+    public func copy() -> RPEntity {
+        
+        let entity = RPEntity()
+        entity.baseStats = self.baseStats
+        entity.currentStats = self.currentStats
+        entity.body = self.body
+        entity.executableAbilities = self.executableAbilities
+        entity.passiveAbilities = self.passiveAbilities
+        entity.priorities = self.priorities
+        entity.buffs = self.buffs
+        
+        return entity
     }
 }
 

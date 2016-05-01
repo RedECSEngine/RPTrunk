@@ -8,7 +8,7 @@ extension Ability {
     public func getStats() -> RPStats {
         return components
             .flatMap { $0.getStats() }
-            .reduce(RPStats([:])) { $0 + $1 }
+            .reduce(RPStats([:]), combine: +)
     }
 }
 

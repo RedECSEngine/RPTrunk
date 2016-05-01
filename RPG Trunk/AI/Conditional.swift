@@ -41,5 +41,5 @@ public func checkConditionals(conditionals:[Conditional], entity: RPEntity) -> B
         }
         return failures
     }
-    return result.count == 0;
+    return result.count == 0
 }
