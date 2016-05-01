@@ -9,7 +9,7 @@ import RPGTrunkDemo
 While it is certainly possible (and maybe even desirable) to manually build up and execute all your own events, the Battle object is intended to make life easier by faciliating a few common RPG needs such as:
 
 1. A time system
-2. Event queueing and execution with before and after callbacks
+2. RPEvent queueing and execution with before and after callbacks
 3. References to all entities participating in combat
 4. AI thought faciliation
 

@@ -3,20 +3,21 @@ public class RPCache {
     
     private enum CacheError:ErrorType {
         case NotFound
+        case InvalidFormat(String)
     }
     
     public private(set) static var abilities: [String:Ability] = [:]
-    public private(set) static var buffs: [String:Buff] = [:]
+    public private(set) static var buffs: [String:RPStatusEffect] = [:]
     public private(set) static var entities: [String:RPEntity] = [:]
 
     public static func load(data:[String:AnyObject]) {
 
-        if let abilities = data["abilities"] as? [String:AnyObject] {
-            RPCache.loadAbilities(abilities)
-        }
-
         if let buffs = data["buffs"] as? [String:AnyObject] {
             RPCache.loadBuffs(buffs)
+        }
+        
+        if let abilities = data["abilities"] as? [String:AnyObject] {
+            try! RPCache.loadAbilities(abilities)
         }
 
         if let entities = data["entities"] as? [String:AnyObject] {
@@ -25,16 +26,19 @@ public class RPCache {
 
     }
 
-    public static func loadAbilities(abilities:[String:AnyObject]) {
+    public static func loadAbilities(abilities:[String:AnyObject]) throws {
 
-        abilities.forEach {
+        try abilities.forEach {
             (name, data) in
             
-            if let stats = data["stats"] as? [String: RPValue] {
-                let component = StatsComponent(stats)
-                let ability = BasicAbility(name:name, components:[component], targetType: .SingleEnemy)
-                RPCache.abilities[name] = ability
+            guard let dict = data as? [String: AnyObject] else {
+                throw CacheError.InvalidFormat("Ability should be defined with a dictionary")
             }
+            
+            let components: [Component] = try dict.flatMap(RPCache.buildComponent)
+            
+            let ability = BasicAbility(name:name, components:components)
+            RPCache.abilities[name] = ability
             
             print("Loaded ability:", name)
         }
@@ -48,7 +52,7 @@ public class RPCache {
             if let stats = data["stats"] as? [String: RPValue] {
                 let duration: Int? = data["duration"] as? Int
                 let charges: Int? = data["charges"] as? Int
-                let buff = Buff(name: name, components: [StatsComponent(stats)], duration: duration, charges: charges)
+                let buff = RPStatusEffect(name: name, components: [StatsComponent(stats)], duration: duration, charges: charges)
                 RPCache.buffs[name] = buff
             }
             
@@ -76,15 +80,34 @@ public class RPCache {
                     
                         entity.executableAbilities.append(ability)
                     }
-                    if let buff = RPCache.buffs[name] {
-                        
-                        entity.executableAbilities.append(buff)
-                    }
-                    
                 }
             }
             
             print("Loaded entity:", name)
+        }
+    }
+    
+    public static func buildComponent(_ component:(String, AnyObject)) throws -> [Component] {
+        
+        let (key, val) = component
+        switch key {
+        case "stats":
+            guard let stats = val as? [String:RPValue] else {
+                throw CacheError.InvalidFormat("stats should be in format of [Key:Value]")
+            }
+            return [StatsComponent(stats)]
+        case "components":
+            guard let components = val as? [String] else {
+                throw CacheError.InvalidFormat("components should be in format of [String]")
+            }
+            return try components.map { try RPCache.getComponent($0) }
+        case "target":
+            guard let t = val as? String, let type = EventTargetType(rawValue: t) else {
+                throw CacheError.InvalidFormat("invalid target type provided")
+            }
+            return [TargetingComponent(targetType: type)]
+        default:
+            return []
         }
     }
     
@@ -94,6 +117,12 @@ public class RPCache {
             
             return ability
         }
+        
+        throw RPCache.CacheError.NotFound
+    }
+    
+    public static func getComponent(name: String) throws -> Component {
+        
         if let buff = RPCache.buffs[name] {
             
             return buff

@@ -23,16 +23,10 @@
 - Ability cooldowns
 - Costs for abilities
     - getAvailableAbilities() call with any conditions/limitations considered
-- Modifiable target type
 - Passive abilities with conditions that execute on events
 
 ## Component
-- Targeting modifiers
 - Stat multiplication modifiers
-
-## Stats
-- Magics
-  - affinities/resistances
 
 ## Battle
 - Allies / Enemies

@@ -45,18 +45,22 @@ public protocol StatsContainer {
     var stats:RPStats {get}
 }
 
-public enum EventTargetType:Int {
-    case Oneself = 1
-    case All
-    case Random
-    case AllFriendly
-    case AllEnemy
-    case GroupFriendly
-    case GroupEnemy
-    case SingleFriendly
-    case SingleEnemy
-    case RandomFriendly
-    case RandomEnemy
+public enum EventTargetType:String {
+    
+    //In use
+    case Oneself = "self"
+    case SingleEnemy = "enemy"
+    
+    //Currently unused
+    case All = "all"
+    case Random = "random"
+    case AllFriendly = "allFriendlies"
+    case AllEnemy = "allEnemies"
+    case GroupFriendly = "someFriendlies"
+    case GroupEnemy = "someEnemies"
+    case SingleFriendly = "ally"
+    case RandomFriendly = "randomFriendly"
+    case RandomEnemy = "randomEnemy"
 }
 
 infix operator |> { precedence 50 associativity left }

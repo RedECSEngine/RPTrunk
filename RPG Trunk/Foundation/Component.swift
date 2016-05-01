@@ -1,7 +1,7 @@
 
 public protocol Component {
     func getStats() -> RPStats?
-    func getEvent(initiator:RPEntity, targets:[RPEntity]) -> Event?
+    func getTargetType() -> EventTargetType?
 }
 
 public struct StatsComponent: Component {
@@ -17,8 +17,20 @@ public struct StatsComponent: Component {
         return stats
     }
     
-    public func getEvent(initiator:RPEntity, targets:[RPEntity]) -> Event? {
+    public func getTargetType() -> EventTargetType? {
         return nil
     }
 }
 
+public struct TargetingComponent: Component {
+    
+    public let targetType:EventTargetType
+    
+    public func getTargetType() -> EventTargetType? {
+        return targetType
+    }
+
+    public func getStats() -> RPStats? {
+        return nil
+    }
+}

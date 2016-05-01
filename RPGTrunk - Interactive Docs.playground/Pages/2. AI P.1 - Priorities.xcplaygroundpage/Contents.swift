@@ -29,9 +29,9 @@ entity1.target = entity2
 
 //: Now let's try again
 nextEvent = entity1.think()
-nextEvent // returns Event
+nextEvent // returns RPEvent
 
-//: We've gotten an Event back this time, so let's execute it!
+//: We've gotten an RPEvent back this time, so let's execute it!
 let event = Event(initiator: entity1, targets:[entity2], ability:attack)
 performEvent(event)
 //: We see that Entity2 has lost 3 hit points

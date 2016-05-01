@@ -4,8 +4,6 @@ public struct RPStats: SequenceType {
     public typealias Generator = DictionaryGenerator<String, RPValue>
     
     private let values:[String:RPValue]
-    //let affinities = Magics()
-    //let resistances = Magics()
     
     public init(_ data:[String:RPValue], asPartial:Bool = false) {
         var stats:[String:RPValue] = [:]
@@ -13,6 +11,10 @@ public struct RPStats: SequenceType {
             stats[type] = data[type] ?? (asPartial ? nil : 0) //either set it, initialize to 0 or set as nil, if asP
         }
         values = stats
+    }
+    
+    public init() {
+        values = [:]
     }
     
     public subscript(index:String) -> RPValue {

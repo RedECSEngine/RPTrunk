@@ -10,17 +10,17 @@ public class RPBattle {
     
     public init() { }
     
-    public func tick() -> [(Event, [ConflictResult])] {
+    public func tick() -> [(RPEvent, [RPConflictResult])] {
         
         return entities
             .flatMap { $0.tick() }
             |> performEvents
     }
     
-    private func performEvents(events:[Event]) -> [(Event, [ConflictResult])] {
+    private func performEvents(events:[RPEvent]) -> [(RPEvent, [RPConflictResult])] {
         
         return events
-            .flatMap { event -> [Event] in
+            .flatMap { event -> [RPEvent] in
                 let pre = self.entities.flatMap { $0.eventWillOccur(event) }
                 let during = [event]
                 let post = self.entities.flatMap { $0.eventDidOccur(event) }

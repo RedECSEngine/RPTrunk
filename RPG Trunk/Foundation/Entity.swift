@@ -8,7 +8,7 @@ public class RPEntity: StatsContainer {
     public var executableAbilities:[Ability] = []
     public var passiveAbilities:[Ability] = []
     public var priorities:[Priority] = []
-    public var buffs:[AppliedBuff] = []
+    public var buffs:[RPAppliedStatusEffect] = []
     
     public weak var target:RPEntity?
     
@@ -67,14 +67,14 @@ public class RPEntity: StatsContainer {
     }
     
     
-    //MARK: - Event/Battle handling
+    //MARK: - RPEvent/Battle handling
     
-    public func tick() -> [Event] {
+    public func tick() -> [RPEvent] {
         
-        var abilityEvents = [Event]()
+        var abilityEvents = [RPEvent]()
         for priority in self.priorities where priority.evaluate(self) {
-            if let target = self.target {
-                abilityEvents.append(Event(initiator: self, targets: [target], ability: priority.ability))
+            if let _ = self.target {
+                abilityEvents.append(RPEvent(initiator: self, ability: priority.ability))
                 break
             }
         }
@@ -85,16 +85,16 @@ public class RPEntity: StatsContainer {
             return !buff.isExpired
         }
         
-        let buffEvents = buffs.map { Event(initiator:self, targets: [self], ability: $0.ability) }
+        let buffEvents = buffs.map { RPEvent(initiator:self, ability: $0.ability) }
         
         return abilityEvents + buffEvents
     }
     
-    func eventWillOccur(event:Event) -> Event? {
+    func eventWillOccur(event: RPEvent) -> RPEvent? {
         return nil //TODO: Check for passive abilities that would trigger based on this event
     }
 
-    func eventDidOccur(event:Event) -> Event? {
+    func eventDidOccur(event: RPEvent) -> RPEvent? {
         return nil //TODO: Check for passive abiliies that would trigger etc..
     }
 }
