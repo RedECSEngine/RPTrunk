@@ -1,5 +1,5 @@
 
-public class Body {
+public struct Body {
     let weapons:[Weapon] = []
     let equipment:[Armor] = []
     let storage = Storage()
@@ -49,7 +49,7 @@ public class RPEntity: StatsContainer {
         for type in RPGameEnvironment.statTypes {
             cs[type] = newStats[type] < maxStats[type] ? newStats[type] : nil
         }
-        currentStats = RPStats(cs)
+        currentStats = RPStats(cs, asPartial: true)
     }
     
     // Stored on the entity for reuse
@@ -79,15 +79,25 @@ public class RPEntity: StatsContainer {
         return entity
     }
     
-    public func think() -> Event? {
-        for priority in self.priorities {
-            if priority.evaluate(self) {
-                if let target = self.target {
-                    return Event(initiator: self, targets: [target], ability: priority.ability)
-                }
+    public func tick() -> [Event] {
+        
+        var abilityEvents = [Event]()
+        for priority in self.priorities where priority.evaluate(self) {
+            if let target = self.target {
+                abilityEvents.append(Event(initiator: self, targets: [target], ability: priority.ability))
+                break
             }
         }
-        return nil
+        
+        buffs = buffs.filter {
+            buff in
+            buff.tick()
+            return !buff.isExpired
+        }
+        
+        let buffEvents = buffs.map { Event(initiator:self, targets: [self], ability: $0.ability) }
+        
+        return abilityEvents + buffEvents
     }
     
     func eventWillOccur(event:Event) -> Event? {

@@ -15,7 +15,7 @@ public struct Armor: Wearable {
     public var name = "Unititled Armor"
     public var component:Component?
     public var stats:RPStats {
-        return component?.stats ?? RPStats([:])
+        return component?.getStats() ?? RPStats([:])
     }
 }
 
@@ -23,7 +23,7 @@ public struct Weapon: Wearable {
     public var name = "Unititled Weapon"
     public var component:Component?
     public var stats:RPStats {
-        return component?.stats ?? RPStats([:])
+        return component?.getStats() ?? RPStats([:])
     }
 }
 

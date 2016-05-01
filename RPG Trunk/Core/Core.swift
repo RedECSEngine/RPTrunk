@@ -45,8 +45,6 @@ public protocol StatsContainer {
     var stats:RPStats {get}
 }
 
-
-
 public enum EventTargetType:Int {
     case Oneself = 1
     case All

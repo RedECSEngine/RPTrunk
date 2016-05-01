@@ -10,23 +10,33 @@
 ## Entity
 - Meta dictionary
 - Buffs/Debuffs
-  - decay on tick
   - decay on event (being attacked)
-- MP costs for abilities
-    - getAvailableAbilities() call with any conditions/limitations considered
 - Experience and leveling up
 - Position
     - attack/cast radius
+- Misses, Crits, Dodges, Blocks - Or only some of them? //modifiers on existing structures?
+
+## Ability
+- Multistrike /multi-event type abilities
+  - e.g. Punch, punch, kick
+- Abilities w/ area of effects
+- Ability cooldowns
+- Costs for abilities
+    - getAvailableAbilities() call with any conditions/limitations considered
+- Modifiable target type
+- Passive abilities with conditions that execute on events
+
+## Component
+- Targeting modifiers
+- Stat multiplication modifiers
 
 ## Stats
 - Magics
   - affinities/resistances
+
+## Battle
+- Allies / Enemies
  
 ## Other todos
-- Multistrike /multi-event type abilities
-  - e.g. Punch, punch, kick
 - Printable entities/contents
-- Misses, Crits, Dodges, Blocks - Or only some of them? //modifiers on existing structures?
-- Abilities w/ area of effects
-- Preloading from and access from dictionaries
- 
+- Action intervals i.e. # of ticks before entity can perform an event again

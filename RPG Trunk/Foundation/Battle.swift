@@ -1,13 +1,19 @@
+public struct RPTeam {
+    let entities:[RPEntity]
+}
 
 public class RPBattle {
     
     public var entities:[RPEntity] = []
     
+    public var teams = [RPTeam]()
+    
     public init() { }
     
     public func tick() -> [(Event, [ConflictResult])] {
         
-        return entities.flatMap { $0.think() }
+        return entities
+            .flatMap { $0.tick() }
             |> performEvents
     }
     
@@ -20,6 +26,6 @@ public class RPBattle {
                 let post = self.entities.flatMap { $0.eventDidOccur(event) }
                 return pre + during + post
             }
-            .map { ($0, performEvent($0)) }
+            .map { ($0, $0.execute()) }
     }
 }

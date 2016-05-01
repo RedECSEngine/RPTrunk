@@ -1,19 +1,19 @@
+public protocol Ability {
 
-public struct Ability: StatsContainer {
-    public var name:String
-    public var components:[Component]
-    public var targetType:EventTargetType = .Oneself  // RPGEventTargetType
+    var name:String { get }
+    var components:[Component] { get }
+}
 
-    public init(name:String, components:[Component]) {
-        self.name = name
-        self.components = components
-    }
-    
-    public var stats:RPStats {
-        return self.components.reduce(RPStats([:]), combine:combineComponentStatsToTotal)
+extension Ability {
+    public func getStats() -> RPStats {
+        return components
+            .flatMap { $0.getStats() }
+            .reduce(RPStats([:])) { $0 + $1 }
     }
 }
 
-public func combineComponentStatsToTotal(total:RPStats, component:Component) -> RPStats {
-    return total + component.stats
+public struct BasicAbility: Ability {
+    public var name:String
+    public var components:[Component]
+    public var targetType:EventTargetType = .Oneself  // RPGEventTargetType
 }
