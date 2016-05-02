@@ -22,6 +22,10 @@ public struct RPStatusEffect: Component {
     public func getTargetType() -> EventTargetType? {
         return nil
     }
+    
+    public func getCost() -> RPStats? {
+        return nil
+    }
 }
 
 public class RPAppliedStatusEffect {

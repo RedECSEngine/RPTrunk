@@ -55,6 +55,15 @@ public class RPEntity: StatsContainer {
         currentStats = RPStats(cs, asPartial: true)
     }
     
+    public func usableAbilities () -> [Ability] {
+        
+        return executableAbilities.filter {
+            let stats = self.allCurrentStats()
+            let cost = $0.cost
+            
+            return self.allCurrentStats() >= $0.cost
+        }
+    }
     
     //MARK: - Initialization
     

@@ -2,8 +2,8 @@
 //: [Previous](@previous)
 import Foundation
 import XCPlayground
-import RPGTrunk
-import RPGTrunkDemo
+import RPTrunk
+import RPTrunkDemo
 /*:
  # The *AI* object
  
@@ -14,14 +14,14 @@ import RPGTrunkDemo
 let entity1 = RPEntity(["hp": 50])
 let entity2 = RPEntity(["hp": 50])
 
-let dmgComponent = Component(["damage": 5])
+let dmgComponent = StatsComponent(["damage": 5])
 
 //: ##### Our basic attack
-let attack = Ability(["components": [dmgComponent]])
+let attack = BasicAbility(name:"Attack", components: [dmgComponent])
 let attackPriority = Priority(ability: attack, conditionals: nil)
 
 //: ##### The Finishing Blow
-let finishingBlow = Ability(["components": [dmgComponent, dmgComponent, dmgComponent]]) // triple damage
+let finishingBlow = BasicAbility(name:"Finishing Blow", components: [dmgComponent, dmgComponent, dmgComponent]) // triple damage
 
 //: Only execute this attack when targat below 20% hp
 let lowHPCondition = Conditional("target.hp% < 20")

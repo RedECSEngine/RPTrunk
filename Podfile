@@ -5,19 +5,19 @@ def testing_pods
     pod 'Nimble', '~> 3.2.0'
 end
 
-target 'RPGTrunk' do
+target 'RPTrunk' do
 
 end
 
-target 'RPG TrunkTests' do
+target 'RPTrunkTests' do
   testing_pods
 end
 
-target 'RPGTrunkDemo' do
+target 'RPTrunkDemo' do
 
 end
 
-target 'RPGTrunkDemoTests' do
+target 'RPTrunkDemoTests' do
 
 end
 

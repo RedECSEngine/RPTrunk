@@ -41,18 +41,39 @@ public struct RPStats: SequenceType {
     }
 }
 
+extension RPStats: Comparable {}
+
+public func == (a:RPStats, b:RPStats) -> Bool {
+    for type in RPGameEnvironment.statTypes where a[type] != b[type] {
+        return false
+    }
+    return true
+}
+
+public func < (a:RPStats, b:RPStats) -> Bool {
+    
+    for (type, value) in b.values where a[type] < value {
+        return true
+    }
+    
+    return false
+}
+
+
+//MARK: Other math functions
+
 public func + (a:RPStats, b:RPStats) -> RPStats {
     var dict:[String:RPValue] = [:]
-    for type in RPGameEnvironment.statTypes {
-        dict[type] = a[type] + b[type]
+    for (type, val) in b.values {
+        dict[type] = a[type] + val
     }
     return RPStats(dict)
 }
 
 public func - (a:RPStats, b:RPStats) -> RPStats {
     var dict:[String:RPValue] = [:]
-    for type in RPGameEnvironment.statTypes {
-        dict[type] = a[type] - b[type]
+    for (type, val) in b.values {
+        dict[type] = a[type] - val
     }
     return RPStats(dict)
 }

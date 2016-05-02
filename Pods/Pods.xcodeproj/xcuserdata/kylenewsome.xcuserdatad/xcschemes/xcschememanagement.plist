@@ -9,7 +9,7 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>Pods-RPG TrunkTests.xcscheme</key>
+		<key>Pods-RPTrunkTests.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
@@ -22,12 +22,12 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>4474D31279D79EF089902B9FFC55F25B</key>
+		<key>33BB55EDF780AF27E1EF61F8E94F9EF0</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>CC4BD6F63445F935A39ED95AC4F40174</key>
+		<key>5BFF1BBF90B73DFDCAE84780B915F4E1</key>
 		<dict>
 			<key>primary</key>
 			<true/>

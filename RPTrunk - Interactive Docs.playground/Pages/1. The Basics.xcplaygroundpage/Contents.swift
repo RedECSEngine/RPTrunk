@@ -1,7 +1,7 @@
 import Foundation
 import XCPlayground
-import RPGTrunk
-import RPGTrunkDemo
+import RPTrunk
+import RPTrunkDemo
 
 //: # A basic Entity conflict
 /*:
@@ -11,24 +11,25 @@ To demonstrate a basic conflict, first we start by creating two entities with so
 let entity1 = RPEntity(["hp": 50])
 let entity2 = RPEntity(["hp": 50])
 
-
-/*: 
+/*:
 Next, we need to create an ability that an entity can execute.
 Creating an ability starts by first creating a Generic component with properties
 
 In this example we'll make a component with some damage
 */
-let dmgComponent = Component(["damage": 3])
+let dmgComponent = StatsComponent(["damage": 3])
 //: Now we can create our ability with the damage component. An ability is always made up of one or more components
-let attack = Ability(["components": [dmgComponent]])
+let attack = BasicAbility(name:"Attack", components:[dmgComponent])
+entity1.target = entity2
 
 /*: 
 ### 2. Create an event and perform it
 
 That's all the groundwork necessary for the set up .Now we just need to create an event that combines our entities and ability into a conflict
 */
-let event = Event(initiator: entity1, targets:[entity2], ability:attack)
-performEvent(event)
+let event = RPEvent(initiator: entity1, ability:attack)
+let results = event.execute()
+results.forEach { print($0) }
 //: We see that Entity2 has lost 3 hit points
 entity1["hp"]
 entity2["hp"]

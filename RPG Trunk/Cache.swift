@@ -10,18 +10,18 @@ public class RPCache {
     public private(set) static var buffs: [String:RPStatusEffect] = [:]
     public private(set) static var entities: [String:RPEntity] = [:]
 
-    public static func load(data:[String:AnyObject]) {
+    public static func load(data:[String:AnyObject]) throws {
 
         if let buffs = data["buffs"] as? [String:AnyObject] {
-            RPCache.loadBuffs(buffs)
+            try RPCache.loadBuffs(buffs)
         }
         
         if let abilities = data["abilities"] as? [String:AnyObject] {
-            try! RPCache.loadAbilities(abilities)
+            try RPCache.loadAbilities(abilities)
         }
 
         if let entities = data["entities"] as? [String:AnyObject] {
-            RPCache.loadEntities(entities)
+            try RPCache.loadEntities(entities)
         }
 
     }
@@ -44,14 +44,18 @@ public class RPCache {
         }
     }
 
-    public static func loadBuffs(buffs:[String:AnyObject]) {
+    public static func loadBuffs(buffs:[String:AnyObject]) throws {
 
-        buffs.forEach {
+        try buffs.forEach {
             (name, data) in
             
-            if let stats = data["stats"] as? [String: RPValue] {
-                let duration: Int? = data["duration"] as? Int
-                let charges: Int? = data["charges"] as? Int
+            guard let dict = data as? [String: AnyObject] else {
+                throw CacheError.InvalidFormat("Buff should be defined with a dictionary")
+            }
+            
+            if let stats = dict["stats"] as? [String: RPValue] {
+                let duration: Int? = dict["duration"] as? Int
+                let charges: Int? = dict["charges"] as? Int
                 let buff = RPStatusEffect(name: name, components: [StatsComponent(stats)], duration: duration, charges: charges)
                 RPCache.buffs[name] = buff
             }
@@ -60,19 +64,19 @@ public class RPCache {
         }
     }
 
-    public static func loadEntities(entities:[String:AnyObject]) {
+    public static func loadEntities(entities:[String:AnyObject]) throws {
 
-        entities.forEach {
+        try entities.forEach {
             (name, data) in
             
-            guard let stats = data["stats"] as? [String: RPValue] else {
-                return
+            guard let dict = data as? [String: AnyObject], let stats = dict["stats"] as? [String:RPValue] else {
+                throw CacheError.InvalidFormat("Entities should be defined with a dictionary that includes stats")
             }
             
             let entity = RPEntity(stats)
             RPCache.entities[name] = entity
             
-            if let abilities = data["abilities"] as? [String] {
+            if let abilities = dict["abilities"] as? [String] {
                 abilities.forEach {
                     name in
                     
@@ -87,7 +91,7 @@ public class RPCache {
         }
     }
     
-    public static func buildComponent(_ component:(String, AnyObject)) throws -> [Component] {
+    public static func buildComponent(component:(String, AnyObject)) throws -> [Component] {
         
         let (key, val) = component
         switch key {
@@ -96,6 +100,11 @@ public class RPCache {
                 throw CacheError.InvalidFormat("stats should be in format of [Key:Value]")
             }
             return [StatsComponent(stats)]
+        case "cost":
+            guard let cost = val as? [String:RPValue] else {
+                throw CacheError.InvalidFormat("cost should be in format of [Key:Value]")
+            }
+            return [CostComponent(cost)]
         case "components":
             guard let components = val as? [String] else {
                 throw CacheError.InvalidFormat("components should be in format of [String]")

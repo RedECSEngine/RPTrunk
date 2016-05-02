@@ -1,8 +1,8 @@
 //: [Previous](@previous)
 import Foundation
 import XCPlayground
-import RPGTrunk
-import RPGTrunkDemo
+import RPTrunk
+import RPTrunkDemo
 /*:
 # The *Battle* object
 
@@ -19,8 +19,8 @@ While it is certainly possible (and maybe even desirable) to manually build up a
 let entity1 = RPEntity(["hp": 50])
 let entity2 = RPEntity(["hp": 50])
 
-let dmgComponent = Component(["damage": 3])
-let attack = Ability(["components": [dmgComponent]])
+let dmgComponent = StatsComponent(["damage": 3])
+let attack = BasicAbility(name:"Attack", components: [dmgComponent])
 let attackPriority = Priority(ability: attack, conditionals: nil)
 entity1.priorities.append(attackPriority)
 entity1.target = entity2

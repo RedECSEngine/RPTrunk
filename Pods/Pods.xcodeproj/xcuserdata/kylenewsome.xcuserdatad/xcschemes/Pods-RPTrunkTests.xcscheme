@@ -14,10 +14,10 @@
             buildForArchiving = "YES">
             <BuildableReference
                BuildableIdentifier = 'primary'
-               BlueprintIdentifier = '48E5FC5DA92894C078409DEE'
-               BlueprintName = 'Pods-RPG TrunkTests'
+               BlueprintIdentifier = 'F9D37C47F9A67DFB2A3D87DC'
+               BlueprintName = 'Pods-RPTrunkTests'
                ReferencedContainer = 'container:Pods.xcodeproj'
-               BuildableName = 'Pods_RPG_TrunkTests.framework'>
+               BuildableName = 'Pods_RPTrunkTests.framework'>
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>

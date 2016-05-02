@@ -24,7 +24,7 @@ public struct RPEvent {
     }
     
     func getStats() -> RPStats {
-        return ability.getStats()
+        return ability.stats
     }
     
     func applyBuffs() {

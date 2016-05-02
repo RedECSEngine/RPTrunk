@@ -8,7 +8,7 @@
 
 import XCTest
 import Nimble
-@testable import RPGTrunk
+@testable import RPTrunk
 
 class Interpreter_spec: XCTestCase {
     let entity = RPEntity(["hp": 40])
@@ -25,16 +25,11 @@ class Interpreter_spec: XCTestCase {
         super.tearDown()
     }
     
-    func test_getTarget_shouldReturnTheEntityTarget() {
-        let result = getTarget(entity)
-        expect(result == PropertyResultType.Entity(entity: self.enemy)).to(beTrue())
-    }
-    
     func test_entityParsing() {
-        let result = entity.parse(ArraySlice(["hp"]))
+        let result = parse(entity.parser, ArraySlice(["hp"]))
         expect(result).to(equal(40))
         
-        let result2 = entity.parse(ArraySlice(["target", "hp"]))
+        let result2 = parse(entity.parser, ArraySlice(["target", "hp"]))
         expect(result2).to(equal(20))
     }
     

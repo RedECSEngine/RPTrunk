@@ -84,10 +84,10 @@ strip_invalid_archs() {
 
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
-  install_framework "Pods-RPG TrunkTests/Nimble.framework"
-  install_framework "Pods-RPG TrunkTests/Quick.framework"
+  install_framework "Pods-RPTrunkTests/Nimble.framework"
+  install_framework "Pods-RPTrunkTests/Quick.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
-  install_framework "Pods-RPG TrunkTests/Nimble.framework"
-  install_framework "Pods-RPG TrunkTests/Quick.framework"
+  install_framework "Pods-RPTrunkTests/Nimble.framework"
+  install_framework "Pods-RPTrunkTests/Quick.framework"
 fi
