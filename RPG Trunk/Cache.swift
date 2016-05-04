@@ -7,20 +7,20 @@ public class RPCache {
     }
     
     public private(set) static var abilities: [String:Ability] = [:]
-    public private(set) static var buffs: [String:RPStatusEffect] = [:]
+    public private(set) static var statusEffects: [String:RPStatusEffect] = [:]
     public private(set) static var entities: [String:RPEntity] = [:]
 
     public static func load(data:[String:AnyObject]) throws {
 
-        if let buffs = data["buffs"] as? [String:AnyObject] {
-            try RPCache.loadBuffs(buffs)
+        if let se = data["Status Effects"] as? [String:AnyObject] {
+            try RPCache.loadStatusEffects(se)
         }
         
-        if let abilities = data["abilities"] as? [String:AnyObject] {
+        if let abilities = data["Abilities"] as? [String:AnyObject] {
             try RPCache.loadAbilities(abilities)
         }
 
-        if let entities = data["entities"] as? [String:AnyObject] {
+        if let entities = data["Entities"] as? [String:AnyObject] {
             try RPCache.loadEntities(entities)
         }
 
@@ -44,23 +44,23 @@ public class RPCache {
         }
     }
 
-    public static func loadBuffs(buffs:[String:AnyObject]) throws {
+    public static func loadStatusEffects(statusEffects:[String:AnyObject]) throws {
 
-        try buffs.forEach {
+        try statusEffects.forEach {
             (name, data) in
             
             guard let dict = data as? [String: AnyObject] else {
-                throw CacheError.InvalidFormat("Buff should be defined with a dictionary")
+                throw CacheError.InvalidFormat("Status effect should be defined with a dictionary")
             }
             
             if let stats = dict["stats"] as? [String: RPValue] {
                 let duration: Int? = dict["duration"] as? Int
                 let charges: Int? = dict["charges"] as? Int
-                let buff = RPStatusEffect(name: name, components: [StatsComponent(stats)], duration: duration, charges: charges)
-                RPCache.buffs[name] = buff
+                let se = RPStatusEffect(name: name, components: [StatsComponent(stats)], duration: duration, charges: charges)
+                RPCache.statusEffects[name] = se
             }
             
-            print("Loaded buff:", name)
+            print("Loaded status effect:", name)
         }
     }
 
@@ -73,7 +73,9 @@ public class RPCache {
                 throw CacheError.InvalidFormat("Entities should be defined with a dictionary that includes stats")
             }
             
-            let entity = RPEntity(stats)
+            let entity = RPEntity.new()
+            entity.baseStats = entity.baseStats + RPStats(stats)
+            
             RPCache.entities[name] = entity
             
             if let abilities = dict["abilities"] as? [String] {
@@ -114,7 +116,7 @@ public class RPCache {
             guard let t = val as? String, let type = EventTargetType(rawValue: t) else {
                 throw CacheError.InvalidFormat("invalid target type provided")
             }
-            return [TargetingComponent(targetType: type)]
+            return [TargetingComponent(type)]
         default:
             return []
         }
@@ -132,9 +134,9 @@ public class RPCache {
     
     public static func getComponent(name: String) throws -> Component {
         
-        if let buff = RPCache.buffs[name] {
+        if let se = RPCache.statusEffects[name] {
             
-            return buff
+            return se
         }
         
         throw RPCache.CacheError.NotFound

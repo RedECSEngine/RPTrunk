@@ -10,6 +10,12 @@ public struct DefaultGame: RPGameDelegate {
         "defense"
     ]
     
+    public var entityDefaults:RPEntity  {
+        return RPEntity()
+    }
+    
+    public var abilityDefaults = [Component]()
+    
     public func resolveConflict (target: RPStats, b: RPStats) -> RPStats {
         //hp result - part 1 - damage hits against hp, with defense as reduction
         var hpResult = 0 // + _b.affinities.healing

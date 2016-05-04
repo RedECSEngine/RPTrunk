@@ -41,7 +41,7 @@ public class RPAppliedStatusEffect {
     
     public init(_ se: RPStatusEffect) {
         statusEffect = se
-        let components:[Component] = se.components + [TargetingComponent(targetType:.Oneself)]
+        let components:[Component] = se.components + [TargetingComponent(.Oneself)]
         ability = BasicAbility(name: se.name, components: components)
     }
     

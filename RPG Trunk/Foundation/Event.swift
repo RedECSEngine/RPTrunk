@@ -6,13 +6,15 @@ public struct RPEvent {
     let ability:Ability
     
     public var targets: [RPEntity] {
-        //TODO: Iterate over components and potentially modify target selection (i.e 'All' component)
         
+        //TODO: Iterate over components and potentially modify target selection (i.e 'All' component)
         switch ability.targetType {
         case .Oneself:
             return [initiator]
         case .SingleEnemy:
             return initiator.target != nil ? [initiator.target!] : []
+        case .All:
+            return initiator.targets
         default:
             return []
         }
@@ -30,14 +32,14 @@ public struct RPEvent {
     func applyBuffs() {
         
         if let a = ability as? RPStatusEffect {
-            targets.forEach { $0.buffs.append(RPAppliedStatusEffect(a)) }
+            targets.forEach { $0.statusEffects.append(RPAppliedStatusEffect(a)) }
         } else {
             ability.components
                 .flatMap { $0 as? RPStatusEffect
             }
                 .forEach {
                     buff in
-                    targets.forEach { $0.buffs.append(RPAppliedStatusEffect(buff)) }
+                    targets.forEach { $0.statusEffects.append(RPAppliedStatusEffect(buff)) }
                 }
         }
     }

@@ -8,9 +8,21 @@ public class RPEntity: StatsContainer {
     public var executableAbilities:[Ability] = []
     public var passiveAbilities:[Ability] = []
     public var priorities:[Priority] = []
-    public var buffs:[RPAppliedStatusEffect] = []
+    public var statusEffects:[RPAppliedStatusEffect] = []
     
-    public weak var target:RPEntity?
+    public var targets:[RPEntity] = []
+    public var target:RPEntity? {
+        get {
+            return targets.first
+        }
+        set {
+            if let v = newValue {
+                targets = [v]
+                return
+            }
+            targets = []
+        }
+    }
     
     public weak var data:AnyObject?
     
@@ -25,10 +37,10 @@ public class RPEntity: StatsContainer {
     public var stats:RPStats {
         var totalStats = self.baseStats
         for weapon in self.body.weapons {
-            totalStats = totalStats + weapon.stats;
+            totalStats = totalStats + weapon.stats
         }
         for equip in self.body.equipment {
-            totalStats = totalStats + equip.stats;
+            totalStats = totalStats + equip.stats
         }
         return totalStats
     }
@@ -65,7 +77,12 @@ public class RPEntity: StatsContainer {
         }
     }
     
+    
     //MARK: - Initialization
+    
+    public static func new() -> RPEntity {
+        return RPGameEnvironment.current.delegate.entityDefaults.copy()
+    }
     
     public init(_ data:[String:RPValue]) {
         self.baseStats = RPStats(data)
@@ -78,23 +95,25 @@ public class RPEntity: StatsContainer {
     
     //MARK: - RPEvent/Battle handling
     
-    public func tick() -> [RPEvent] {
+    public func executeTickAndGetNewEvents() -> [RPEvent] {
         
+        // Get any events that should execute based on priorities
         var abilityEvents = [RPEvent]()
         for priority in self.priorities where priority.evaluate(self) {
-            if let _ = self.target {
+            if let _ = target {
                 abilityEvents.append(RPEvent(initiator: self, ability: priority.ability))
                 break
             }
         }
         
-        buffs = buffs.filter {
-            buff in
-            buff.tick()
-            return !buff.isExpired
+        // Next calculate new events that should occur from status effects
+        statusEffects = statusEffects.filter {
+            se in
+            se.tick()
+            return !se.isExpired
         }
         
-        let buffEvents = buffs.map { RPEvent(initiator:self, ability: $0.ability) }
+        let buffEvents = statusEffects.map { RPEvent(initiator:self, ability: $0.ability) }
         
         return abilityEvents + buffEvents
     }
@@ -119,8 +138,7 @@ extension RPEntity {
         entity.executableAbilities = self.executableAbilities
         entity.passiveAbilities = self.passiveAbilities
         entity.priorities = self.priorities
-        entity.buffs = self.buffs
-        
+        entity.statusEffects = self.statusEffects
         return entity
     }
 }
@@ -137,4 +155,3 @@ extension RPEntity: CustomStringConvertible {
     }
     
 }
-

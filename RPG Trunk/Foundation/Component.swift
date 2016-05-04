@@ -53,6 +53,10 @@ public struct TargetingComponent: Component {
     
     public let targetType:EventTargetType
     
+    public init(_ targetType:EventTargetType) {
+        self.targetType = targetType
+    }
+    
     public func getTargetType() -> EventTargetType? {
         return targetType
     }

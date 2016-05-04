@@ -37,8 +37,11 @@ public struct BasicAbility: Ability {
     public var name:String
     public var components:[Component]
     
-    public init(name:String,components:[Component]) {
+    public init(name:String,components:[Component], shouldUseDefaults:Bool = true) {
         self.name = name
         self.components = components
+        if shouldUseDefaults {
+            self.components += RPGameEnvironment.current.delegate.abilityDefaults
+        }
     }
 }

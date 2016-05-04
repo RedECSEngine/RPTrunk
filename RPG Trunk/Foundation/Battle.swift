@@ -2,22 +2,33 @@ public struct RPTeam {
     let entities:[RPEntity]
 }
 
-public class RPBattle {
+public typealias EventResult = (RPEvent, [RPConflictResult])
+
+public class RPBattle: RPEntity {
     
     public var entities:[RPEntity] = []
     
+    override public var targets: [RPEntity] {
+        get {
+            return entities
+        }
+        set {
+            print("[RPTrunk--Warn]: Trying to set the targets of \(String(RPBattle)). Use self.entities for setter access (targets == entities)")
+        }
+    }
+    
     public var teams = [RPTeam]()
     
-    public init() { }
-    
-    public func tick() -> [(RPEvent, [RPConflictResult])] {
+    public func tick() -> [EventResult] {
         
+        let battleEvents = executeTickAndGetNewEvents()
         return entities
-            .flatMap { $0.tick() }
+            .flatMap { $0.executeTickAndGetNewEvents() }
+            .reduce(battleEvents, combine: +)
             |> performEvents
     }
     
-    private func performEvents(events:[RPEvent]) -> [(RPEvent, [RPConflictResult])] {
+    private func performEvents(events:[RPEvent]) -> [EventResult] {
         
         return events
             .flatMap { event -> [RPEvent] in
