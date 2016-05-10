@@ -1,3 +1,4 @@
+
 public protocol Ability {
 
     var name:String { get }
@@ -17,19 +18,11 @@ extension Ability {
     }
     
     public var stats: RPStats {
-        return components
-            .flatMap { $0.getStats() }
-            .reduce(RPStats([:]), combine: +)
+        return combineComponentStats(components)
     }
     
     public var cost:RPStats {
-        return self.components.reduce(RPStats()) {
-            prev, current in
-            guard let c = current.getCost() else {
-                return prev
-            }
-            return prev + c
-        }
+        return combineComponentCosts(components)
     }
 }
 

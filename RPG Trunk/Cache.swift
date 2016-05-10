@@ -56,7 +56,7 @@ public class RPCache {
             if let stats = dict["stats"] as? [String: RPValue] {
                 let duration: Int? = dict["duration"] as? Int
                 let charges: Int? = dict["charges"] as? Int
-                let se = RPStatusEffect(name: name, components: [StatsComponent(stats)], duration: duration, charges: charges)
+                let se = RPStatusEffect(name: name, components: [BasicComponent(stats:RPStats(stats))], duration: duration, charges: charges)
                 RPCache.statusEffects[name] = se
             }
             
@@ -75,6 +75,7 @@ public class RPCache {
             
             let entity = RPEntity.new()
             entity.baseStats = entity.baseStats + RPStats(stats)
+            entity.currentStats = entity.currentStats + RPStats(stats)
             
             RPCache.entities[name] = entity
             
@@ -101,12 +102,12 @@ public class RPCache {
             guard let stats = val as? [String:RPValue] else {
                 throw CacheError.InvalidFormat("stats should be in format of [Key:Value]")
             }
-            return [StatsComponent(stats)]
+            return [BasicComponent(stats:RPStats(stats))]
         case "cost":
             guard let cost = val as? [String:RPValue] else {
                 throw CacheError.InvalidFormat("cost should be in format of [Key:Value]")
             }
-            return [CostComponent(cost)]
+            return [BasicComponent(cost:RPStats(cost))]
         case "components":
             guard let components = val as? [String] else {
                 throw CacheError.InvalidFormat("components should be in format of [String]")
@@ -116,7 +117,7 @@ public class RPCache {
             guard let t = val as? String, let type = EventTargetType(rawValue: t) else {
                 throw CacheError.InvalidFormat("invalid target type provided")
             }
-            return [TargetingComponent(type)]
+            return [BasicComponent(targetType:type)]
         default:
             return []
         }

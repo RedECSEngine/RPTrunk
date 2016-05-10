@@ -1,71 +1,78 @@
 
 public protocol Component {
+    
     func getStats() -> RPStats?
-    func getTargetType() -> EventTargetType?
     func getCost() -> RPStats?
+    func getRequirements() -> RPStats?
+    func getTargetType() -> EventTargetType?
 }
 
-public struct StatsComponent: Component, StatsContainer {
-    public let stats:RPStats
-    public init(_ data:[String:RPValue]) {
-        self.stats = RPStats(data)
-    }
-    public init( _ stats:RPStats) {
+func combineComponentStats(components:[Component]) -> RPStats {
+    
+    return components
+        .flatMap { $0.getStats() }
+        .reduce(RPStats([:]), combine: +)
+}
+
+func combineComponentCosts(components:[Component]) -> RPStats {
+    
+    return components
+        .flatMap { $0.getCost() }
+        .reduce(RPStats([:]), combine: +)
+}
+
+func combineComponentRequirements(components:[Component]) -> RPStats {
+    
+    return components
+        .flatMap { $0.getRequirements() }
+        .reduce(RPStats([:]), combine: +)
+}
+
+public struct BasicComponent: Component {
+
+    public let stats:RPStats?
+    public let cost:RPStats?
+    public let requirements:RPStats?
+    public let targetType:EventTargetType?
+    
+    public init(stats:RPStats?, cost:RPStats?, requirements:RPStats?, targetType:EventTargetType?) {
+        
         self.stats = stats
-    }
-    
-    public func getStats() -> RPStats? {
-        return stats
-    }
-    
-    public func getTargetType() -> EventTargetType? {
-        return nil
-    }
-    
-    public func getCost() -> RPStats? {
-        return nil
-    }
-}
-
-public struct CostComponent: Component, StatsContainer {
-    public let stats:RPStats
-    public init(_ data:[String:RPValue]) {
-        self.stats = RPStats(data, asPartial: true)
-    }
-    public init( _ stats:RPStats) {
-        self.stats = stats
-    }
-    
-    public func getStats() -> RPStats? {
-        return nil
-    }
-    
-    public func getTargetType() -> EventTargetType? {
-        return nil
-    }
-    
-    public func getCost() -> RPStats? {
-        return stats
-    }
-}
-
-public struct TargetingComponent: Component {
-    
-    public let targetType:EventTargetType
-    
-    public init(_ targetType:EventTargetType) {
+        self.cost = cost
+        self.requirements = requirements
         self.targetType = targetType
     }
     
-    public func getTargetType() -> EventTargetType? {
-        return targetType
-    }
-
-    public func getStats() -> RPStats? {
-        return nil
+    public init(stats:RPStats?) {
+        self.stats = stats
+        self.cost = nil
+        self.requirements = nil
+        self.targetType = nil
     }
     
-    public func getCost() -> RPStats? {
-        return nil
+    public init(cost:RPStats?) {
+        self.stats = nil
+        self.cost = cost
+        self.requirements = nil
+        self.targetType = nil
     }
+    
+    public init(requirements:RPStats?) {
+        self.stats = nil
+        self.cost = nil
+        self.requirements = requirements
+        self.targetType = nil
+    }
+    
+    public init(targetType:EventTargetType?) {
+        self.stats = nil
+        self.cost = nil
+        self.requirements = nil
+        self.targetType = targetType
+    }
+    
+    public func getStats() -> RPStats? { return stats }
+    public func getCost() -> RPStats? { return cost }
+    public func getRequirements() -> RPStats? { return requirements }
+    public func getTargetType() -> EventTargetType? { return targetType }
 }
