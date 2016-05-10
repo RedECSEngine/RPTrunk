@@ -9,12 +9,7 @@ public protocol Ability {
 extension Ability {
     
     public var targetType:EventTargetType {
-        for component in components {
-            if let t = component.getTargetType() {
-                return t
-            }
-        }
-        return .SingleEnemy
+        return combineComponentTargetTypes(components)
     }
     
     public var stats: RPStats {

@@ -28,6 +28,16 @@ func combineComponentRequirements(components:[Component]) -> RPStats {
         .reduce(RPStats([:]), combine: +)
 }
 
+func combineComponentTargetTypes(components:[Component]) -> EventTargetType {
+
+    for component in components {
+        if let t = component.getTargetType() {
+            return t
+        }
+    }
+    return .SingleEnemy
+}
+
 public struct BasicComponent: Component {
 
     public let stats:RPStats?
@@ -69,6 +79,14 @@ public struct BasicComponent: Component {
         self.cost = nil
         self.requirements = nil
         self.targetType = targetType
+    }
+    
+    public init(fromComponents:[Component]) {
+        
+        self.stats = combineComponentStats(fromComponents)
+        self.cost = combineComponentCosts(fromComponents)
+        self.requirements = combineComponentRequirements(fromComponents)
+        self.targetType = combineComponentTargetTypes(fromComponents)
     }
     
     public func getStats() -> RPStats? { return stats }
