@@ -2,8 +2,8 @@
 public typealias RPConflictResult = (entity:RPEntity, change:RPStats)
 
 public struct RPEvent {
-    let initiator:RPEntity
-    let ability:Ability
+    public let initiator:RPEntity
+    public let ability:Ability
     
     public var targets: [RPEntity] {
         
@@ -29,6 +29,10 @@ public struct RPEvent {
         return ability.stats
     }
     
+    func getCost() -> RPStats {
+        return ability.cost * -1
+    }
+    
     func applyBuffs() {
         
         if let a = ability as? RPStatusEffect {
@@ -52,7 +56,8 @@ public struct RPEvent {
             let result = RPGameEnvironment.current.delegate.resolveConflict(target.stats, b: totalStats)
             return (target, result)
         }
-        return results
+        let costResult = RPGameEnvironment.current.delegate.resolveConflict(initiator.stats, b: getCost())
+        return results + [(initiator, costResult)]
     }
     
     func applyResults(results:[RPConflictResult]){

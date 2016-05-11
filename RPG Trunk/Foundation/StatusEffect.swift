@@ -46,7 +46,7 @@ public class RPAppliedStatusEffect {
     public init(_ se: RPStatusEffect) {
         statusEffect = se
         let components:[Component] = se.components + [BasicComponent(targetType: .Oneself)]
-        ability = BasicAbility(name: se.name, components: components)
+        ability = CostlessAbility(name: se.name, components: components)
     }
     
     func tick() {

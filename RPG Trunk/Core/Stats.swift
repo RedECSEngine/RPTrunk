@@ -89,3 +89,19 @@ public func - (a:RPStats, b:RPStats) -> RPStats {
     }
     return RPStats(dict)
 }
+
+public func * (a:RPStats, b:RPStats) -> RPStats {
+    var dict:[String:RPValue] = [:]
+    for (type, val) in b.values {
+        dict[type] = a[type] * val
+    }
+    return RPStats(dict)
+}
+
+public func * (a:RPStats, amount: Int) -> RPStats {
+    var dict:[String:RPValue] = [:]
+    for (type, val) in a.values {
+        dict[type] = a[type] * amount
+    }
+    return RPStats(dict)
+}

@@ -11,21 +11,21 @@ func combineComponentStats(components:[Component]) -> RPStats {
     
     return components
         .flatMap { $0.getStats() }
-        .reduce(RPStats([:]), combine: +)
+        .reduce(RPStats(), combine: +)
 }
 
 func combineComponentCosts(components:[Component]) -> RPStats {
     
     return components
         .flatMap { $0.getCost() }
-        .reduce(RPStats([:]), combine: +)
+        .reduce(RPStats(), combine: +)
 }
 
 func combineComponentRequirements(components:[Component]) -> RPStats {
     
     return components
         .flatMap { $0.getRequirements() }
-        .reduce(RPStats([:]), combine: +)
+        .reduce(RPStats(), combine: +)
 }
 
 func combineComponentTargetTypes(components:[Component]) -> EventTargetType {
