@@ -3,6 +3,8 @@ public protocol RPGameDelegate {
 
     // instance managers
     var statTypes:[String] { get }
+    var entityDefaults:RPEntity { get }
+    var abilityDefaults:[Component] { get }
     
     func resolveConflict (target: RPStats, b: RPStats) -> RPStats
 }
@@ -50,9 +52,9 @@ public enum EventTargetType:String {
     //In use
     case Oneself = "self"
     case SingleEnemy = "enemy"
+    case All = "all"
     
     //Currently unused
-    case All = "all"
     case Random = "random"
     case AllFriendly = "allFriendlies"
     case AllEnemy = "allEnemies"

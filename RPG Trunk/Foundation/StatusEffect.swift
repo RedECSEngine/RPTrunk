@@ -26,6 +26,10 @@ public struct RPStatusEffect: Component {
     public func getCost() -> RPStats? {
         return nil
     }
+    
+    public func getRequirements() -> RPStats? {
+        return nil
+    }
 }
 
 public class RPAppliedStatusEffect {
@@ -41,8 +45,8 @@ public class RPAppliedStatusEffect {
     
     public init(_ se: RPStatusEffect) {
         statusEffect = se
-        let components:[Component] = se.components + [TargetingComponent(targetType:.Oneself)]
-        ability = BasicAbility(name: se.name, components: components)
+        let components:[Component] = se.components + [BasicComponent(targetType: .Oneself)]
+        ability = CostlessAbility(name: se.name, components: components)
     }
     
     func tick() {

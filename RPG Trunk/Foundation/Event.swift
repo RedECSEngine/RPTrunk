@@ -2,17 +2,19 @@
 public typealias RPConflictResult = (entity:RPEntity, change:RPStats)
 
 public struct RPEvent {
-    let initiator:RPEntity
-    let ability:Ability
+    public let initiator:RPEntity
+    public let ability:Ability
     
     public var targets: [RPEntity] {
-        //TODO: Iterate over components and potentially modify target selection (i.e 'All' component)
         
+        //TODO: Iterate over components and potentially modify target selection (i.e 'All' component)
         switch ability.targetType {
         case .Oneself:
             return [initiator]
         case .SingleEnemy:
             return initiator.target != nil ? [initiator.target!] : []
+        case .All:
+            return initiator.targets
         default:
             return []
         }
@@ -27,17 +29,21 @@ public struct RPEvent {
         return ability.stats
     }
     
+    func getCost() -> RPStats {
+        return ability.cost * -1
+    }
+    
     func applyBuffs() {
         
         if let a = ability as? RPStatusEffect {
-            targets.forEach { $0.buffs.append(RPAppliedStatusEffect(a)) }
+            targets.forEach { $0.statusEffects.append(RPAppliedStatusEffect(a)) }
         } else {
             ability.components
                 .flatMap { $0 as? RPStatusEffect
             }
                 .forEach {
                     buff in
-                    targets.forEach { $0.buffs.append(RPAppliedStatusEffect(buff)) }
+                    targets.forEach { $0.statusEffects.append(RPAppliedStatusEffect(buff)) }
                 }
         }
     }
@@ -50,7 +56,8 @@ public struct RPEvent {
             let result = RPGameEnvironment.current.delegate.resolveConflict(target.stats, b: totalStats)
             return (target, result)
         }
-        return results
+        let costResult = RPGameEnvironment.current.delegate.resolveConflict(initiator.stats, b: getCost())
+        return results + [(initiator, costResult)]
     }
     
     func applyResults(results:[RPConflictResult]){

@@ -41,6 +41,18 @@ public struct RPStats: SequenceType {
     }
 }
 
+extension RPStats: DictionaryLiteralConvertible {
+    
+    public init(dictionaryLiteral elements: (String, RPValue)...) {
+        values = elements.reduce([:]) {
+            prev, current in
+            var new = prev
+            new[current.0] = current.1
+            return new
+        }
+    }
+}
+
 extension RPStats: Comparable {}
 
 public func == (a:RPStats, b:RPStats) -> Bool {
@@ -74,6 +86,22 @@ public func - (a:RPStats, b:RPStats) -> RPStats {
     var dict:[String:RPValue] = [:]
     for (type, val) in b.values {
         dict[type] = a[type] - val
+    }
+    return RPStats(dict)
+}
+
+public func * (a:RPStats, b:RPStats) -> RPStats {
+    var dict:[String:RPValue] = [:]
+    for (type, val) in b.values {
+        dict[type] = a[type] * val
+    }
+    return RPStats(dict)
+}
+
+public func * (a:RPStats, amount: Int) -> RPStats {
+    var dict:[String:RPValue] = [:]
+    for (type, val) in a.values {
+        dict[type] = a[type] * amount
     }
     return RPStats(dict)
 }
