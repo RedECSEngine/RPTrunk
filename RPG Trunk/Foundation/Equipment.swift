@@ -3,7 +3,7 @@ public protocol Storable {
     var name:String { get }
 }
 
-public protocol Wearable: Storable, StatsContainer {
+public protocol Wearable: Storable {
     var component:Component? { get }
 }
 
@@ -14,16 +14,16 @@ public struct Item: Storable {
 public struct Armor: Wearable {
     public let name = "Unititled Armor"
     public let component:Component?
-    public var stats:RPStats {
-        return component?.getStats() ?? RPStats([:])
+    public var stats: Stats {
+        return component?.getStats() ?? Stats([:])
     }
 }
 
 public struct Weapon: Wearable {
     public let name = "Unititled Weapon"
     public let component:Component?
-    public var stats:RPStats {
-        return component?.getStats() ?? RPStats([:])
+    public var stats: Stats {
+        return component?.getStats() ?? Stats([:])
     }
 }
 

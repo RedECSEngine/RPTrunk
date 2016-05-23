@@ -8,8 +8,8 @@ import RPTrunkDemo
 ### 1. Build up your entities and ablities
 To demonstrate a basic conflict, first we start by creating two entities with some initial hit points..
 */
-let entity1 = RPEntity(["hp": 50])
-let entity2 = RPEntity(["hp": 50])
+let entity1 = Entity(["hp": 50])
+let entity2 = Entity(["hp": 50])
 
 /*:
 Next, we need to create an ability that an entity can execute.
@@ -27,7 +27,7 @@ entity1.target = entity2
 
 That's all the groundwork necessary for the set up .Now we just need to create an event that combines our entities and ability into a conflict
 */
-let event = RPEvent(initiator: entity1, ability:attack)
+let event = Event(initiator: entity1, ability:attack)
 let results = event.execute()
 results.forEach { print($0) }
 //: We see that Entity2 has lost 3 hit points

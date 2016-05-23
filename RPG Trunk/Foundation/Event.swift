@@ -1,11 +1,19 @@
 
-public typealias RPConflictResult = (entity:RPEntity, change:RPStats)
+public struct EventResult {
+    public let event:Event
+    public let effects:[ConflictResult]
+    
+    init(_ event:Event, _ effects:[ConflictResult]) {
+        self.event = event
+        self.effects = effects
+    }
+}
 
-public struct RPEvent {
-    public let initiator:RPEntity
+public struct Event {
+    unowned public let initiator: Entity
     public let ability:Ability
     
-    public var targets: [RPEntity] {
+    public var targets: [Entity] {
         
         //TODO: Iterate over components and potentially modify target selection (i.e 'All' component)
         switch ability.targetType {
@@ -20,57 +28,57 @@ public struct RPEvent {
         }
     }
     
-    public init(initiator:RPEntity, ability:Ability) {
+    public init(initiator: Entity, ability:Ability) {
         self.initiator = initiator
         self.ability = ability
     }
     
-    func getStats() -> RPStats {
+    func getStats() -> Stats {
         return ability.stats
     }
     
-    func getCost() -> RPStats {
+    func getCost() -> Stats {
         return ability.cost * -1
     }
     
-    func applyBuffs() {
+    func applyStatusEffectChanges() {
         
-        if let a = ability as? RPStatusEffect {
-            targets.forEach { $0.statusEffects.append(RPAppliedStatusEffect(a)) }
-        } else {
-            ability.components
-                .flatMap { $0 as? RPStatusEffect
+        ability.dischargedStatusEffects
+            .forEach {
+                name in
+                targets.forEach { $0.dischargeStatusEffect(name) }
             }
-                .forEach {
-                    buff in
-                    targets.forEach { $0.statusEffects.append(RPAppliedStatusEffect(buff)) }
-                }
+        
+        ability.statusEffects
+            .forEach {
+                se in
+                targets.forEach { $0.applyStatusEffect(se) }
         }
     }
     
     //MARK: - Results calculation and application
     
-    public func getResults() -> [RPConflictResult] {
+    public func getResults() -> [ConflictResult] {
         let totalStats = getStats()
-        let results = targets.map { (target) -> RPConflictResult in
+        let results = targets.map { (target) -> ConflictResult in
             let result = RPGameEnvironment.current.delegate.resolveConflict(target.stats, b: totalStats)
-            return (target, result)
+            return ConflictResult(target, result)
         }
         let costResult = RPGameEnvironment.current.delegate.resolveConflict(initiator.stats, b: getCost())
-        return results + [(initiator, costResult)]
+        return results + [ConflictResult(initiator, costResult)]
     }
     
-    func applyResults(results:[RPConflictResult]){
+    func applyResults(results:[ConflictResult]){
         results.forEach { (result) -> () in
             result.entity.setCurrentStats(result.entity.allCurrentStats() + result.change)
         }
-        applyBuffs()
+        applyStatusEffectChanges()
     }
     
-    public func execute() -> [RPConflictResult] {
+    public func execute() -> EventResult {
         let results = getResults()
         applyResults(results)
-        return results
+        return EventResult(self, results)
     }
     
 }

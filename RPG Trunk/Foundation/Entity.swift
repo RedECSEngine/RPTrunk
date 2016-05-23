@@ -1,17 +1,19 @@
 
-public class RPEntity: StatsContainer {
+public class Entity: Temporal {
     
-    public var baseStats = RPStats([:])
-    public var currentStats = RPStats([:], asPartial: true) //when a current is nil, it means it's at max
+    public var currentTick: Double = 0
+    public var maximumTick: Double = 0
     
+    public var baseStats: Stats = [:]
+    public var currentStats: Stats = [:] //when a value is nil, for a given key, it means it's at max
     public var body = Body()
-    public var executableAbilities:[Ability] = []
-    public var passiveAbilities:[Ability] = []
-    public var priorities:[Priority] = []
-    public var statusEffects:[RPAppliedStatusEffect] = []
     
-    public var targets:[RPEntity] = []
-    public var target:RPEntity? {
+    public private(set) var executableAbilities:[ActiveAbility] = []
+    public private(set) var passiveAbilities:[ActiveAbility] = []
+    public private(set) var statusEffects:[ActiveStatusEffect] = []
+    
+    public var targets:[Entity] = []
+    public var target: Entity? {
         get {
             return targets.first
         }
@@ -28,13 +30,17 @@ public class RPEntity: StatsContainer {
     
     // Stored on the entity for reuse
     public lazy var parser:Parser<String, PropertyResultType> = {
-        return valueParser() <|> entityTargetParser(self) <|> entityStatParser(self)
+        return boolParser()
+            <|> valueParser()
+            <|> entityTargetParser(self)
+            <|> entityStatusParser(self)
+            <|> entityStatParser(self)
     }()
     
     
     //MARK: - Computed properties
     
-    public var stats:RPStats {
+    public var stats: Stats {
         var totalStats = self.baseStats
         for weapon in self.body.weapons {
             totalStats = totalStats + weapon.stats
@@ -49,101 +55,176 @@ public class RPEntity: StatsContainer {
         return currentStats.get(index) ?? stats[index]
     }
     
-    public func allCurrentStats() -> RPStats {
+    public func allCurrentStats() -> Stats {
         var cs:[String:RPValue] = [:]
         let maxStats = stats
         for type in RPGameEnvironment.statTypes {
             cs[type] = currentStats.get(type) ?? maxStats[type]
         }
-        return RPStats(cs)
+        return Stats(cs)
     }
     
-    public func setCurrentStats(newStats:RPStats) {
+    public func setCurrentStats(newStats: Stats) {
         var cs:[String:RPValue] = [:]
         let maxStats = stats
         for type in RPGameEnvironment.statTypes {
             cs[type] = newStats[type] < maxStats[type] ? newStats[type] : nil
         }
-        currentStats = RPStats(cs, asPartial: true)
+        currentStats = Stats(cs, asPartial: true)
     }
     
     public func usableAbilities () -> [Ability] {
         
-        return executableAbilities.filter {
-            let stats = self.allCurrentStats()
-            let cost = $0.cost
+        guard !isCoolingDown() else {
+            return []
+        }
+        
+        return executableAbilities.flatMap {
+            activeAbility in
             
-            return self.allCurrentStats() >= $0.cost
+            if self.allCurrentStats() >= activeAbility.ability.cost {
+                return activeAbility.ability
+            }
+            return nil
         }
     }
     
     
     //MARK: - Initialization
     
-    public static func new() -> RPEntity {
+    public static func new() -> Entity {
         return RPGameEnvironment.current.delegate.entityDefaults.copy()
     }
     
     public init(_ data:[String:RPValue]) {
-        self.baseStats = RPStats(data)
+        self.baseStats = Stats(data)
     }
     
     public convenience init() {
         self.init([:])
     }
     
+    deinit {
+        print("Entity dealloc", self)
+    }
+    
+    
+    //MARK: Abilities
+    
+    public func addExecutableAbility(ability:Ability, conditional:Conditional) {
+        let activeAbility = ActiveAbility(ability, conditional)
+        activeAbility.entity = self
+        executableAbilities.append(activeAbility)
+    }
+    
+    public func addPassiveAbility(ability:Ability, conditional:Conditional) {
+        let activeAbility = ActiveAbility(ability, conditional)
+        activeAbility.entity = self
+        passiveAbilities.append(activeAbility)
+    }
+    
+    public func applyStatusEffect(se:StatusEffect) {
+        
+        if let existing = statusEffects.find({ $0.name == se.identity.name }) {
+            
+            //TODO: Handle stackability of status effects rather than just resetting
+            existing.resetCooldown()
+        } else {
+        
+            statusEffects.append(ActiveStatusEffect(se))
+        }
+        
+    }
+    
+    public func dischargeStatusEffect(label:String) {
+        statusEffects
+            .filter { $0.labels.contains(label) }
+            .forEach { $0.expendCharge() }
+        statusEffects = statusEffects.filter { $0.isCoolingDown() }
+    }
     
     //MARK: - RPEvent/Battle handling
     
-    public func executeTickAndGetNewEvents() -> [RPEvent] {
+    public func tick(moment:Moment) -> [Event] {
+        
+        if currentTick < maximumTick {
+            currentTick += moment.delta
+        }
+        
+        // Next calculate new events that should occur from status effects
+        let newMoment = moment.addSibling(self)
+        let buffEvents = statusEffects.flatMap { $0.tick(newMoment) }
+        
+        statusEffects = statusEffects.filter { $0.isCoolingDown() }
+        
+        guard !isCoolingDown() && canPerformEvents() else {
+            return buffEvents
+        }
         
         // Get any events that should execute based on priorities
-        var abilityEvents = [RPEvent]()
-        for priority in self.priorities where priority.evaluate(self) {
+        var abilityEvents = [Event]()
+        for activeAbility in executableAbilities where activeAbility.canExecute() {
+            
             if let _ = target {
-                abilityEvents.append(RPEvent(initiator: self, ability: priority.ability))
+                abilityEvents += activeAbility.getEvents()
+                resetCooldown()
                 break
             }
         }
         
-        // Next calculate new events that should occur from status effects
-        statusEffects = statusEffects.filter {
-            se in
-            se.tick()
-            return !se.isExpired
-        }
-        
-        let buffEvents = statusEffects.map { RPEvent(initiator:self, ability: $0.ability) }
-        
         return abilityEvents + buffEvents
     }
     
-    func eventWillOccur(event: RPEvent) -> RPEvent? {
-        return nil //TODO: Check for passive abilities that would trigger based on this event
+    public func resetCooldown() {
+        currentTick = 0
+    }
+    
+    func eventWillOccur(event: Event) -> [Event] {
+        return [] //TODO: Check for passive abilities that would trigger based on this event
     }
 
-    func eventDidOccur(event: RPEvent) -> RPEvent? {
-        return nil //TODO: Check for passive abiliies that would trigger etc..
+    func eventDidOccur(event: Event) -> [Event] {
+        var abilityEvents = [Event]()
+        
+        for activeAbility in passiveAbilities where activeAbility.canExecute() {
+            abilityEvents += activeAbility.getEvents()
+            break
+        }
+        return abilityEvents
+    }
+    
+    //Querying
+    
+    func canPerformEvents() -> Bool {
+        
+        for se in statusEffects where se.shouldDisableEntity() {
+            return false
+        }
+        return true
+    }
+    
+    func hasStatus(name:String) -> Bool {
+        return statusEffects.find({ $0.name == name }) != nil
     }
 }
 
-extension RPEntity {
+extension Entity {
 
-    public func copy() -> RPEntity {
+    public func copy() -> Entity {
         
-        let entity = RPEntity()
+        let entity = Entity()
+        entity.maximumTick = self.maximumTick
         entity.baseStats = self.baseStats
         entity.currentStats = self.currentStats
         entity.body = self.body
-        entity.executableAbilities = self.executableAbilities
-        entity.passiveAbilities = self.passiveAbilities
-        entity.priorities = self.priorities
+        entity.executableAbilities = self.executableAbilities.map { $0.copyForEntity(entity) }
+        entity.passiveAbilities = self.passiveAbilities.map { $0.copyForEntity(entity) }
         entity.statusEffects = self.statusEffects
         return entity
     }
 }
 
-extension RPEntity: CustomStringConvertible {
+extension Entity: CustomStringConvertible {
     
     public var description:String {
         var o:[String:String] = [:]

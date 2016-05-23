@@ -11,8 +11,8 @@ import RPTrunkDemo
  */
 
 //: Let's start by recreating the foundation from our basic AI example
-let entity1 = RPEntity(["hp": 50])
-let entity2 = RPEntity(["hp": 50])
+let entity1 = Entity(["hp": 50])
+let entity2 = Entity(["hp": 50])
 
 let dmgComponent = StatsComponent(["damage": 5])
 

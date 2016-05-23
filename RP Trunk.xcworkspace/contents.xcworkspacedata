@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:RPTrunk - Interactive Docs.playground">
+   </FileRef>
+   <FileRef
       location = "group:RP Trunk.xcodeproj">
    </FileRef>
    <FileRef

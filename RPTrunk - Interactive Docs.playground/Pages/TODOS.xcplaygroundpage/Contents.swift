@@ -8,7 +8,6 @@
  
 # Other todos
 - Buffs/Debuffs
- - decay on tick
  - decay on event (being attacked)
 - Multistrike /multi-event type abilities
  - e.g. Punch, punch, kick

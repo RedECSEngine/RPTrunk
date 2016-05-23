@@ -1,69 +1,100 @@
 
-public struct RPStatusEffect: Component {
+public struct StatusEffect: Component {
     
-    public let name:String
-    public let components:[Component]
+    public let identity:Identity
     
     //both duration and charge can be used or one or the other
-    var duration:Int? //the duration in AP
-    var charges:Int? //the number of charges left
+    let duration:Double? //the duration in AP
+    let charges:Int? //the number of charges left
+    let impairsAction:Bool
+    let ability:Ability?
     
-    public init(name:String, components:[Component], duration:Int?, charges:Int?) {
-        self.name = name
-        self.components = components
+    public init(identity:Identity, components:[Component], duration:Double?, charges:Int?, impairsAction:Bool = false) {
+        self.identity = identity
         self.duration = duration
         self.charges = charges
+        self.impairsAction = impairsAction
+        
+        if components.count > 0 {
+        
+            let components:[Component] = components + [TargetType.Oneself]
+            ability = Ability(name: identity.name, components: components)
+        } else {
+            ability = nil
+        }
     }
     
-    public func getStats() -> RPStats? {
-        return nil //stats are only used when applied
-    }
-    
-    public func getTargetType() -> EventTargetType? {
-        return nil
-    }
-    
-    public func getCost() -> RPStats? {
-        return nil
-    }
-    
-    public func getRequirements() -> RPStats? {
-        return nil
+    public func getStatusEffects() -> [StatusEffect] {
+        return [self]
     }
 }
 
-public class RPAppliedStatusEffect {
+extension StatusEffect: Equatable {}
 
-    var currentTick:Int = 0
+public func ==(lhs:StatusEffect, rhs:StatusEffect) -> Bool {
+    return lhs.identity == rhs.identity
+        && lhs.ability == rhs.ability
+}
+
+public class ActiveStatusEffect: Temporal {
+
+    public var currentTick:Double = 0
+    public var maximumTick:Double { return statusEffect.duration ?? 0 }
+    
     var currentCharge:Int = 0
     
-    let ability:Ability
     var level:Int? // power level of the buff, if it is stackable
-    var isExpired = false
     
-    let statusEffect: RPStatusEffect
+    public weak var entity: Entity?
     
-    public init(_ se: RPStatusEffect) {
+    private let statusEffect: StatusEffect
+    
+    public var name:String { return statusEffect.identity.name }
+    public var labels:[String] { return statusEffect.identity.labels }
+    
+    public init(_ se: StatusEffect) {
         statusEffect = se
-        let components:[Component] = se.components + [BasicComponent(targetType: .Oneself)]
-        ability = CostlessAbility(name: se.name, components: components)
+        currentCharge = se.charges ?? 0
     }
     
-    func tick() {
+    public func shouldDisableEntity() -> Bool {
+        return statusEffect.impairsAction
+    }
+    
+    public func tick(moment:Moment) -> [Event] {
         
-        if let d = statusEffect.duration where d <= currentTick {
-            isExpired = true
+        guard isCoolingDown() else {
+            return []
+        }
+        
+        currentTick += moment.delta
+        
+        if let entity = moment.parents.last as? Entity,
+            let ability = statusEffect.ability {
+            return [Event(initiator:entity, ability: ability)]
+        }
+        
+        return []
+    }
+    
+    public func resetCooldown() {
+        currentTick = 0
+    }
+    
+    public func expendCharge() {
+    
+        currentCharge -= 1
+        if currentCharge <= 0 {
+            currentTick = maximumTick
             return
         }
-        currentTick += 1
     }
     
-    func expendCharge() {
-    
-        currentCharge += 1
-        if let c = statusEffect.charges where c <= currentCharge {
-            isExpired = true
-            return
+    public func isCoolingDown() -> Bool {
+        if statusEffect.duration != nil {
+            return currentTick < maximumTick
+        } else {
+            return currentCharge != 0
         }
     }
 }

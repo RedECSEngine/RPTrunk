@@ -16,8 +16,8 @@ While it is certainly possible (and maybe even desirable) to manually build up a
 */
 
 //: Let's start by recreating the foundation from our basic AI example
-let entity1 = RPEntity(["hp": 50])
-let entity2 = RPEntity(["hp": 50])
+let entity1 = Entity(["hp": 50])
+let entity2 = Entity(["hp": 50])
 
 let dmgComponent = StatsComponent(["damage": 3])
 let attack = BasicAbility(name:"Attack", components: [dmgComponent])

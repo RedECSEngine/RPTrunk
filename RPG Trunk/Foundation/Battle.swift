@@ -1,42 +1,46 @@
-public struct RPTeam {
-    let entities:[RPEntity]
+public struct Team {
+    let entities:[Entity]
 }
 
-public typealias EventResult = (RPEvent, [RPConflictResult])
-
-public class RPBattle: RPEntity {
+public class Battle: Entity {
     
-    public var entities:[RPEntity] = []
+    public var entities:[Entity] = []
     
-    override public var targets: [RPEntity] {
+    override public var targets: [Entity] {
         get {
             return entities
         }
         set {
-            print("[RPTrunk--Warn]: Trying to set the targets of \(String(RPBattle)). Use self.entities for setter access (targets == entities)")
+            print("[RPTrunk--Warn]: Trying to set the targets of \(String(Battle)). Use self.entities for setter access (targets == entities)")
         }
     }
     
-    public var teams = [RPTeam]()
+    public var teams = [Team]()
     
-    public func tick() -> [EventResult] {
+    public override func tick(moment:Moment) -> [Event] {
         
-        let battleEvents = executeTickAndGetNewEvents()
+        let battleEvents = super.tick(moment)
+        let newMoment = moment.addSibling(self)
         return entities
-            .flatMap { $0.executeTickAndGetNewEvents() }
+            .flatMap { $0.tick(newMoment) }
             .reduce(battleEvents, combine: +)
-            |> performEvents
     }
     
-    private func performEvents(events:[RPEvent]) -> [EventResult] {
+    public func newMoment() -> [EventResult] {
+    
+        let eventsToExecute = tick(Moment(delta: 1))
+        return performEvents(eventsToExecute)
+    }
+    
+    private func performEvents(events:[Event]) -> [EventResult] {
         
         return events
-            .flatMap { event -> [RPEvent] in
+            .flatMap { event -> [Event] in
                 let pre = self.entities.flatMap { $0.eventWillOccur(event) }
                 let during = [event]
                 let post = self.entities.flatMap { $0.eventDidOccur(event) }
                 return pre + during + post
             }
-            .map { ($0, $0.execute()) }
+            .map { $0.execute() }
     }
 }
