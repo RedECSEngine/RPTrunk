@@ -61,11 +61,10 @@ public struct Event {
     public func getResults() -> [ConflictResult] {
         let totalStats = getStats()
         let results = targets.map { (target) -> ConflictResult in
-            let result = RPGameEnvironment.current.delegate.resolveConflict(target.stats, b: totalStats)
-            return ConflictResult(target, result)
+            return RPGameEnvironment.current.delegate.resolveConflict(self, target:target, conflict: totalStats)
         }
-        let costResult = RPGameEnvironment.current.delegate.resolveConflict(initiator.stats, b: getCost())
-        return results + [ConflictResult(initiator, costResult)]
+        let costResult = RPGameEnvironment.current.delegate.resolveConflict(self, target:initiator, conflict: getCost())
+        return results + [costResult]
     }
     
     func applyResults(results:[ConflictResult]){

@@ -35,57 +35,68 @@ extension Component {
     }
 }
 
-func combineComponentStats(components:[Component]) -> Stats {
-    
-    return components
-        .flatMap { $0.getStats() }
-        .reduce(Stats(), combine: +)
+public protocol ComponentContainer {
+    var components:[Component] { get }
 }
 
-func combineComponentCosts(components:[Component]) -> Stats {
-    
-    return components
-        .flatMap { $0.getCost() }
-        .reduce(Stats(), combine: +)
-}
+extension ComponentContainer {
 
-func combineComponentRequirements(components:[Component]) -> Stats {
-    
-    return components
-        .flatMap { $0.getRequirements() }
-        .reduce(Stats(), combine: +)
-}
-
-func combineComponentTargetTypes(components:[Component]) -> TargetType {
-
-    for component in components {
-        if let t = component.getTargetType() {
-            return t
-        }
+    public var stats:Stats {
+        
+        return components
+            .flatMap { $0.getStats() }
+            .reduce(Stats(), combine: +)
     }
-    return .SingleEnemy
+
+    public var cost:Stats {
+        
+        return components
+            .flatMap { $0.getCost() }
+            .reduce(Stats(), combine: +)
+    }
+
+    public var requirements:Stats {
+        
+        return components
+            .flatMap { $0.getRequirements() }
+            .reduce(Stats(), combine: +)
+    }
+
+    public var targetType:TargetType {
+
+        for component in components {
+            if let t = component.getTargetType() {
+                return t
+            }
+        }
+        return .SingleEnemy
+    }
+
+    public var statusEffects: [StatusEffect] {
+        return components
+            .flatMap { $0.getStatusEffects() }
+    }
+
+    public var dischargedStatusEffects:[String] {
+        return components
+            .flatMap { $0.getDischargedStatusEffects() }
+    }
 }
 
-func combineComponentStatusEffects(components:[Component]) -> [StatusEffect] {
-    return components
-        .flatMap { $0.getStatusEffects() }
-}
-
-func combineComponentDischargedStatusEffects(components:[Component]) -> [String] {
-    return components
-        .flatMap { $0.getDischargedStatusEffects() }
-}
-
-func componentsAreEqual(a:[Component], _ b:[Component]) -> Bool {
-    return combineComponentStats(a) == combineComponentStats(b)
-        && combineComponentCosts(a) == combineComponentCosts(b)
-        && combineComponentRequirements(a) == combineComponentRequirements(b)
-        && combineComponentTargetTypes(a) == combineComponentTargetTypes(b)
-        && combineComponentStatusEffects(a) == combineComponentStatusEffects(b)
-        && combineComponentDischargedStatusEffects(a) == combineComponentDischargedStatusEffects(b)
+func ==(a:ComponentContainer, b:ComponentContainer) -> Bool {
+    return a.stats == b.stats
+        && a.cost == b.cost
+        && a.requirements == b.requirements
+        && a.targetType == b.targetType
+        && a.statusEffects == b.statusEffects
+        && a.dischargedStatusEffects == b.dischargedStatusEffects
  }
 
 public struct BasicComponent: Component {
+    
+    private struct IntermediaryContainer: ComponentContainer {
+        let components: [Component]
+    }
 
     public let stats: Stats?
     public let cost: Stats?
@@ -150,12 +161,14 @@ public struct BasicComponent: Component {
     
     public init(fromComponents:[Component]) {
         
-        self.stats = combineComponentStats(fromComponents)
-        self.cost = combineComponentCosts(fromComponents)
-        self.requirements = combineComponentRequirements(fromComponents)
-        self.targetType = combineComponentTargetTypes(fromComponents)
-        self.statusEffects = combineComponentStatusEffects(fromComponents)
-        self.dischargedStatusEffects = combineComponentDischargedStatusEffects(fromComponents)
+        let container = IntermediaryContainer(components:fromComponents)
+        
+        self.stats = container.stats
+        self.cost = container.cost
+        self.requirements = container.requirements
+        self.targetType = container.targetType
+        self.statusEffects = container.statusEffects
+        self.dischargedStatusEffects = container.dischargedStatusEffects
     }
     
     public func getStats() -> Stats? { return stats }

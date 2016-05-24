@@ -34,7 +34,7 @@
 		75EE2C3F1C386E8700BF8437 /* Stats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C3E1C386E8700BF8437 /* Stats.swift */; };
 		75EE2C411C386F1900BF8437 /* Equipment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C401C386F1900BF8437 /* Equipment.swift */; };
 		75EE2C431C38702A00BF8437 /* Component.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C421C38702A00BF8437 /* Component.swift */; };
-		75EE2C451C38722600BF8437 /* Abilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C441C38722600BF8437 /* Abilities.swift */; };
+		75EE2C451C38722600BF8437 /* Ability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C441C38722600BF8437 /* Ability.swift */; };
 		75EE2C471C3874F000BF8437 /* Entity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C461C3874F000BF8437 /* Entity.swift */; };
 		75EE2C491C38751A00BF8437 /* Battle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C481C38751A00BF8437 /* Battle.swift */; };
 		75EE2C4B1C387B4800BF8437 /* Conditional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C4A1C387B4800BF8437 /* Conditional.swift */; };
@@ -96,7 +96,7 @@
 		75EE2C3E1C386E8700BF8437 /* Stats.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stats.swift; sourceTree = "<group>"; };
 		75EE2C401C386F1900BF8437 /* Equipment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Equipment.swift; sourceTree = "<group>"; };
 		75EE2C421C38702A00BF8437 /* Component.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Component.swift; sourceTree = "<group>"; };
-		75EE2C441C38722600BF8437 /* Abilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Abilities.swift; sourceTree = "<group>"; };
+		75EE2C441C38722600BF8437 /* Ability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Ability.swift; sourceTree = "<group>"; };
 		75EE2C461C3874F000BF8437 /* Entity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Entity.swift; sourceTree = "<group>"; };
 		75EE2C481C38751A00BF8437 /* Battle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Battle.swift; sourceTree = "<group>"; };
 		75EE2C4A1C387B4800BF8437 /* Conditional.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Conditional.swift; sourceTree = "<group>"; };
@@ -173,7 +173,7 @@
 		75A05B961C3A13EF000E97B2 /* Foundation */ = {
 			isa = PBXGroup;
 			children = (
-				75EE2C441C38722600BF8437 /* Abilities.swift */,
+				75EE2C441C38722600BF8437 /* Ability.swift */,
 				75EE2C481C38751A00BF8437 /* Battle.swift */,
 				75EE2C421C38702A00BF8437 /* Component.swift */,
 				75B181CD1CEEA9EB004C51B0 /* ConflictResult.swift */,
@@ -539,7 +539,7 @@
 				7523B43C1C409000000C843B /* PropertyResultType.swift in Sources */,
 				75EE2C491C38751A00BF8437 /* Battle.swift in Sources */,
 				75B6AD2F1CF2AAF500D9A818 /* Identity.swift in Sources */,
-				75EE2C451C38722600BF8437 /* Abilities.swift in Sources */,
+				75EE2C451C38722600BF8437 /* Ability.swift in Sources */,
 				75B181D41CEEAA01004C51B0 /* GameEnvironment.swift in Sources */,
 				75B181CB1CEEA9C0004C51B0 /* Parser.swift in Sources */,
 				75B181CF1CEEA9EB004C51B0 /* ConflictResult.swift in Sources */,

@@ -1,30 +1,10 @@
 
-public struct Ability {
+public struct Ability: ComponentContainer {
 
     public var name:String
     public var components:[Component]
     public var cooldown:Double { return 0 }
     public var repeats:Int = 1
-    
-    public var targetType:TargetType {
-        return combineComponentTargetTypes(components)
-    }
-    
-    public var stats: Stats {
-        return combineComponentStats(components)
-    }
-    
-    public var cost: Stats {
-        return combineComponentCosts(components)
-    }
-    
-    public var statusEffects: [StatusEffect] {
-        return combineComponentStatusEffects(components)
-    }
-    
-    public var dischargedStatusEffects: [String] {
-        return combineComponentDischargedStatusEffects(components)
-    }
     
     public init(name:String, components:[Component] = [], shouldUseDefaults:Bool = true) {
         self.name = name
@@ -39,7 +19,7 @@ extension Ability:Equatable {}
 public func ==(lhs:Ability, rhs:Ability) -> Bool {
     return
         lhs.name == rhs.name
-    && componentsAreEqual(lhs.components,rhs.components)
+    && lhs as ComponentContainer == rhs as ComponentContainer
 }
 
 public class ActiveAbility: Temporal {
