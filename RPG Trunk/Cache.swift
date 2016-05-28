@@ -127,9 +127,10 @@ public class RPCache {
             }
             return try effects.map { try RPCache.getStatusEffect($0) }
         case "target":
-            guard let t = val as? String, let type = TargetType(rawValue: t) else {
+            guard let t = val as? String else {
                 throw CacheError.InvalidFormat("invalid target type provided")
             }
+            let type = TargetType.fromString(t)
             return [type]
         case "discharge":
             guard let r = val as? [String] else {

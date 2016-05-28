@@ -69,7 +69,7 @@ extension ComponentContainer {
                 return t
             }
         }
-        return .SingleEnemy
+        return .SingleEnemy(.Always)
     }
 
     public var statusEffects: [StatusEffect] {

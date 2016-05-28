@@ -17,7 +17,7 @@ public struct StatusEffect: Component {
         
         if components.count > 0 {
         
-            let components:[Component] = components + [TargetType.Oneself]
+            let components:[Component] = components + [TargetType.Oneself(.Always)]
             ability = Ability(name: identity.name, components: components)
         } else {
             ability = nil
