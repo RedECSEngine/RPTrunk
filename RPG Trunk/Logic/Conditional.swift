@@ -104,11 +104,19 @@ func interpretStringCondition(condition:String) throws -> Conditional.Predicate 
         condOperator = op
     }
     
+    let lhsEvaluators = parse(lhs)
+    let rhsEvaluators = parse(rhs)
+    
     return { (entity) -> Bool in
-        guard let lhsResult = parse(entity.parser, lhs), rhsResult = parse(entity.parser, rhs) else {
+        
+        let lhsResult = extractResult(entity, evaluators: lhsEvaluators)
+        let rhsResult = extractResult(entity, evaluators: rhsEvaluators)
+        
+        guard let l = lhsResult, r = rhsResult else {
             return false
         }
-        return condOperator.evaluate(lhsResult, rhsResult)
+        
+        return condOperator.evaluate(l, r)
     }
 }
 

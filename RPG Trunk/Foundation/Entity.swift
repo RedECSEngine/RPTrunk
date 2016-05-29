@@ -28,15 +28,6 @@ public class Entity: Temporal {
     
     public weak var data:AnyObject?
     
-    // Stored on the entity for reuse
-    public lazy var parser:Parser<String, PropertyResultType> = {
-        return boolParser()
-            <|> valueParser()
-            <|> entityTargetParser(self)
-            <|> entityStatusParser(self)
-            <|> entityStatParser(self)
-    }()
-    
     
     //MARK: - Computed properties
     

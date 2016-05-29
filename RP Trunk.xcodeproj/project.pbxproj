@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7523B43C1C409000000C843B /* PropertyResultType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7523B43B1C409000000C843B /* PropertyResultType.swift */; };
 		752EEF0D1CF1290F006B86AD /* StatusEffects_Spec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752EEF0C1CF1290F006B86AD /* StatusEffects_Spec.swift */; };
 		753D301C1CD6CF6A003D0013 /* Position.swift in Sources */ = {isa = PBXBuildFile; fileRef = 753D301A1CD6CF6A003D0013 /* Position.swift */; };
 		753D301D1CD6CF6A003D0013 /* StatusEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 753D301B1CD6CF6A003D0013 /* StatusEffect.swift */; };
@@ -27,7 +26,6 @@
 		75B181D41CEEAA01004C51B0 /* GameEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B181D21CEEAA01004C51B0 /* GameEnvironment.swift */; };
 		75B6AD1A1CF2802200D9A818 /* TargetType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B6AD191CF2802200D9A818 /* TargetType.swift */; };
 		75B6AD2F1CF2AAF500D9A818 /* Identity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B6AD2E1CF2AAF500D9A818 /* Identity.swift */; };
-		75CEEE701CFA45D9007B6BC0 /* ParserResultType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CEEE6F1CFA45D9007B6BC0 /* ParserResultType.swift */; };
 		75EE2C221C3865D100BF8437 /* RPG Trunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 75EE2C211C3865D100BF8437 /* RPG Trunk.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		75EE2C291C3865D100BF8437 /* RPTrunk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75EE2C1E1C3865D100BF8437 /* RPTrunk.framework */; };
 		75EE2C2E1C3865D100BF8437 /* Parser_Spec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C2D1C3865D100BF8437 /* Parser_Spec.swift */; };
@@ -64,7 +62,6 @@
 		09BDDC29FCE2317C5D180FF5 /* Pods_RPTrunkTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RPTrunkTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		54926B9C10AC9B7276A2A568 /* Pods-RPTrunkTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RPTrunkTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-RPTrunkTests/Pods-RPTrunkTests.release.xcconfig"; sourceTree = "<group>"; };
 		6B63BCDD55427D42FF404632 /* Pods_RPG_TrunkTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RPG_TrunkTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		7523B43B1C409000000C843B /* PropertyResultType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PropertyResultType.swift; sourceTree = "<group>"; };
 		752EEF0C1CF1290F006B86AD /* StatusEffects_Spec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StatusEffects_Spec.swift; sourceTree = "<group>"; };
 		753D301A1CD6CF6A003D0013 /* Position.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Position.swift; sourceTree = "<group>"; };
 		753D301B1CD6CF6A003D0013 /* StatusEffect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StatusEffect.swift; sourceTree = "<group>"; };
@@ -87,7 +84,6 @@
 		75B6AD191CF2802200D9A818 /* TargetType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TargetType.swift; sourceTree = "<group>"; };
 		75B6AD2E1CF2AAF500D9A818 /* Identity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Identity.swift; sourceTree = "<group>"; };
 		75C322871CB35F2D00441038 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		75CEEE6F1CFA45D9007B6BC0 /* ParserResultType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ParserResultType.swift; sourceTree = "<group>"; };
 		75EE2C1E1C3865D100BF8437 /* RPTrunk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RPTrunk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EE2C211C3865D100BF8437 /* RPG Trunk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RPG Trunk.h"; sourceTree = "<group>"; };
 		75EE2C231C3865D100BF8437 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -192,15 +188,6 @@
 			path = Foundation;
 			sourceTree = "<group>";
 		};
-		75CD84EE1CF0D28200BC26EC /* Parser */ = {
-			isa = PBXGroup;
-			children = (
-				75B181C91CEEA9C0004C51B0 /* Parser.swift */,
-				75CEEE6F1CFA45D9007B6BC0 /* ParserResultType.swift */,
-			);
-			path = Parser;
-			sourceTree = "<group>";
-		};
 		75EE2C141C3865D100BF8437 = {
 			isa = PBXGroup;
 			children = (
@@ -257,9 +244,8 @@
 		75EE2C4C1C3899E100BF8437 /* Logic */ = {
 			isa = PBXGroup;
 			children = (
-				75CD84EE1CF0D28200BC26EC /* Parser */,
+				75B181C91CEEA9C0004C51B0 /* Parser.swift */,
 				75B181CA1CEEA9C0004C51B0 /* Operators.swift */,
-				7523B43B1C409000000C843B /* PropertyResultType.swift */,
 				75EE2C4A1C387B4800BF8437 /* Conditional.swift */,
 			);
 			path = Logic;
@@ -539,11 +525,9 @@
 				75B181D31CEEAA01004C51B0 /* GameDelegate.swift in Sources */,
 				75EE2C471C3874F000BF8437 /* Entity.swift in Sources */,
 				753D301D1CD6CF6A003D0013 /* StatusEffect.swift in Sources */,
-				7523B43C1C409000000C843B /* PropertyResultType.swift in Sources */,
 				75EE2C491C38751A00BF8437 /* Battle.swift in Sources */,
 				75B6AD2F1CF2AAF500D9A818 /* Identity.swift in Sources */,
 				75EE2C451C38722600BF8437 /* Ability.swift in Sources */,
-				75CEEE701CFA45D9007B6BC0 /* ParserResultType.swift in Sources */,
 				75B181D41CEEAA01004C51B0 /* GameEnvironment.swift in Sources */,
 				75B181CB1CEEA9C0004C51B0 /* Parser.swift in Sources */,
 				75B181CF1CEEA9EB004C51B0 /* ConflictResult.swift in Sources */,

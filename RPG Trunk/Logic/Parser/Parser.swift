@@ -35,63 +35,75 @@ public func <|> <Token, A>(l: Parser<Token, A>, r: Parser<Token,A>) -> Parser<To
     return Parser { l.p($0) + r.p($0) }
 }
 
-public func parse(parser:Parser<String, PropertyResultType>, _ input:ArraySlice<String>) -> RPValue? {
+public enum ParserResultType {
     
-    for (res, rem) in parser.p(input) {
-        switch res {
-        case .EntityResult(let e):
-            return parse(e.parser, rem)
-        case .ValueResult(let v):
-            return v
-        case .BoolResult(let v):
-            return RPValue(v)
-        default:
-            return nil
-        }
-    }
-    return nil
+    case EvaluationFunction(f:ParserResultType -> ParserResultType)
+    case EntityResult(entity:Entity)
+    case StatsResult(stats:Stats)
+    case ValueResult(value:RPValue)
+    case BoolResult(value:Bool)
+    case Nothing
+    
+    public static var stringParser:Parser<String, ParserResultType> =
+        boolParser()
+            <|> valueParser()
+            <|> targetParser()
+            <|> statParser()
+            <|> statusParser()
 }
 
-func valueParser() -> Parser<String, PropertyResultType> {
-    return Parser { x in
-        guard let (head, tail) = x.decompose, value = RPValue(head) else {
-            return none()
-        }
-        return one( (.ValueResult(value: value), tail) )
+
+public func parse(input:ArraySlice<String>) -> [ParserResultType] {
+    
+    for (res, rem) in ParserResultType.stringParser.p(input) {
+        return [res] + parse(rem)
     }
+    
+    return []
 }
 
-func boolParser() -> Parser<String, PropertyResultType> {
-    return Parser { x in
-        guard let (head, tail) = x.decompose else {
-            return none()
+public func extractResult(entity:Entity, evaluators: [ParserResultType]) -> RPValue? {
+    
+    let initial = ParserResultType.EntityResult(entity: entity)
+    
+    let final = evaluators.reduce(initial) {
+        
+        (prev, current) -> ParserResultType in
+        
+        if case let .EvaluationFunction(f) = current {
+            return f(prev)
         }
         
-        if head == "true" {
-            return one( (.BoolResult(value: true), tail) )
-        } else if head == "false" {
-            return one( (.BoolResult(value: false), tail) )
-        }
-        
-        return none()
+        return current
+    }
+    
+    switch final {
+    case .ValueResult(let v):
+        return v
+    case .BoolResult(let v):
+        return RPValue(v)
+    default:
+        return nil
     }
 }
 
-func entityTargetParser(entity: Entity) -> Parser<String, PropertyResultType> {
+func targetParser() -> Parser<String, ParserResultType> {
     return Parser { x in
         guard let (head, tail) = x.decompose where head == "target" else {
             return none()
         }
-        
-        if let tar = entity.target {
-            return one( (.EntityResult(entity: tar), tail) )
-        } else {
-            return none()
-        }
+        return one( (.EvaluationFunction(f:getTarget), tail) )
     }
 }
 
-func entityStatParser(entity: Entity) -> Parser<String, PropertyResultType> {
+func getTarget(input:ParserResultType) -> ParserResultType {
+    if case let .EntityResult(e) = input where e.target != nil {
+        return .EntityResult(entity: e.target!)
+    }
+    return .Nothing
+}
+
+func statParser() -> Parser<String, ParserResultType> {
     return Parser { x in
         guard let (head, tail) = x.decompose else {
             return none()
@@ -109,18 +121,35 @@ func entityStatParser(entity: Entity) -> Parser<String, PropertyResultType> {
             return none()
         }
         
-        var currentValue = entity[type]
+        let function = getStat(type, usePercent: usePercent)
         
-        if usePercent {
-            let percent:Double = floor(Double(currentValue) / Double(entity.stats[type]) * 100)
-            currentValue = RPValue(percent)
-        }
-        
-        return one( (.ValueResult(value: currentValue), tail) )
+        return one( (.EvaluationFunction(f: function), tail) )
     }
 }
 
-func entityStatusParser(entity: Entity) -> Parser<String, PropertyResultType> {
+func getStat(type:String, usePercent:Bool) -> ParserResultType -> ParserResultType {
+    
+    return {
+        input in
+        
+        if case let .EntityResult(e) = input {
+            
+            var currentValue = e[type]
+            
+            if usePercent {
+                
+                let percent:Double = floor(Double(currentValue) / Double(e.stats[type]) * 100)
+                currentValue = RPValue(percent)
+            }
+            
+            return .ValueResult(value: currentValue)
+        }
+        
+        return .Nothing
+    }
+}
+
+func statusParser() -> Parser<String, ParserResultType> {
     return Parser { x in
         guard let (head, tail) = x.decompose else {
             return none()
@@ -131,8 +160,46 @@ func entityStatusParser(entity: Entity) -> Parser<String, PropertyResultType> {
         }
         
         let status:String = String(head.characters.dropLast())
-        let found = entity.hasStatus(status)
-        return one( (.BoolResult(value: found), tail) )
+        let function = getStatus(status)
+        
+        return one( (.EvaluationFunction(f: function), tail) )
+    }
+}
+
+func getStatus(status:String) -> ParserResultType -> ParserResultType {
+    
+    return {
+        input in
+        if case let .EntityResult(e) = input {
+            let found = e.hasStatus(status)
+            return .BoolResult(value: found)
+        }
+        return .Nothing
+    }
+}
+
+func valueParser() -> Parser<String, ParserResultType> {
+    return Parser { x in
+        guard let (head, tail) = x.decompose, value = RPValue(head) else {
+            return none()
+        }
+        return one( (.ValueResult(value: value), tail) )
+    }
+}
+
+func boolParser() -> Parser<String, ParserResultType> {
+    return Parser { x in
+        guard let (head, tail) = x.decompose else {
+            return none()
+        }
+        
+        if head == "true" {
+            return one( (.BoolResult(value: true), tail) )
+        } else if head == "false" {
+            return one( (.BoolResult(value: false), tail) )
+        }
+        
+        return none()
     }
 }
 

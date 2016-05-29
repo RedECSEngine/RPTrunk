@@ -26,14 +26,22 @@ class ParserSpec: QuickSpec {
                 
                 it("should return the entity's target") {
                     
-                    let parser = entityTargetParser(entity)
+                    let parser = targetParser()
                     let result = parser.p(query).generate().next()
                     
-                    switch result!.0 {
-                    case .EntityResult(let e):
+                    guard case let .EvaluationFunction(f) = result!.0 else {
+                        
+                        expect(false).to(beTrue())
+                        return
+                    }
+                    
+                    let result2 = f(.EntityResult(entity:entity))
+                    
+                    if case let .EntityResult(e) = result2 {
                         
                         expect(e === enemy).to(beTrue())
-                    default:
+                    } else {
+                        
                         expect(false).to(beTrue())
                     }
                     
@@ -41,11 +49,26 @@ class ParserSpec: QuickSpec {
                 
                 it("should return .Nothing when the enemy's target is nil") {
                     
-                    let parser = entityTargetParser(enemy)
+                    let parser = targetParser()
                     let result = parser.p(query).generate().next()
                     
-                    expect(result).to(beNil())
+                    guard case let .EvaluationFunction(f) = result!.0 else {
+                        
+                        expect(false).to(beTrue())
+                        return
+                    }
+                    
+                    let result2 = f(.EntityResult(entity:enemy))
+                    
+                    switch result2 {
+                    case .Nothing:
+                        break
+                    default:
+                        
+                        expect(false).to(beTrue())
+                    }
                 }
+                
             }
             
             context("Stats and logic") {
@@ -56,10 +79,10 @@ class ParserSpec: QuickSpec {
                 
                 
                 it("should be able to read the hp it both the entity and its target") {
-                    let result = parse(entity.parser, ArraySlice(["hp"]))
+                    let result = extractResult(entity, evaluators: parse(ArraySlice(["hp"])) )
                     expect(result).to(equal(40))
                     
-                    let result2 = parse(entity.parser, ArraySlice(["target", "hp"]))
+                    let result2 = extractResult(entity, evaluators: parse(ArraySlice(["target", "hp"])) )
                     expect(result2).to(equal(20))
                 }
                 
