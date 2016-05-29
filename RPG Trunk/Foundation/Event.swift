@@ -16,7 +16,7 @@ public struct Event {
     public var targets: [Entity] {
         
         //TODO: Iterate over components and potentially modify target selection (i.e 'All' component)
-        switch ability.targetType {
+        switch ability.targeting.type {
         case .Oneself:
             return [initiator]
         case .SingleEnemy:

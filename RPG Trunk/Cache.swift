@@ -130,7 +130,7 @@ public class RPCache {
             guard let t = val as? String else {
                 throw CacheError.InvalidFormat("invalid target type provided")
             }
-            let type = TargetType.fromString(t)
+            let type = Targeting.fromString(t)
             return [type]
         case "discharge":
             guard let r = val as? [String] else {

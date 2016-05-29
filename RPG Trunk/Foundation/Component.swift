@@ -4,7 +4,7 @@ public protocol Component {
     func getStats() -> Stats?
     func getCost() -> Stats?
     func getRequirements() -> Stats?
-    func getTargetType() -> TargetType?
+    func getTargeting() -> Targeting?
     func getStatusEffects() -> [StatusEffect]
     func getDischargedStatusEffects() -> [String]
 }
@@ -14,7 +14,7 @@ extension Component {
         return nil
     }
     
-    public func getTargetType() -> TargetType? {
+    public func getTargeting() -> Targeting? {
         return nil
     }
     
@@ -62,14 +62,14 @@ extension ComponentContainer {
             .reduce(Stats(), combine: +)
     }
 
-    public var targetType:TargetType {
+    public var targeting:Targeting {
 
         for component in components {
-            if let t = component.getTargetType() {
+            if let t = component.getTargeting() {
                 return t
             }
         }
-        return .SingleEnemy(.Always)
+        return Targeting(.SingleEnemy, .Always)
     }
 
     public var statusEffects: [StatusEffect] {
@@ -87,7 +87,7 @@ func ==(a:ComponentContainer, b:ComponentContainer) -> Bool {
     return a.stats == b.stats
         && a.cost == b.cost
         && a.requirements == b.requirements
-        && a.targetType == b.targetType
+        && a.targeting == b.targeting
         && a.statusEffects == b.statusEffects
         && a.dischargedStatusEffects == b.dischargedStatusEffects
  }
@@ -101,7 +101,7 @@ public struct BasicComponent: Component {
     public let stats: Stats?
     public let cost: Stats?
     public let requirements: Stats?
-    public let targetType:TargetType?
+    public let targeting:Targeting?
     public let statusEffects: [StatusEffect]?
     public let dischargedStatusEffects: [String]?
     
@@ -109,7 +109,7 @@ public struct BasicComponent: Component {
         self.stats = stats
         self.cost = nil
         self.requirements = nil
-        self.targetType = nil
+        self.targeting = nil
         self.statusEffects = nil
         self.dischargedStatusEffects = nil
     }
@@ -118,7 +118,7 @@ public struct BasicComponent: Component {
         self.stats = nil
         self.cost = cost
         self.requirements = nil
-        self.targetType = nil
+        self.targeting = nil
         self.statusEffects = nil
         self.dischargedStatusEffects = nil
     }
@@ -127,16 +127,16 @@ public struct BasicComponent: Component {
         self.stats = nil
         self.cost = nil
         self.requirements = requirements
-        self.targetType = nil
+        self.targeting = nil
         self.statusEffects = nil
         self.dischargedStatusEffects = nil
     }
     
-    public init(targetType:TargetType) {
+    public init(targetType:Targeting) {
         self.stats = nil
         self.cost = nil
         self.requirements = nil
-        self.targetType = targetType
+        self.targeting = targetType
         self.statusEffects = nil
         self.dischargedStatusEffects = nil
     }
@@ -145,7 +145,7 @@ public struct BasicComponent: Component {
         self.stats = nil
         self.cost = nil
         self.requirements = nil
-        self.targetType = nil
+        self.targeting = nil
         self.statusEffects = statusEffects
         self.dischargedStatusEffects = nil
     }
@@ -154,7 +154,7 @@ public struct BasicComponent: Component {
         self.stats = nil
         self.cost = nil
         self.requirements = nil
-        self.targetType = nil
+        self.targeting = nil
         self.statusEffects = nil
         self.dischargedStatusEffects = dischargedStatusEffects
     }
@@ -166,7 +166,7 @@ public struct BasicComponent: Component {
         self.stats = container.stats
         self.cost = container.cost
         self.requirements = container.requirements
-        self.targetType = container.targetType
+        self.targeting = container.targeting
         self.statusEffects = container.statusEffects
         self.dischargedStatusEffects = container.dischargedStatusEffects
     }
@@ -174,7 +174,7 @@ public struct BasicComponent: Component {
     public func getStats() -> Stats? { return stats }
     public func getCost() -> Stats? { return cost }
     public func getRequirements() -> Stats? { return requirements }
-    public func getTargetType() -> TargetType? { return targetType }
+    public func getTargetType() -> Targeting? { return targeting }
     public func getStatusEffects() -> [StatusEffect] { return statusEffects ?? [] }
     public func getDischargedStatusEffects() -> [String] { return dischargedStatusEffects ?? [] }
     

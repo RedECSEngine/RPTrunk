@@ -5,20 +5,20 @@ public enum Conditional {
     
     case Always
     case Never
-    case Custom(Predicate)
+    case Custom(String, Predicate)
     
     public init(_ condition:String) {
         do {
-            let query = try interpretStringCondition(condition)
-            self = .Custom(query)
+            let predicate = try interpretStringCondition(condition)
+            self = .Custom(condition, predicate)
         } catch {
             print("WARNING: Failed to parse conditional (\(condition))", error)
             self = .Never
         }
     }
     
-    public init(_ query: Entity -> Bool) {
-        self = .Custom(query)
+    public init(_ condition:String, _ predicate: Entity -> Bool) {
+        self = .Custom(condition, predicate)
     }
     
     public func exec(e: Entity) -> Bool {
@@ -27,11 +27,29 @@ public enum Conditional {
             return true
         case .Never:
             return false
-        case .Custom(let query):
+        case .Custom(_ ,let query):
             return query(e)
         }
     }
+}
 
+extension Conditional: CustomStringConvertible {
+    public var description:String {
+        switch self {
+        case .Always:
+            return "Always"
+        case .Never:
+            return "Never"
+        case .Custom(let condition, _):
+            return condition
+        }
+    }
+}
+
+extension Conditional: Equatable { }
+
+public func ==(lhs:Conditional, rhs:Conditional) -> Bool {
+    return lhs.description == rhs.description
 }
 
 extension Conditional: StringLiteralConvertible {
@@ -53,13 +71,15 @@ extension Conditional: StringLiteralConvertible {
 }
 
 public func && (a: Conditional, b: Conditional) -> Conditional {
-    return Conditional { e in
+    let condition = a.description + " && " + b.description
+    return Conditional(condition) { e in
         return a.exec(e) && b.exec(e)
     }
 }
 
 public func || (a: Conditional, b: Conditional) -> Conditional {
-    return Conditional { e in
+    let condition = a.description + " || " + b.description
+    return Conditional(condition) { e in
         return a.exec(e) || b.exec(e)
     }
 }
