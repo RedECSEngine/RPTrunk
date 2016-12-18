@@ -24,7 +24,7 @@ public func ==(lhs:Identity, rhs:Identity) -> Bool {
 }
 
 
-extension Identity: StringLiteralConvertible {
+extension Identity: ExpressibleByStringLiteral {
     
     public typealias ExtendedGraphemeClusterLiteralType = StringLiteralType
     public typealias UnicodeScalarLiteralType = Character

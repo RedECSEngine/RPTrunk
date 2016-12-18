@@ -45,21 +45,21 @@ extension ComponentContainer {
         
         return components
             .flatMap { $0.getStats() }
-            .reduce(Stats(), combine: +)
+            .reduce(Stats(), +)
     }
 
     public var cost:Stats {
         
         return components
             .flatMap { $0.getCost() }
-            .reduce(Stats(), combine: +)
+            .reduce(Stats(), +)
     }
 
     public var requirements:Stats {
         
         return components
             .flatMap { $0.getRequirements() }
-            .reduce(Stats(), combine: +)
+            .reduce(Stats(), +)
     }
 
     public var targeting:Targeting {
@@ -69,7 +69,7 @@ extension ComponentContainer {
                 return t
             }
         }
-        return Targeting(.SingleEnemy, .Always)
+        return Targeting(.singleEnemy, .always)
     }
 
     public var statusEffects: [StatusEffect] {
@@ -94,7 +94,7 @@ func ==(a:ComponentContainer, b:ComponentContainer) -> Bool {
 
 public struct BasicComponent: Component {
     
-    private struct IntermediaryContainer: ComponentContainer {
+    fileprivate struct IntermediaryContainer: ComponentContainer {
         let components: [Component]
     }
 

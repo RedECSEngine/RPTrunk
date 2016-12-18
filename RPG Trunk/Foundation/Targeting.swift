@@ -3,15 +3,15 @@ public struct Targeting: Component {
 
     public enum SelectionType {
         
-        case Oneself
-        case Random
-        case All
-        case SingleEnemy
-        case AllEnemy
-        case RandomEnemy
-        case SingleFriendly
-        case AllFriendly
-        case RandomFriendly
+        case oneself
+        case random
+        case all
+        case singleEnemy
+        case allEnemy
+        case randomEnemy
+        case singleFriendly
+        case allFriendly
+        case randomFriendly
     }
 
     public let type:SelectionType
@@ -22,7 +22,7 @@ public struct Targeting: Component {
         self.conditional = conditional
     }
     
-    public func validTargets(potentialTargets:[Entity], forEntity entity:Entity) -> [Entity] {
+    public func validTargets(_ potentialTargets:[Entity], forEntity entity:Entity) -> [Entity] {
         
         let validTargets = potentialTargets.filter { isValid($0, forEntity: entity) }
         
@@ -31,9 +31,9 @@ public struct Targeting: Component {
         }
         
         switch type {
-        case .Oneself, .SingleEnemy, .SingleFriendly:
+        case .oneself, .singleEnemy, .singleFriendly:
             return [first]
-        case .Random, .RandomEnemy, .RandomFriendly:
+        case .random, .randomEnemy, .randomFriendly:
             return [validTargets.shuffle().first!]
         default:
         return validTargets
@@ -41,14 +41,14 @@ public struct Targeting: Component {
         
     }
     
-    public func isValid(potentialTarget:Entity, forEntity entity:Entity) -> Bool {
+    public func isValid(_ potentialTarget:Entity, forEntity entity:Entity) -> Bool {
         
         switch type {
-        case .All:
+        case .all:
             return conditional.exec(potentialTarget)
-        case .Random:
+        case .random:
             return conditional.exec(potentialTarget)
-        case .Oneself:
+        case .oneself:
             return potentialTarget === entity && conditional.exec(potentialTarget)
         default:
             //TODO: Make cases for enemy/friendly types
@@ -59,37 +59,37 @@ public struct Targeting: Component {
 
 extension Targeting {
     
-    public static func fromString(query:String) -> Targeting {
+    public static func fromString(_ query:String) -> Targeting {
         
-        let components = query.componentsSeparatedByString(":")
+        let components = query.components(separatedBy: ":")
         guard let type = components.first else {
             fatalError("Unexpected format for string translation to target")
         }
         
-        let condition:Conditional = components.count > 1 ? Conditional(components[1]) : .Always
+        let condition:Conditional = components.count > 1 ? Conditional(components[1]) : .always
         
         switch type {
             
         case "self":
-            return Targeting(.Oneself, condition)
+            return Targeting(.oneself, condition)
         case "enemy":
-            return Targeting(.SingleEnemy, condition)
+            return Targeting(.singleEnemy, condition)
         case "all":
-            return Targeting(.All, condition)
+            return Targeting(.all, condition)
         case "random":
-            return Targeting(.Random, condition)
+            return Targeting(.random, condition)
         case "allFriendlies":
-            return Targeting(.AllFriendly, condition)
+            return Targeting(.allFriendly, condition)
         case "allEnemies":
-            return Targeting(.AllEnemy, condition)
+            return Targeting(.allEnemy, condition)
         case "ally":
-            return Targeting(.SingleFriendly, condition)
+            return Targeting(.singleFriendly, condition)
         case "randomFriendly":
-            return Targeting(.RandomFriendly, condition)
+            return Targeting(.randomFriendly, condition)
         case "randomEnemy":
-            return Targeting(.RandomEnemy, condition)
+            return Targeting(.randomEnemy, condition)
         default:
-            return Targeting(.All, condition) //type would be the condition in this case
+            return Targeting(.all, condition) //type would be the condition in this case
             
         }
     }

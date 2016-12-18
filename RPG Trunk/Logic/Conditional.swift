@@ -3,31 +3,31 @@ public enum Conditional {
     
     public typealias Predicate = (Entity) -> Bool
     
-    case Always
-    case Never
-    case Custom(String, Predicate)
+    case always
+    case never
+    case custom(String, Predicate)
     
     public init(_ condition:String) {
         do {
             let predicate = try interpretStringCondition(condition)
-            self = .Custom(condition, predicate)
+            self = .custom(condition, predicate)
         } catch {
             print("WARNING: Failed to parse conditional (\(condition))", error)
-            self = .Never
+            self = .never
         }
     }
     
-    public init(_ condition:String, _ predicate: Entity -> Bool) {
-        self = .Custom(condition, predicate)
+    public init(_ condition:String, _ predicate: @escaping (Entity) -> Bool) {
+        self = .custom(condition, predicate)
     }
     
-    public func exec(e: Entity) -> Bool {
+    public func exec(_ e: Entity) -> Bool {
         switch self {
-        case .Always:
+        case .always:
             return true
-        case .Never:
+        case .never:
             return false
-        case .Custom(_ ,let query):
+        case .custom(_ ,let query):
             return query(e)
         }
     }
@@ -36,11 +36,11 @@ public enum Conditional {
 extension Conditional: CustomStringConvertible {
     public var description:String {
         switch self {
-        case .Always:
+        case .always:
             return "Always"
-        case .Never:
+        case .never:
             return "Never"
-        case .Custom(let condition, _):
+        case .custom(let condition, _):
             return condition
         }
     }
@@ -52,7 +52,7 @@ public func ==(lhs:Conditional, rhs:Conditional) -> Bool {
     return lhs.description == rhs.description
 }
 
-extension Conditional: StringLiteralConvertible {
+extension Conditional: ExpressibleByStringLiteral {
 
     public typealias ExtendedGraphemeClusterLiteralType = StringLiteralType
     public typealias UnicodeScalarLiteralType = Character
@@ -88,22 +88,22 @@ public func || (a: Conditional, b: Conditional) -> Conditional {
 // MARK: - Internal access types & functions
 
 enum ConditionalQueryType: Int {
-    case Comparison = 3
-    case Examination = 1
+    case comparison = 3
+    case examination = 1
 }
 
-enum ConditionalInterpretationError: ErrorType {
-    case IncorrectComponentCount(reason:String)
-    case InvalidSyntax(reason:String)
+enum ConditionalInterpretationError: Error {
+    case incorrectComponentCount(reason:String)
+    case invalidSyntax(reason:String)
 }
 
-func interpretStringCondition(condition:String) throws -> Conditional.Predicate {
+func interpretStringCondition(_ condition:String) throws -> Conditional.Predicate {
     
     let components = try breakdownConditionToComponents(condition)
     
     guard let queryType = ConditionalQueryType(rawValue: components.count) else {
         
-        throw ConditionalInterpretationError.IncorrectComponentCount(reason: "Invalid number of components in query")
+        throw ConditionalInterpretationError.incorrectComponentCount(reason: "Invalid number of components in query")
     }
     
     let lhs:ArraySlice<String> = breakdownComponentDotNotation(components[0])
@@ -111,14 +111,14 @@ func interpretStringCondition(condition:String) throws -> Conditional.Predicate 
     let condOperator:ConditionalOperator
     
     switch queryType {
-    case .Examination:
+    case .examination:
        condOperator = .Equal
        rhs = ["true"]
-    case .Comparison:
+    case .comparison:
         rhs = breakdownComponentDotNotation(components[2])
         
         guard let op = ConditionalOperator(rawValue: components[1]) else {
-            throw ConditionalInterpretationError.InvalidSyntax(reason: "Operator `\(components[1])` is not recognized")
+            throw ConditionalInterpretationError.invalidSyntax(reason: "Operator `\(components[1])` is not recognized")
         }
         
         condOperator = op
@@ -132,7 +132,7 @@ func interpretStringCondition(condition:String) throws -> Conditional.Predicate 
         let lhsResult = extractResult(entity, evaluators: lhsEvaluators)
         let rhsResult = extractResult(entity, evaluators: rhsEvaluators)
         
-        guard let l = lhsResult, r = rhsResult else {
+        guard let l = lhsResult, let r = rhsResult else {
             return false
         }
         
@@ -140,12 +140,12 @@ func interpretStringCondition(condition:String) throws -> Conditional.Predicate 
     }
 }
 
-func breakdownConditionToComponents(condition:String) throws -> [String] {
-    let components = condition.componentsSeparatedByString(" ")
+func breakdownConditionToComponents(_ condition:String) throws -> [String] {
+    let components = condition.components(separatedBy: " ")
     return components
 }
 
-func breakdownComponentDotNotation(termString:String) -> ArraySlice<String> {
-    let components = termString.componentsSeparatedByString(".")
+func breakdownComponentDotNotation(_ termString:String) -> ArraySlice<String> {
+    let components = termString.components(separatedBy: ".")
     return ArraySlice(components)
 }

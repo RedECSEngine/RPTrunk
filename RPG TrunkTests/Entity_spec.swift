@@ -41,7 +41,7 @@ class EntitySpec: QuickSpec {
                 it("should trigger on event occurences") {
                 
                     let ability = Ability(name: "Test")
-                    entity.addPassiveAbility(ability, conditional: .Always)
+                    entity.addPassiveAbility(ability, conditional: .always)
                     
                     let enemyAbility = Ability(name: "enemyAbility")
                     let fakeEvent = Event(initiator: enemy, ability: enemyAbility)

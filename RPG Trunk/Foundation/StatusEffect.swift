@@ -17,7 +17,7 @@ public struct StatusEffect: Component {
         
         if components.count > 0 {
         
-            let components:[Component] = components + [Targeting(.Oneself, .Always)]
+            let components:[Component] = components + [Targeting(.oneself, .always)]
             ability = Ability(name: identity.name, components: components)
         } else {
             ability = nil
@@ -36,32 +36,32 @@ public func ==(lhs:StatusEffect, rhs:StatusEffect) -> Bool {
         && lhs.ability == rhs.ability
 }
 
-public class ActiveStatusEffect: Temporal {
+open class ActiveStatusEffect: Temporal {
 
-    public var currentTick:Double = 0
-    public var maximumTick:Double { return statusEffect.duration ?? 0 }
+    open var currentTick:Double = 0
+    open var maximumTick:Double { return statusEffect.duration ?? 0 }
     
     var currentCharge:Int = 0
     
     var level:Int? // power level of the buff, if it is stackable
     
-    public weak var entity: Entity?
+    open weak var entity: Entity?
     
-    private let statusEffect: StatusEffect
+    fileprivate let statusEffect: StatusEffect
     
-    public var name:String { return statusEffect.identity.name }
-    public var labels:[String] { return statusEffect.identity.labels }
+    open var name:String { return statusEffect.identity.name }
+    open var labels:[String] { return statusEffect.identity.labels }
     
     public init(_ se: StatusEffect) {
         statusEffect = se
         currentCharge = se.charges ?? 0
     }
     
-    public func shouldDisableEntity() -> Bool {
+    open func shouldDisableEntity() -> Bool {
         return statusEffect.impairsAction
     }
     
-    public func tick(moment:Moment) -> [Event] {
+    open func tick(_ moment:Moment) -> [Event] {
         
         guard isCoolingDown() else {
             return []
@@ -77,11 +77,11 @@ public class ActiveStatusEffect: Temporal {
         return []
     }
     
-    public func resetCooldown() {
+    open func resetCooldown() {
         currentTick = 0
     }
     
-    public func expendCharge() {
+    open func expendCharge() {
     
         currentCharge -= 1
         if currentCharge <= 0 {
@@ -90,7 +90,7 @@ public class ActiveStatusEffect: Temporal {
         }
     }
     
-    public func isCoolingDown() -> Bool {
+    open func isCoolingDown() -> Bool {
         if statusEffect.duration != nil {
             return currentTick < maximumTick
         } else {

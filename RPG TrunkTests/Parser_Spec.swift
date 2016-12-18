@@ -5,8 +5,8 @@ import Nimble
 
 class ParserSpec: QuickSpec {
     
-    enum Error:ErrorType {
-        case InvalidCase
+    enum TestError:Error {
+        case invalidCase
     }
     
     override func spec() {
@@ -18,7 +18,7 @@ class ParserSpec: QuickSpec {
             
             let entity = Entity()
             let enemy = Entity()
-            entity.target = enemy
+            entity.targets = [enemy]
             
             context("getTarget") {
                 
@@ -27,17 +27,17 @@ class ParserSpec: QuickSpec {
                 it("should return the entity's target") {
                     
                     let parser = targetParser()
-                    let result = parser.p(query).generate().next()
+                    let result = parser.p(query).makeIterator().next()
                     
-                    guard case let .EvaluationFunction(f) = result!.0 else {
+                    guard case let .evaluationFunction(f) = result!.0 else {
                         
                         expect(false).to(beTrue())
                         return
                     }
                     
-                    let result2 = f(.EntityResult(entity:entity))
+                    let result2 = f(.entityResult(entity:entity))
                     
-                    if case let .EntityResult(e) = result2 {
+                    if case let .entityResult(e) = result2 {
                         
                         expect(e === enemy).to(beTrue())
                     } else {
@@ -50,18 +50,18 @@ class ParserSpec: QuickSpec {
                 it("should return .Nothing when the enemy's target is nil") {
                     
                     let parser = targetParser()
-                    let result = parser.p(query).generate().next()
+                    let result = parser.p(query).makeIterator().next()
                     
-                    guard case let .EvaluationFunction(f) = result!.0 else {
+                    guard case let .evaluationFunction(f) = result!.0 else {
                         
                         expect(false).to(beTrue())
                         return
                     }
                     
-                    let result2 = f(.EntityResult(entity:enemy))
+                    let result2 = f(.entityResult(entity:enemy))
                     
                     switch result2 {
-                    case .Nothing:
+                    case .nothing:
                         break
                     default:
                         
@@ -75,7 +75,7 @@ class ParserSpec: QuickSpec {
             
                 let entity = Entity(["hp": 40])
                 let enemy = Entity(["hp": 20])
-                entity.target = enemy
+                entity.targets = [enemy]
                 
                 
                 it("should be able to read the hp it both the entity and its target") {

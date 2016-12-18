@@ -1,6 +1,6 @@
 import Foundation
 import UIKit
-import RPGTrunk
+import RPTrunk
 
 /*
 extension Entity: CustomStringConvertible {
@@ -10,14 +10,14 @@ extension Entity: CustomStringConvertible {
 }
 */
 
-extension RPEntity: CustomPlaygroundQuickLookable {
+extension Entity: CustomPlaygroundQuickLookable {
     public func customPlaygroundQuickLook() -> PlaygroundQuickLook {
         return PlaygroundQuickLook(reflecting: EntityQuickLookView(entity: self))
     }
 }
 
 public class EntityQuickLookView: UIView {
-    public init(entity:RPEntity) {
+    public init(entity:Entity) {
         super.init(frame: CGRectMake(0, 0, 100, 200))
         self.backgroundColor = UIColor.whiteColor()
         let hpLabel = UILabel(frame: CGRectMake(0,0, 100, 20))

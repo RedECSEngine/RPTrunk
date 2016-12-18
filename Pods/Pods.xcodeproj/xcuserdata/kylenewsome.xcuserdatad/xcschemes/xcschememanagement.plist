@@ -9,6 +9,21 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
+		<key>Pods-RPTrunk.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
+		<key>Pods-RPTrunkDemo.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
+		<key>Pods-RPTrunkDemoTests.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
 		<key>Pods-RPTrunkTests.xcscheme</key>
 		<dict>
 			<key>isShown</key>
@@ -22,17 +37,32 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>33BB55EDF780AF27E1EF61F8E94F9EF0</key>
+		<key>086B6114F2727F40F2C7FC9B889A0493</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>40FF1C77152F384080A1A02E90A36DA9</key>
+		<key>22145D90CE5E39B0518EE9659D6B81C2</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>5BFF1BBF90B73DFDCAE84780B915F4E1</key>
+		<key>645C33DC363607DF08323D47662A4855</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>83809A38136027B4284EC111C802F7B0</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>CE32D95CDE4C7232591193AB629D67A2</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F49ACB29E2CCB4747B5F2016A12FAB58</key>
 		<dict>
 			<key>primary</key>
 			<true/>

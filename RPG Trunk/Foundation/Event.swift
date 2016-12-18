@@ -17,11 +17,14 @@ public struct Event {
         
         //TODO: Iterate over components and potentially modify target selection (i.e 'All' component)
         switch ability.targeting.type {
-        case .Oneself:
+        case .oneself:
             return [initiator]
-        case .SingleEnemy:
-            return initiator.target != nil ? [initiator.target!] : []
-        case .All:
+        case .singleEnemy:
+            if let t = initiator.getTarget() {
+                return [t]
+            }
+            return []
+        case .all:
             return initiator.targets
         default:
             return []
@@ -67,7 +70,7 @@ public struct Event {
         return results + [costResult]
     }
     
-    func applyResults(results:[ConflictResult]){
+    func applyResults(_ results:[ConflictResult]){
         results.forEach { (result) -> () in
             result.entity.setCurrentStats(result.entity.allCurrentStats() + result.change)
         }

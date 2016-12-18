@@ -22,12 +22,12 @@ public func ==(lhs:Ability, rhs:Ability) -> Bool {
     && lhs as ComponentContainer == rhs as ComponentContainer
 }
 
-public class ActiveAbility: Temporal {
+open class ActiveAbility: Temporal {
     
-    public var currentTick: Double = 0
-    public var maximumTick: Double { return ability.cooldown }
-    public var conditional: Conditional
-    public weak var entity: Entity?
+    open var currentTick: Double = 0
+    open var maximumTick: Double { return ability.cooldown }
+    open var conditional: Conditional
+    open weak var entity: Entity?
     
     let ability:Ability
     
@@ -36,14 +36,14 @@ public class ActiveAbility: Temporal {
         conditional = c
     }
     
-    public func canExecute() -> Bool {
+    open func canExecute() -> Bool {
         guard let e = entity else {
             return false
         }
         return conditional.exec(e)
     }
     
-    public func getEvents() -> [Event] {
+    open func getEvents() -> [Event] {
     
         if let e = entity {
             return (0..<ability.repeats).map { _ in Event(initiator: e, ability: ability) }
@@ -51,7 +51,7 @@ public class ActiveAbility: Temporal {
         return []
     }
     
-    public func tick(moment:Moment) -> [Event] {
+    open func tick(_ moment:Moment) -> [Event] {
         
         if isCoolingDown() {
             currentTick += moment.delta
@@ -59,11 +59,11 @@ public class ActiveAbility: Temporal {
         return []
     }
     
-    public func resetCooldown() {
+    open func resetCooldown() {
         currentTick = 0
     }
     
-    public func copyForEntity(entity:Entity) -> ActiveAbility {
+    open func copyForEntity(_ entity:Entity) -> ActiveAbility {
         
         let newActiveAbility = ActiveAbility(ability, conditional)
         newActiveAbility.entity = entity

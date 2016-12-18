@@ -1,25 +1,25 @@
 
 import Foundation
 
-public class RPGameEnvironment {
+open class RPGameEnvironment {
     
     // static vars
-    static public private(set) var current:RPGameEnvironment! = RPGameEnvironment(delegate: DefaultGame())
-    static private var environments:[RPGameEnvironment] = []
+    static open fileprivate(set) var current:RPGameEnvironment! = RPGameEnvironment(delegate: DefaultGame())
+    static fileprivate var environments:[RPGameEnvironment] = []
     
-    static public var statTypes:[String] {
+    static open var statTypes:[String] {
        return RPGameEnvironment.current.delegate.statTypes
     }
     
-    public var delegate:RPGameDelegate
+    open var delegate:RPGameDelegate
     
     // static methods
-    static public func pushEnvironment(env:RPGameEnvironment) {
+    static open func pushEnvironment(_ env:RPGameEnvironment) {
         RPGameEnvironment.environments.append(env)
         RPGameEnvironment.current = env
     }
     
-    static public func popEnvironment() {
+    static open func popEnvironment() {
         RPGameEnvironment.environments.removeLast()
         RPGameEnvironment.current = RPGameEnvironment.environments.last
     }

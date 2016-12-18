@@ -5,7 +5,7 @@ public enum ConditionalOperator: String {
     case Equal = "=="
     case NotEqual = "!="
     
-    public func evaluate<U:Comparable>(lhs:U, _ rhs:U) -> Bool {
+    public func evaluate<U:Comparable>(_ lhs:U, _ rhs:U) -> Bool {
         return self.toFunc()(lhs, rhs)
     }
     
@@ -23,18 +23,18 @@ public enum ConditionalOperator: String {
     }
 }
 
-public func isGreaterThan<U:Comparable>(lhs:U, _ rhs:U) -> Bool {
+public func isGreaterThan<U:Comparable>(_ lhs:U, _ rhs:U) -> Bool {
     return lhs > rhs
 }
 
-public func isLessThan<U:Comparable>(lhs:U, _ rhs:U) -> Bool {
+public func isLessThan<U:Comparable>(_ lhs:U, _ rhs:U) -> Bool {
     return lhs < rhs;
 }
 
-public func isEqual<U:Comparable>(lhs:U, rhs:U) -> Bool {
+public func isEqual<U:Comparable>(_ lhs:U, rhs:U) -> Bool {
     return lhs == rhs;
 }
 
-public func isNotEqual<U:Comparable>(lhs:U, rhs:U) -> Bool {
+public func isNotEqual<U:Comparable>(_ lhs:U, rhs:U) -> Bool {
     return lhs != rhs;
 }

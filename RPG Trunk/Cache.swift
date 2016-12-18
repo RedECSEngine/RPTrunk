@@ -1,16 +1,16 @@
 
-public class RPCache {
+open class RPCache {
     
-    public enum CacheError:ErrorType {
-        case NotFound(String)
-        case InvalidFormat(String)
+    public enum CacheError:Error {
+        case notFound(String)
+        case invalidFormat(String)
     }
     
-    public private(set) static var abilities: [String:Ability] = [:]
-    public private(set) static var statusEffects: [String:StatusEffect] = [:]
-    public private(set) static var entities: [String:Entity] = [:]
+    open fileprivate(set) static var abilities: [String:Ability] = [:]
+    open fileprivate(set) static var statusEffects: [String:StatusEffect] = [:]
+    open fileprivate(set) static var entities: [String:Entity] = [:]
 
-    public static func load(data:[String:AnyObject]) throws {
+    open static func load(_ data:[String:AnyObject]) throws {
         
         print("start loading")
 
@@ -30,13 +30,13 @@ public class RPCache {
 
     }
 
-    public static func loadAbilities(abilities:[String:AnyObject]) throws {
+    open static func loadAbilities(_ abilities:[String:AnyObject]) throws {
 
         try abilities.forEach {
             (name, data) in
             
             guard let dict = data as? [String: AnyObject] else {
-                throw CacheError.InvalidFormat("Ability should be defined with a dictionary")
+                throw CacheError.invalidFormat("Ability should be defined with a dictionary")
             }
             
             let components:[Component] = try dict.flatMap(RPCache.buildComponent)
@@ -48,13 +48,13 @@ public class RPCache {
         }
     }
 
-    public static func loadStatusEffects(statusEffects:[String:AnyObject]) throws {
+    open static func loadStatusEffects(_ statusEffects:[String:AnyObject]) throws {
 
         try statusEffects.forEach {
             (name, data) in
             
             guard let dict = data as? [String: AnyObject] else {
-                throw CacheError.InvalidFormat("Status effect should be defined with a dictionary")
+                throw CacheError.invalidFormat("Status effect should be defined with a dictionary")
             }
             
             let components:[Component] = try dict.flatMap(RPCache.buildComponent)
@@ -72,13 +72,13 @@ public class RPCache {
         }
     }
 
-    public static func loadEntities(entities:[String:AnyObject]) throws {
+    open static func loadEntities(_ entities:[String:AnyObject]) throws {
 
         try entities.forEach {
             (name, data) in
             
             guard let dict = data as? [String: AnyObject], let stats = dict["stats"] as? [String:RPValue] else {
-                throw CacheError.InvalidFormat("Entities should be defined with a dictionary that includes stats")
+                throw CacheError.invalidFormat("Entities should be defined with a dictionary that includes stats")
             }
             
             let entity = Entity.new()
@@ -93,7 +93,7 @@ public class RPCache {
                     
                     if let ability = RPCache.abilities[name] {
                     
-                        entity.addExecutableAbility(ability, conditional: .Always)
+                        entity.addExecutableAbility(ability, conditional: .always)
                     }
                 }
             }
@@ -102,44 +102,44 @@ public class RPCache {
         }
     }
     
-    public static func buildComponent(component:(String, AnyObject)) throws -> [Component] {
+    open static func buildComponent(_ component:(String, AnyObject)) throws -> [Component] {
         
         let (key, val) = component
         switch key {
         case "stats":
             guard let stats = val as? [String:RPValue] else {
-                throw CacheError.InvalidFormat("stats should be in format of [Key:Value]")
+                throw CacheError.invalidFormat("stats should be in format of [Key:Value]")
             }
             return [Stats(stats)]
         case "cost":
             guard let cost = val as? [String:RPValue] else {
-                throw CacheError.InvalidFormat("cost should be in format of [Key:Value]")
+                throw CacheError.invalidFormat("cost should be in format of [Key:Value]")
             }
             return [BasicComponent(cost:Stats(cost))]
         case "requirements":
             guard let req = val as? [String:RPValue] else {
-                throw CacheError.InvalidFormat("cost should be in format of [Key:Value]")
+                throw CacheError.invalidFormat("cost should be in format of [Key:Value]")
             }
             return [BasicComponent(requirements:Stats(req))]
         case "statusEffects":
             guard let effects = val as? [String] else {
-                throw CacheError.InvalidFormat("components should be in format of [String]")
+                throw CacheError.invalidFormat("components should be in format of [String]")
             }
             return try effects.map { try RPCache.getStatusEffect($0) }
         case "target":
             guard let t = val as? String else {
-                throw CacheError.InvalidFormat("invalid target type provided")
+                throw CacheError.invalidFormat("invalid target type provided")
             }
             let type = Targeting.fromString(t)
             return [type]
         case "discharge":
             guard let r = val as? [String] else {
-                throw CacheError.InvalidFormat("invalid discharged status effect format provided; Should be [String]")
+                throw CacheError.invalidFormat("invalid discharged status effect format provided; Should be [String]")
             }
             return [BasicComponent(dischargedStatusEffects:r)]
         case "components":
             guard let components = val as? [String] else {
-                throw CacheError.InvalidFormat("components should be in format of [String]")
+                throw CacheError.invalidFormat("components should be in format of [String]")
             }
             return try components.map { try RPCache.getComponent($0) }
         default:
@@ -147,49 +147,49 @@ public class RPCache {
         }
     }
     
-    public static func buildConditional(data:[String: AnyObject]) -> Conditional {
+    open static func buildConditional(_ data:[String: AnyObject]) -> Conditional {
         
         if let query = data["conditional"] as? String {
             return Conditional(query)
         }
         
-        return .Always
+        return .always
     }
     
-    public static func getAbility(name: String) throws -> Ability {
+    open static func getAbility(_ name: String) throws -> Ability {
         
         if let ability = RPCache.abilities[name] {
             
             return ability
         }
         
-        throw RPCache.CacheError.NotFound(name)
+        throw RPCache.CacheError.notFound(name)
     }
     
-    public static func getStatusEffect(name: String) throws -> Component {
+    open static func getStatusEffect(_ name: String) throws -> Component {
         
         if let se = RPCache.statusEffects[name] {
             
             return se
         }
         
-        throw RPCache.CacheError.NotFound(name)
+        throw RPCache.CacheError.notFound(name)
     }
     
-    public static func getComponent(name: String) throws -> Component {
+    open static func getComponent(_ name: String) throws -> Component {
         
         //TODO: expand this function to try other types of components before throwing an error
         
         guard let se = try? RPCache.getStatusEffect(name) else {
-            throw RPCache.CacheError.NotFound(name)
+            throw RPCache.CacheError.notFound(name)
         }
         
         return se
     }
     
-    public static func newEntity(name:String) throws -> Entity {
+    open static func newEntity(_ name:String) throws -> Entity {
         guard let entity = RPCache.entities[name] else {
-            throw RPCache.CacheError.NotFound(name)
+            throw RPCache.CacheError.notFound(name)
         }
         return entity.copy()
     }

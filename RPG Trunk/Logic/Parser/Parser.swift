@@ -7,42 +7,46 @@ extension ArraySlice {
 }
 
 public struct Parser<Token, Result> {
-    public let p: ArraySlice<Token> -> AnySequence<(Result, ArraySlice<Token>)>
-    public init(_ p:ArraySlice<Token> -> AnySequence<(Result, ArraySlice<Token>)>) {
+    public let p: (ArraySlice<Token>) -> AnySequence<(Result, ArraySlice<Token>)>
+    public init(_ p:@escaping (ArraySlice<Token>) -> AnySequence<(Result, ArraySlice<Token>)>) {
         self.p = p
     }
 }
 
-public func +<G:GeneratorType, H:GeneratorType where G.Element == H.Element>(first: G, second:H) -> AnyGenerator<G.Element> {
+public func +<G:IteratorProtocol, H:IteratorProtocol>(first: G, second:H) -> AnyIterator<G.Element> where G.Element == H.Element {
     var one = first, two = second
-    return AnyGenerator { one.next() ?? two.next() }
+    return AnyIterator { one.next() ?? two.next() }
 }
 
 public func +<A>(l: AnySequence<A>, r: AnySequence<A>) -> AnySequence<A> {
-    return AnySequence { l.generate() + r.generate() }
+    return AnySequence { l.makeIterator() + r.makeIterator() }
 }
 
-public func one<A>(x: A) -> AnySequence<A> {
-    return AnySequence(GeneratorOfOne(x))
+public func one<A>(_ x: A) -> AnySequence<A> {
+    
+    return AnySequence(IteratorOverOne(_elements: x))
 }
 
 public func none<A>() -> AnySequence<A> {
-    return AnySequence(AnyGenerator { return nil })
+    return AnySequence(AnyIterator { return nil })
 }
 
-infix operator <|> { associativity right precedence 130 }
+precedencegroup OrPipe {
+    associativity: right
+}
+infix operator <|> : OrPipe
 public func <|> <Token, A>(l: Parser<Token, A>, r: Parser<Token,A>) -> Parser<Token, A> {
     return Parser { l.p($0) + r.p($0) }
 }
 
 public enum ParserResultType {
     
-    case EvaluationFunction(f:ParserResultType -> ParserResultType)
-    case EntityResult(entity:Entity)
-    case StatsResult(stats:Stats)
-    case ValueResult(value:RPValue)
-    case BoolResult(value:Bool)
-    case Nothing
+    case evaluationFunction(f:(ParserResultType) -> ParserResultType)
+    case entityResult(entity:Entity)
+    case statsResult(stats:Stats)
+    case valueResult(value:RPValue)
+    case boolResult(value:Bool)
+    case nothing
     
     public static var stringParser:Parser<String, ParserResultType> =
         boolParser()
@@ -53,7 +57,7 @@ public enum ParserResultType {
 }
 
 
-public func parse(input:ArraySlice<String>) -> [ParserResultType] {
+public func parse(_ input:ArraySlice<String>) -> [ParserResultType] {
     
     for (res, rem) in ParserResultType.stringParser.p(input) {
         return [res] + parse(rem)
@@ -62,15 +66,15 @@ public func parse(input:ArraySlice<String>) -> [ParserResultType] {
     return []
 }
 
-public func extractResult(entity:Entity, evaluators: [ParserResultType]) -> RPValue? {
+public func extractResult(_ entity:Entity, evaluators: [ParserResultType]) -> RPValue? {
     
-    let initial = ParserResultType.EntityResult(entity: entity)
+    let initial = ParserResultType.entityResult(entity: entity)
     
     let final = evaluators.reduce(initial) {
         
         (prev, current) -> ParserResultType in
         
-        if case let .EvaluationFunction(f) = current {
+        if case let .evaluationFunction(f) = current {
             return f(prev)
         }
         
@@ -78,10 +82,10 @@ public func extractResult(entity:Entity, evaluators: [ParserResultType]) -> RPVa
     }
     
     switch final {
-    case .ValueResult(let v):
+    case .valueResult(let v):
         return v
-    case .BoolResult(let v):
-        return RPValue(v)
+    case .boolResult(let v):
+        return RPValue(v ? 1 : 0)
     default:
         return nil
     }
@@ -89,18 +93,18 @@ public func extractResult(entity:Entity, evaluators: [ParserResultType]) -> RPVa
 
 func targetParser() -> Parser<String, ParserResultType> {
     return Parser { x in
-        guard let (head, tail) = x.decompose where head == "target" else {
+        guard let (head, tail) = x.decompose, head == "target" else {
             return none()
         }
-        return one( (.EvaluationFunction(f:getTarget), tail) )
+        return one( (.evaluationFunction(f:getTarget), tail) )
     }
 }
 
-func getTarget(input:ParserResultType) -> ParserResultType {
-    if case let .EntityResult(e) = input where e.target != nil {
-        return .EntityResult(entity: e.target!)
+func getTarget(_ input:ParserResultType) -> ParserResultType {
+    if case let .entityResult(e) = input, e.getTarget() != nil {
+        return .entityResult(entity: e.getTarget()!)
     }
-    return .Nothing
+    return .nothing
 }
 
 func statParser() -> Parser<String, ParserResultType> {
@@ -113,7 +117,7 @@ func statParser() -> Parser<String, ParserResultType> {
         var usePercent = false
         
         if head.characters.last == "%" {
-            type.removeAtIndex(type.endIndex.predecessor())
+            type.remove(at: type.characters.index(before: type.endIndex))
             usePercent = true
         }
         
@@ -123,16 +127,16 @@ func statParser() -> Parser<String, ParserResultType> {
         
         let function = getStat(type, usePercent: usePercent)
         
-        return one( (.EvaluationFunction(f: function), tail) )
+        return one( (.evaluationFunction(f: function), tail) )
     }
 }
 
-func getStat(type:String, usePercent:Bool) -> ParserResultType -> ParserResultType {
+func getStat(_ type:String, usePercent:Bool) -> (ParserResultType) -> ParserResultType {
     
     return {
         input in
         
-        if case let .EntityResult(e) = input {
+        if case let .entityResult(e) = input {
             
             var currentValue = e[type]
             
@@ -142,10 +146,10 @@ func getStat(type:String, usePercent:Bool) -> ParserResultType -> ParserResultTy
                 currentValue = RPValue(percent)
             }
             
-            return .ValueResult(value: currentValue)
+            return .valueResult(value: currentValue)
         }
         
-        return .Nothing
+        return .nothing
     }
 }
 
@@ -162,28 +166,28 @@ func statusParser() -> Parser<String, ParserResultType> {
         let status:String = String(head.characters.dropLast())
         let function = getStatus(status)
         
-        return one( (.EvaluationFunction(f: function), tail) )
+        return one( (.evaluationFunction(f: function), tail) )
     }
 }
 
-func getStatus(status:String) -> ParserResultType -> ParserResultType {
+func getStatus(_ status:String) -> (ParserResultType) -> ParserResultType {
     
     return {
         input in
-        if case let .EntityResult(e) = input {
+        if case let .entityResult(e) = input {
             let found = e.hasStatus(status)
-            return .BoolResult(value: found)
+            return .boolResult(value: found)
         }
-        return .Nothing
+        return .nothing
     }
 }
 
 func valueParser() -> Parser<String, ParserResultType> {
     return Parser { x in
-        guard let (head, tail) = x.decompose, value = RPValue(head) else {
+        guard let (head, tail) = x.decompose, let value = RPValue(head) else {
             return none()
         }
-        return one( (.ValueResult(value: value), tail) )
+        return one( (.valueResult(value: value), tail) )
     }
 }
 
@@ -194,9 +198,9 @@ func boolParser() -> Parser<String, ParserResultType> {
         }
         
         if head == "true" {
-            return one( (.BoolResult(value: true), tail) )
+            return one( (.boolResult(value: true), tail) )
         } else if head == "false" {
-            return one( (.BoolResult(value: false), tail) )
+            return one( (.boolResult(value: false), tail) )
         }
         
         return none()

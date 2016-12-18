@@ -8,7 +8,7 @@ public struct Moment {
         self.delta = delta
     }
     
-    public func addSibling(sibling:Temporal) -> Moment {
+    public func addSibling(_ sibling:Temporal) -> Moment {
         return Moment(delta:self.delta, parents: parents + [sibling])
     }
     
@@ -19,7 +19,7 @@ public protocol Temporal {
     var currentTick:Double { get }
     var maximumTick:Double { get }
 
-    func tick(moment:Moment) -> [Event]
+    func tick(_ moment:Moment) -> [Event]
     func resetCooldown()
 }
 

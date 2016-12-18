@@ -1,6 +1,6 @@
 
 public struct Stats: Component {
-    private let values:[String:RPValue]
+    fileprivate let values:[String:RPValue]
     
     public init(_ data:[String:RPValue], asPartial:Bool = false) {
         var stats:[String:RPValue] = [:]
@@ -18,7 +18,7 @@ public struct Stats: Component {
         return values[index] ?? 0
     }
     
-    public func get(key:String) -> RPValue? {
+    public func get(_ key:String) -> RPValue? {
         return values[key]
     }
     
@@ -38,16 +38,14 @@ public struct Stats: Component {
     }
 }
 
-extension Stats: SequenceType {
-
-    public typealias Generator = DictionaryGenerator<String, RPValue>
+extension Stats: Sequence {
     
-    public func generate() -> Stats.Generator {
-        return values.generate()
+    public func makeIterator() -> DictionaryIterator<String, RPValue> {
+        return values.makeIterator()
     }
 }
 
-extension Stats: DictionaryLiteralConvertible {
+extension Stats: ExpressibleByDictionaryLiteral {
     
     public init(dictionaryLiteral elements: (String, RPValue)...) {
         values = elements.reduce([:]) {

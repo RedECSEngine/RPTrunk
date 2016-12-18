@@ -1,37 +1,28 @@
 
-public class Entity: Temporal {
+open class Entity: Temporal {
     
-    public var currentTick: Double = 0
-    public var maximumTick: Double = 0
+    open var currentTick: Double = 0
+    open var maximumTick: Double = 0
     
-    public var baseStats: Stats = [:]
-    public var currentStats: Stats = [:] //when a value is nil, for a given key, it means it's at max
-    public var body = Body()
+    open var baseStats: Stats = [:]
+    open var currentStats: Stats = [:] //when a value is nil, for a given key, it means it's at max
+    open var body = Body()
     
-    public private(set) var executableAbilities:[ActiveAbility] = []
-    public private(set) var passiveAbilities:[ActiveAbility] = []
-    public private(set) var statusEffects:[ActiveStatusEffect] = []
+    open fileprivate(set) var executableAbilities:[ActiveAbility] = []
+    open fileprivate(set) var passiveAbilities:[ActiveAbility] = []
+    open fileprivate(set) var statusEffects:[ActiveStatusEffect] = []
     
-    public var targets:[Entity] = []
-    public var target: Entity? {
-        get {
-            return targets.first
-        }
-        set {
-            if let v = newValue {
-                targets = [v]
-                return
-            }
-            targets = []
-        }
-    }
+    open weak var parent:Entity? = nil
+    open fileprivate(set) var children:[Entity] = []
     
-    public weak var data:AnyObject?
+    open var targets: [Entity] = []
+    
+    open weak var data:AnyObject?
     
     
     //MARK: - Computed properties
     
-    public var stats: Stats {
+    open var stats: Stats {
         var totalStats = self.baseStats
         for weapon in self.body.weapons {
             totalStats = totalStats + weapon.stats
@@ -42,11 +33,11 @@ public class Entity: Temporal {
         return totalStats
     }
     
-    public subscript(index:String) -> RPValue {
+    open subscript(index:String) -> RPValue {
         return currentStats.get(index) ?? stats[index]
     }
     
-    public func allCurrentStats() -> Stats {
+    open func allCurrentStats() -> Stats {
         var cs:[String:RPValue] = [:]
         let maxStats = stats
         for type in RPGameEnvironment.statTypes {
@@ -55,7 +46,7 @@ public class Entity: Temporal {
         return Stats(cs)
     }
     
-    public func setCurrentStats(newStats: Stats) {
+    open func setCurrentStats(_ newStats: Stats) {
         var cs:[String:RPValue] = [:]
         let maxStats = stats
         for type in RPGameEnvironment.statTypes {
@@ -64,7 +55,7 @@ public class Entity: Temporal {
         currentStats = Stats(cs, asPartial: true)
     }
     
-    public func usableAbilities () -> [Ability] {
+    open func usableAbilities () -> [Ability] {
         
         guard !isCoolingDown() else {
             return []
@@ -83,7 +74,7 @@ public class Entity: Temporal {
     
     //MARK: - Initialization
     
-    public static func new() -> Entity {
+    open static func new() -> Entity {
         return RPGameEnvironment.current.delegate.entityDefaults.copy()
     }
     
@@ -100,23 +91,62 @@ public class Entity: Temporal {
     }
     
     
-    //MARK: Abilities
+    //MARK: - Children
     
-    public func addExecutableAbility(ability:Ability, conditional:Conditional) {
+    open func addChild(_ entity:Entity) {
+        assert(entity.parent == nil, "Entity already has a parent")
+        
+        entity.parent = self
+        children.append(entity)
+    }
+    
+    open func removeChild(_ entity:Entity) {
+        guard let p = entity.parent, p === self,
+           let idx = children.index(where: { $0 === entity })
+            else {
+            return
+        }
+        
+        children.remove(at: idx)
+        entity.parent = nil
+    }
+    
+    
+    //MARK: Targeting & Abilities
+    
+    open func getPossibleTargets() -> [Entity]? {
+        
+        if targets.count > 0 {
+            return targets
+        }
+        
+        if let p = parent,
+            let targs = p.getPossibleTargets() {
+            return targs
+        }
+        
+        return nil
+    }
+    
+    open func getTarget() -> Entity? {
+        return targets.first
+    }
+    
+    open func addExecutableAbility(_ ability:Ability, conditional:Conditional) {
         let activeAbility = ActiveAbility(ability, conditional)
         activeAbility.entity = self
         executableAbilities.append(activeAbility)
     }
     
-    public func addPassiveAbility(ability:Ability, conditional:Conditional) {
+    open func addPassiveAbility(_ ability:Ability, conditional:Conditional) {
         let activeAbility = ActiveAbility(ability, conditional)
         activeAbility.entity = self
         passiveAbilities.append(activeAbility)
     }
     
-    public func applyStatusEffect(se:StatusEffect) {
+    open func applyStatusEffect(_ se:StatusEffect) {
         
-        if let existing = statusEffects.find({ $0.name == se.identity.name }) {
+        if let existing = statusEffects.first(where: { $0.name == se.identity.name }) {
             
             //TODO: Handle stackability of status effects rather than just resetting
             existing.resetCooldown()
@@ -127,16 +157,17 @@ public class Entity: Temporal {
         
     }
     
-    public func dischargeStatusEffect(label:String) {
+    open func dischargeStatusEffect(_ label:String) {
         statusEffects
             .filter { $0.labels.contains(label) }
             .forEach { $0.expendCharge() }
         statusEffects = statusEffects.filter { $0.isCoolingDown() }
     }
     
+    
     //MARK: - RPEvent/Battle handling
     
-    public func tick(moment:Moment) -> [Event] {
+    open func tick(_ moment:Moment) -> [Event] {
         
         if currentTick < maximumTick {
             currentTick += moment.delta
@@ -156,25 +187,23 @@ public class Entity: Temporal {
         var abilityEvents = [Event]()
         for activeAbility in executableAbilities where activeAbility.canExecute() {
             
-            if let _ = target {
-                abilityEvents += activeAbility.getEvents()
-                resetCooldown()
-                break
-            }
+            abilityEvents += activeAbility.getEvents()
+            resetCooldown()
+            break
         }
         
         return abilityEvents + buffEvents
     }
     
-    public func resetCooldown() {
+    open func resetCooldown() {
         currentTick = 0
     }
     
-    func eventWillOccur(event: Event) -> [Event] {
+    func eventWillOccur(_ event: Event) -> [Event] {
         return [] //TODO: Check for passive abilities that would trigger based on this event
     }
 
-    func eventDidOccur(event: Event) -> [Event] {
+    func eventDidOccur(_ event: Event) -> [Event] {
         var abilityEvents = [Event]()
         
         for activeAbility in passiveAbilities where activeAbility.canExecute() {
@@ -194,8 +223,8 @@ public class Entity: Temporal {
         return true
     }
     
-    func hasStatus(name:String) -> Bool {
-        return statusEffects.find({ $0.name == name }) != nil
+    func hasStatus(_ name:String) -> Bool {
+        return statusEffects.first(where: { $0.name == name }) != nil
     }
 }
 

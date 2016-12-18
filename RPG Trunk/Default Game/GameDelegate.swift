@@ -15,7 +15,7 @@ public protocol RPGameDelegate {
     var entityDefaults: Entity { get }
     var abilityDefaults:[Component] { get }
     
-    func resolveConflict(event:Event, target:Entity, conflict:Stats) -> ConflictResult
+    func resolveConflict(_ event:Event, target:Entity, conflict:Stats) -> ConflictResult
 }
 
 public struct DefaultGame: RPGameDelegate {
@@ -35,7 +35,7 @@ public struct DefaultGame: RPGameDelegate {
     
     public var abilityDefaults = [Component]()
     
-    public func resolveConflict(event:Event, target:Entity, conflict:Stats) -> ConflictResult {
+    public func resolveConflict(_ event:Event, target:Entity, conflict:Stats) -> ConflictResult {
     
         //hp result - part 1 - damage hits against hp, with defense as reduction
         var hpResult = 0 // + _b.affinities.healing
