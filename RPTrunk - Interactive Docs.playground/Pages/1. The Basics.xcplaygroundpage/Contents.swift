@@ -17,10 +17,10 @@ Creating an ability starts by first creating a Generic component with properties
 
 In this example we'll make a component with some damage
 */
-let dmgComponent = StatsComponent(["damage": 3])
+let dmgComponent = Stats(["damage": 3])
 //: Now we can create our ability with the damage component. An ability is always made up of one or more components
-let attack = BasicAbility(name:"Attack", components:[dmgComponent])
-entity1.target = entity2
+let attack = Ability(name:"Attack", components:[dmgComponent])
+entity1.targets = [entity2]
 
 /*: 
 ### 2. Create an event and perform it
@@ -29,7 +29,7 @@ That's all the groundwork necessary for the set up .Now we just need to create a
 */
 let event = Event(initiator: entity1, ability:attack)
 let results = event.execute()
-results.forEach { print($0) }
+results.effects.forEach { print($0) }
 //: We see that Entity2 has lost 3 hit points
 entity1["hp"]
 entity2["hp"]

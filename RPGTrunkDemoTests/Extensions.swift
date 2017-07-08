@@ -11,16 +11,17 @@ extension Entity: CustomStringConvertible {
 */
 
 extension Entity: CustomPlaygroundQuickLookable {
-    public func customPlaygroundQuickLook() -> PlaygroundQuickLook {
+
+    public var customPlaygroundQuickLook: PlaygroundQuickLook {
         return PlaygroundQuickLook(reflecting: EntityQuickLookView(entity: self))
     }
 }
 
-public class EntityQuickLookView: UIView {
+open class EntityQuickLookView: UIView {
     public init(entity:Entity) {
-        super.init(frame: CGRectMake(0, 0, 100, 200))
-        self.backgroundColor = UIColor.whiteColor()
-        let hpLabel = UILabel(frame: CGRectMake(0,0, 100, 20))
+        super.init(frame: CGRect(x: 0, y:0, width: 100, height: 200))
+        self.backgroundColor = UIColor.white
+        let hpLabel = UILabel(frame: CGRect(x: 0, y:0, width: 100, height: 20))
         hpLabel.text = "hp: \(entity["hp"])"
         self.addSubview(hpLabel)
     }

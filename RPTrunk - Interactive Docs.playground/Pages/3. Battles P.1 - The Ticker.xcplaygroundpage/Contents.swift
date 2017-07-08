@@ -19,22 +19,25 @@ While it is certainly possible (and maybe even desirable) to manually build up a
 let entity1 = Entity(["hp": 50])
 let entity2 = Entity(["hp": 50])
 
-let dmgComponent = StatsComponent(["damage": 3])
-let attack = BasicAbility(name:"Attack", components: [dmgComponent])
-let attackPriority = Priority(ability: attack, conditionals: nil)
-entity1.priorities.append(attackPriority)
-entity1.target = entity2
+let dmgComponent = Stats(["damage": 3])
+let attack = Ability(name:"Attack", components: [dmgComponent])
+
+entity1.addExecutableAbility(attack, conditional: .always)
+entity1.targets = [entity2]
 /*:
 We know we can ask entity for events with `Entity.think()` and then manually execute them ourselves, but that's a bit boring. We're ready to let our Entities do their own bidding at a regular interval.
 
 So let's create a battle and put our entities inside
 */
-let battle = RPBattle()
-battle.entities += [entity1, entity2]
+let battle = Battle()
+let team1 = Team(entities: [entity1])
+let team2 = Team(entities: [entity2])
+battle.teams = [team1, team2]
 
 //: It's going to be an unfair fight, but let's see what happens
 for _ in 0..<10 {
-    battle.tick()
+    
+    battle.newMoment()
     entity1["hp"] // stays at 50
     entity2["hp"] // loses 3 per tick
 }

@@ -186,7 +186,6 @@ open class Entity: Temporal {
         // Get any events that should execute based on priorities
         var abilityEvents = [Event]()
         for activeAbility in executableAbilities where activeAbility.canExecute() {
-            
             abilityEvents += activeAbility.getEvents()
             resetCooldown()
             break
