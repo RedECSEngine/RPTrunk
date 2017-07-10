@@ -25,7 +25,10 @@ public struct Stats: Component {
     public func nonZeroes() -> Stats {
         
         var changes = [String:RPValue]()
-        values.forEach { (key, val) in
+        values.forEach {
+            (arg) in
+            let (key, val) = arg
+            
             if val != 0 {
                 changes[key] = val
             }

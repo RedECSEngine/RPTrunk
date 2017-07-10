@@ -75,7 +75,7 @@ open class Entity: Temporal {
     //MARK: - Initialization
     
     open static func new() -> Entity {
-        return RPGameEnvironment.current.delegate.entityDefaults.copy()
+        return RPGameEnvironment.current.delegate.createDefaultEntity()
     }
     
     public init(_ data:[String:RPValue]) {
@@ -190,6 +190,7 @@ open class Entity: Temporal {
             resetCooldown()
             break
         }
+        abilityEvents = abilityEvents.filter { false == $0.targets.isEmpty }
         
         return abilityEvents + buffEvents
     }
@@ -198,11 +199,11 @@ open class Entity: Temporal {
         currentTick = 0
     }
     
-    func eventWillOccur(_ event: Event) -> [Event] {
+    open func eventWillOccur(_ event: Event) -> [Event] {
         return [] //TODO: Check for passive abilities that would trigger based on this event
     }
 
-    func eventDidOccur(_ event: Event) -> [Event] {
+    open func eventDidOccur(_ event: Event) -> [Event] {
         var abilityEvents = [Event]()
         
         for activeAbility in passiveAbilities where activeAbility.canExecute() {
@@ -214,7 +215,7 @@ open class Entity: Temporal {
     
     //Querying
     
-    func canPerformEvents() -> Bool {
+    open func canPerformEvents() -> Bool {
         
         for se in statusEffects where se.shouldDisableEntity() {
             return false
@@ -222,7 +223,7 @@ open class Entity: Temporal {
         return true
     }
     
-    func hasStatus(_ name:String) -> Bool {
+    open func hasStatus(_ name:String) -> Bool {
         return statusEffects.first(where: { $0.name == name }) != nil
     }
 }

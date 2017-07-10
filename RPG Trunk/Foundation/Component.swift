@@ -174,7 +174,7 @@ public struct BasicComponent: Component {
     public func getStats() -> Stats? { return stats }
     public func getCost() -> Stats? { return cost }
     public func getRequirements() -> Stats? { return requirements }
-    public func getTargetType() -> Targeting? { return targeting }
+    public func getTargeting() -> Targeting? { return targeting }
     public func getStatusEffects() -> [StatusEffect] { return statusEffects ?? [] }
     public func getDischargedStatusEffects() -> [String] { return dischargedStatusEffects ?? [] }
     

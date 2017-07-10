@@ -12,8 +12,10 @@ public protocol RPGameDelegate {
 
     // instance managers
     var statTypes:[String] { get }
-    var entityDefaults: Entity { get }
+    
     var abilityDefaults:[Component] { get }
+    
+    func createDefaultEntity() -> Entity
     
     func resolveConflict(_ event:Event, target:Entity, conflict:Stats) -> ConflictResult
 }
@@ -29,11 +31,11 @@ public struct DefaultGame: RPGameDelegate {
         "defense"
     ]
     
-    public var entityDefaults: Entity {
+    public var abilityDefaults = [Component]()
+    
+    public func createDefaultEntity() -> Entity {
         return Entity()
     }
-    
-    public var abilityDefaults = [Component]()
     
     public func resolveConflict(_ event:Event, target:Entity, conflict:Stats) -> ConflictResult {
     

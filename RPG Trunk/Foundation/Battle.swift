@@ -7,7 +7,6 @@ public struct Team {
 }
 
 open class Battle: Entity {
-  
     
     open var teams = [Team]()
     
@@ -21,19 +20,17 @@ open class Battle: Entity {
             .reduce(battleEvents, +)
     }
     
-    open func newMoment() -> [EventResult] {
-    
-        let eventsToExecute = tick(Moment(delta: 1))
-        return performEvents(eventsToExecute)
-    }
-    
-    fileprivate func performEvents(_ events:[Event]) -> [EventResult] {
+    open func performEvents(_ events:[Event]) -> [EventResult] {
         
         return events
             .flatMap { event -> [Event] in
-                let pre = self.children.flatMap { $0.eventWillOccur(event) }
+                let pre = self.teams
+                    .flatMap { $0.entities }
+                    .flatMap { $0.eventWillOccur(event) }
                 let during = [event]
-                let post = self.children.flatMap { $0.eventDidOccur(event) }
+                let post = self.teams
+                    .flatMap { $0.entities }
+                    .flatMap { $0.eventDidOccur(event) }
                 return pre + during + post
             }
             .map { $0.execute() }

@@ -12,7 +12,7 @@ open class RPCache {
 
     open static func load(_ data:[String:AnyObject]) throws {
         
-        print("start loading")
+        print(String(describing: self), ">> start loading")
 
         if let se = data["Status Effects"] as? [String:AnyObject] {
             try RPCache.loadStatusEffects(se)
@@ -26,14 +26,15 @@ open class RPCache {
             try RPCache.loadEntities(entities)
         }
         
-        print("done loading")
+        print(String(describing: self), ">> done loading")
 
     }
 
     open static func loadAbilities(_ abilities:[String:AnyObject]) throws {
 
         try abilities.forEach {
-            (name, data) in
+            (arg) in
+            let (name, data) = arg
             
             guard let dict = data as? [String: AnyObject] else {
                 throw CacheError.invalidFormat("Ability should be defined with a dictionary")
@@ -51,7 +52,8 @@ open class RPCache {
     open static func loadStatusEffects(_ statusEffects:[String:AnyObject]) throws {
 
         try statusEffects.forEach {
-            (name, data) in
+            (arg) in
+            let (name, data) = arg
             
             guard let dict = data as? [String: AnyObject] else {
                 throw CacheError.invalidFormat("Status effect should be defined with a dictionary")
@@ -61,10 +63,10 @@ open class RPCache {
             
             let duration: Double? = dict["duration"] as? Double
             let charges: Int? = dict["charges"] as? Int
-            let imapirsAction: Bool = (dict["impairsAction"] as? Bool) ?? false
+            let impairsAction: Bool = (dict["impairsAction"] as? Bool) ?? false
             
             let id = Identity(name: name)
-            let se = StatusEffect(identity: id, components: components, duration: duration, charges: charges, impairsAction: imapirsAction)
+            let se = StatusEffect(identity: id, components: components, duration: duration, charges: charges, impairsAction: impairsAction)
             
             RPCache.statusEffects[name] = se
             
@@ -75,7 +77,8 @@ open class RPCache {
     open static func loadEntities(_ entities:[String:AnyObject]) throws {
 
         try entities.forEach {
-            (name, data) in
+            (arg) in
+            let (name, data) = arg
             
             guard let dict = data as? [String: AnyObject], let stats = dict["stats"] as? [String:RPValue] else {
                 throw CacheError.invalidFormat("Entities should be defined with a dictionary that includes stats")
