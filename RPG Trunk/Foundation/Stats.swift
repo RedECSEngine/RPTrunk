@@ -82,7 +82,7 @@ public func < (a: Stats, b: Stats) -> Bool {
 //MARK: Other math functions
 
 public func + (a: Stats, b: Stats) -> Stats {
-    var dict:[String:RPValue] = [:]
+    var dict:[String:RPValue] = a.values
     for (type, val) in b.values {
         dict[type] = a[type] + val
     }

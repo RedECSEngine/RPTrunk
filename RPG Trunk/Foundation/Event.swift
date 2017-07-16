@@ -72,7 +72,8 @@ public struct Event {
     
     func applyResults(_ results:[ConflictResult]){
         results.forEach { (result) -> () in
-            result.entity.setCurrentStats(result.entity.allCurrentStats() + result.change)
+            let newStats = result.entity.allCurrentStats() + result.change
+            result.entity.setCurrentStats(newStats)
         }
         applyStatusEffectChanges()
     }
