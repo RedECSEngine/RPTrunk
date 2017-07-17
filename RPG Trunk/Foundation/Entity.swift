@@ -179,20 +179,33 @@ open class Entity: Temporal {
         
         statusEffects = statusEffects.filter { $0.isCoolingDown() }
         
+        return getPendingPassiveEvents() + buffEvents + getPendingExecutableEvents()
+    }
+    
+    func getPendingExecutableEvents() -> [Event] {
+        
         guard !isCoolingDown() && canPerformEvents() else {
-            return buffEvents
+            return []
         }
         
         // Get any events that should execute based on priorities
         var abilityEvents = [Event]()
         for activeAbility in executableAbilities where activeAbility.canExecute() {
             abilityEvents += activeAbility.getEvents()
-            resetCooldown()
             break
         }
         abilityEvents = abilityEvents.filter { false == $0.targets.isEmpty }
         
-        return abilityEvents + buffEvents
+        return abilityEvents
+    }
+    
+    open func getPendingPassiveEvents() -> [Event] {
+        var abilityEvents = [Event]()
+        
+        for activeAbility in passiveAbilities where activeAbility.canExecute() {
+            abilityEvents += activeAbility.getEvents()
+        }
+        return abilityEvents
     }
     
     open func resetCooldown() {
@@ -208,7 +221,6 @@ open class Entity: Temporal {
         
         for activeAbility in passiveAbilities where activeAbility.canExecute() {
             abilityEvents += activeAbility.getEvents()
-            break
         }
         return abilityEvents
     }

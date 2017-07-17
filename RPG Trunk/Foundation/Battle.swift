@@ -19,36 +19,34 @@ open class Battle: Temporal {
     
     open func tick(_ moment:Moment) -> [Event] {
         
-        let battleEvents = [Event]()
         let newMoment = moment.addSibling(self)
         return teams
             .flatMap { $0.entities }
             .flatMap { $0.tick(newMoment) }
-            .reduce(battleEvents, +)
+            .reduce([], +)
     }
     
-//    open func remove(_ entity: Entity) {
-//        
-//        var location: (team: Int, index: Int)?
-//        
-//        for (teamIndex, team) in teams.enumerated() {
-//            if let entityIndex = team.entities.index(where: { $0 === entity }) {
-//                location = (team: teamIndex, index: entityIndex)
-//                break
-//            }
-//        }
-//        
-//        guard let loc = location else {
-//            return
-//        }
-//        
-//        teams[loc.team].entities.remove(at: loc.index)
-//    }
+    open func getAllPendingPassiveEvents() -> [Event] {
+        return teams
+            .flatMap { $0.entities }
+            .flatMap { $0.getPendingPassiveEvents() }
+            .reduce([], +)
+    }
+    
+    open func getAllPendingExecutableEvents() -> [Event] {
+        return teams
+            .flatMap { $0.entities }
+            .flatMap { $0.getPendingExecutableEvents() }
+            .reduce([], +)
+    }
     
     open func performEvents(_ events:[Event]) -> [EventResult] {
         
         return events
             .flatMap { event -> [Event] in
+                
+                event.initiator.resetCooldown()
+                
                 let pre = self.teams
                     .flatMap { $0.entities }
                     .flatMap { $0.eventWillOccur(event) }
