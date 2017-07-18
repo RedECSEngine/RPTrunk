@@ -10,7 +10,7 @@ public struct EventResult {
 }
 
 public struct Event {
-    unowned public let initiator: Entity
+    weak public private(set) var initiator: Entity!
     public let ability:Ability
     
     public var targets: [Entity] {

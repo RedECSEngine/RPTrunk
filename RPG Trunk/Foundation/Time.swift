@@ -1,9 +1,10 @@
+public typealias RPTimeIncrement = Double
 
 public struct Moment {
     let parents:[Temporal]
-    let delta:Double
+    let delta:RPTimeIncrement
     
-    public init(delta:Double, parents:[Temporal] = []) {
+    public init(delta:RPTimeIncrement, parents:[Temporal] = []) {
         self.parents = parents
         self.delta = delta
     }
@@ -16,11 +17,11 @@ public struct Moment {
 
 public protocol Temporal {
     
-    var currentTick:Double { get }
-    var maximumTick:Double { get }
+    var currentTick:RPTimeIncrement { get }
+    var maximumTick:RPTimeIncrement { get }
 
-    func tick(_ moment:Moment) -> [Event]
-    func resetCooldown()
+    mutating func tick(_ moment:Moment) -> [Event]
+    mutating func resetCooldown()
 }
 
 extension Temporal {

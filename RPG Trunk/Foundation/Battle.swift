@@ -6,10 +6,7 @@ public struct Team {
     }
 }
 
-open class Battle: Temporal {
-    
-    open var currentTick: Double = 0
-    open var maximumTick: Double = 0
+open class Battle {
     
     open var teams = [Team]()
     
@@ -18,11 +15,9 @@ open class Battle: Temporal {
     }
     
     open func tick(_ moment:Moment) -> [Event] {
-        
-        let newMoment = moment.addSibling(self)
         return teams
             .flatMap { $0.entities }
-            .flatMap { $0.tick(newMoment) }
+            .flatMap { $0.tick(moment) }
             .reduce([], +)
     }
     
@@ -42,24 +37,26 @@ open class Battle: Temporal {
     
     open func performEvents(_ events:[Event]) -> [EventResult] {
         
-        return events
+        let mainEventResults = events
             .flatMap { event -> [Event] in
-                
                 event.initiator.resetCooldown()
                 
-                let pre = self.teams
-                    .flatMap { $0.entities }
-                    .flatMap { $0.eventWillOccur(event) }
-                let during = [event]
-                let post = self.teams
-                    .flatMap { $0.entities }
-                    .flatMap { $0.eventDidOccur(event) }
-                return pre + during + post
+                //reset cooldown if it is an executable
+                event.initiator.resetAbility(byName: event.ability.name)
+                return [event]
             }
             .map { $0.execute() }
+        
+        let reactionEventResults = mainEventResults.flatMap {
+            (eventResult) -> [Event] in
+            eventResult.effects.flatMap({
+                conflictResult -> [Event] in
+                return conflictResult.entity.getPendingPassiveEvents()
+            })
+        }
+        .map { $0.execute() }
+        
+        return mainEventResults + reactionEventResults
     }
     
-    public func resetCooldown() {
-        
-    }
 }

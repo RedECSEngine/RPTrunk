@@ -42,7 +42,9 @@ open class RPCache {
             
             let components:[Component] = try dict.flatMap(RPCache.buildComponent)
             
-            let ability = Ability(name:name, components:components)
+            let cooldown: RPTimeIncrement? = dict["cooldown"] as? RPTimeIncrement
+            
+            let ability = Ability(name:name, components:components, cooldown: cooldown)
             RPCache.abilities[name] = ability
             
             print("Loaded ability:", name)
@@ -61,7 +63,7 @@ open class RPCache {
             
             let components:[Component] = try dict.flatMap(RPCache.buildComponent)
             
-            let duration: Double? = dict["duration"] as? Double
+            let duration: Double? = dict["duration"] as? RPTimeIncrement
             let charges: Int? = dict["charges"] as? Int
             let impairsAction: Bool = (dict["impairsAction"] as? Bool) ?? false
             

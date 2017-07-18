@@ -1,26 +1,20 @@
 
 open class Entity: Temporal {
     
-    open var currentTick: Double = 0
-    open var maximumTick: Double = 0
+    open var currentTick: RPTimeIncrement = 0
+    open var maximumTick: RPTimeIncrement = 0
     
     open var baseStats: Stats = [:]
     open var currentStats: Stats = [:] //when a value is nil, for a given key, it means it's at max
     open var body = Body()
     
-    open fileprivate(set) var executableAbilities:[ActiveAbility] = []
-    open fileprivate(set) var passiveAbilities:[ActiveAbility] = []
+    open fileprivate(set) var executableAbilities:[String: ActiveAbility] = [:]
+    open fileprivate(set) var passiveAbilities:[String: ActiveAbility] = [:]
     open fileprivate(set) var statusEffects:[ActiveStatusEffect] = []
-    
-    open weak var parent:Entity? = nil
-    open fileprivate(set) var children:[Entity] = []
     
     open var targets: [Entity] = []
     
     open weak var data:AnyObject?
-    
-    
-    //MARK: - Computed properties
     
     open var stats: Stats {
         var totalStats = self.baseStats
@@ -61,14 +55,9 @@ open class Entity: Temporal {
             return []
         }
         
-        return executableAbilities.flatMap {
-            activeAbility in
-            
-            if self.allCurrentStats() >= activeAbility.ability.cost {
-                return activeAbility.ability
-            }
-            return nil
-        }
+        return executableAbilities
+            .filter { $0.value.canExecute() && allCurrentStats() > $0.value.ability.cost }
+            .map { $0.value.ability }
     }
     
     
@@ -86,43 +75,10 @@ open class Entity: Temporal {
         self.init([:])
     }
     
-    deinit {
-        print("Entity dealloc", self)
-    }
-    
-    
-    //MARK: - Children
-    
-    open func addChild(_ entity:Entity) {
-        assert(entity.parent == nil, "Entity already has a parent")
-        
-        entity.parent = self
-        children.append(entity)
-    }
-    
-    open func removeChild(_ entity:Entity) {
-        guard let p = entity.parent, p === self,
-           let idx = children.index(where: { $0 === entity })
-            else {
-            return
-        }
-        
-        children.remove(at: idx)
-        entity.parent = nil
-    }
-    
-    
-    //MARK: Targeting & Abilities
-    
     open func getPossibleTargets() -> [Entity]? {
         
         if targets.count > 0 {
             return targets
-        }
-        
-        if let p = parent,
-            let targs = p.getPossibleTargets() {
-            return targs
         }
         
         return nil
@@ -133,39 +89,48 @@ open class Entity: Temporal {
     }
     
     open func addExecutableAbility(_ ability:Ability, conditional:Conditional) {
-        let activeAbility = ActiveAbility(ability, conditional)
+        var activeAbility = ActiveAbility(ability, conditional)
         activeAbility.entity = self
-        executableAbilities.append(activeAbility)
+        executableAbilities[ability.name] = activeAbility
     }
     
     open func addPassiveAbility(_ ability:Ability, conditional:Conditional) {
-        let activeAbility = ActiveAbility(ability, conditional)
+        var activeAbility = ActiveAbility(ability, conditional)
         activeAbility.entity = self
-        passiveAbilities.append(activeAbility)
+        passiveAbilities[ability.name] = activeAbility
     }
     
     open func applyStatusEffect(_ se:StatusEffect) {
         
-        if let existing = statusEffects.first(where: { $0.name == se.identity.name }) {
-            
+        if let statusIndex = statusEffects.index(where: { $0.name == se.identity.name }) {
             //TODO: Handle stackability of status effects rather than just resetting
-            existing.resetCooldown()
+            statusEffects[statusIndex].resetCooldown()
         } else {
-        
             statusEffects.append(ActiveStatusEffect(se))
         }
-        
     }
     
     open func dischargeStatusEffect(_ label:String) {
-        statusEffects
-            .filter { $0.labels.contains(label) }
-            .forEach { $0.expendCharge() }
-        statusEffects = statusEffects.filter { $0.isCoolingDown() }
+        
+        let backwardsCount = (0..<statusEffects.count).reversed() // for safe array removal as traversing
+        for i in backwardsCount {
+            guard statusEffects[i].labels.contains(label) else {
+                continue
+            }
+            statusEffects[i].expendCharge()
+            if false == statusEffects[i].isCoolingDown() {
+                statusEffects.remove(at: i)
+            }
+        }
     }
     
+    open func resetCooldown() {
+        currentTick = 0
+    }
     
-    //MARK: - RPEvent/Battle handling
+    open func resetAbility(byName name: String) {
+        executableAbilities[name]?.resetCooldown()
+    }
     
     open func tick(_ moment:Moment) -> [Event] {
         
@@ -173,13 +138,22 @@ open class Entity: Temporal {
             currentTick += moment.delta
         }
         
-        // Next calculate new events that should occur from status effects
         let newMoment = moment.addSibling(self)
-        let buffEvents = statusEffects.flatMap { $0.tick(newMoment) }
         
-        statusEffects = statusEffects.filter { $0.isCoolingDown() }
+        var statusEffectEvents = [Event]()
+        let backwardsCount = (0..<statusEffects.count).reversed() // for safe array removal as traversing
+        for i in backwardsCount {
+            statusEffectEvents += statusEffects[i].tick(newMoment)
+            if false == statusEffects[i].isCoolingDown() {
+                statusEffects.remove(at: i)
+            }
+        }
         
-        return getPendingPassiveEvents() + buffEvents + getPendingExecutableEvents()
+        for name in executableAbilities.keys {
+            _ = executableAbilities[name]?.tick(newMoment)
+        }
+        
+        return getPendingPassiveEvents() + statusEffectEvents + getPendingExecutableEvents()
     }
     
     func getPendingExecutableEvents() -> [Event] {
@@ -190,9 +164,10 @@ open class Entity: Temporal {
         
         // Get any events that should execute based on priorities
         var abilityEvents = [Event]()
-        for activeAbility in executableAbilities where activeAbility.canExecute() {
-            abilityEvents += activeAbility.getEvents()
-            break
+        for activeAbility in executableAbilities.values where activeAbility.canExecute() {
+                
+                abilityEvents += activeAbility.getEvents()
+                break
         }
         abilityEvents = abilityEvents.filter { false == $0.targets.isEmpty }
         
@@ -202,29 +177,12 @@ open class Entity: Temporal {
     open func getPendingPassiveEvents() -> [Event] {
         var abilityEvents = [Event]()
         
-        for activeAbility in passiveAbilities where activeAbility.canExecute() {
+        for activeAbility in passiveAbilities.values where activeAbility.canExecute() {
             abilityEvents += activeAbility.getEvents()
         }
         return abilityEvents
-    }
-    
-    open func resetCooldown() {
-        currentTick = 0
-    }
-    
-    open func eventWillOccur(_ event: Event) -> [Event] {
-        return [] //TODO: Check for passive abilities that would trigger based on this event
     }
 
-    open func eventDidOccur(_ event: Event) -> [Event] {
-        var abilityEvents = [Event]()
-        
-        for activeAbility in passiveAbilities where activeAbility.canExecute() {
-            abilityEvents += activeAbility.getEvents()
-        }
-        return abilityEvents
-    }
-    
     //Querying
     
     open func canPerformEvents() -> Bool {
@@ -245,12 +203,17 @@ extension Entity {
     public func copy() -> Entity {
         
         let entity = Entity()
+        entity.currentTick = self.currentTick
         entity.maximumTick = self.maximumTick
         entity.baseStats = self.baseStats
         entity.currentStats = self.currentStats
         entity.body = self.body
-        entity.executableAbilities = self.executableAbilities.map { $0.copyForEntity(entity) }
-        entity.passiveAbilities = self.passiveAbilities.map { $0.copyForEntity(entity) }
+        entity.executableAbilities = self.executableAbilities
+            .map { $0.value.copyForEntity(entity) }
+            .toDictionary { $0.ability.name }
+        entity.passiveAbilities = self.passiveAbilities
+            .map { $0.value.copyForEntity(entity) }
+            .toDictionary { $0.ability.name }
         entity.statusEffects = self.statusEffects
         return entity
     }
