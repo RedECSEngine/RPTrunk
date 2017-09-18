@@ -1,8 +1,16 @@
 public struct Team {
-    public var entities:[Entity]
     
-    public init(entities: [Entity]) {
-        self.entities = entities
+    var id: String = UUID().uuidString
+    public private(set) var entities: [Entity] = []
+    
+    public init() {
+    
+    }
+    
+    public mutating func add(_ entity: Entity) {
+    
+        entity.teamId = self.id
+        entities.append(entity)
     }
 }
 
@@ -59,4 +67,10 @@ open class Battle {
         return mainEventResults + reactionEventResults
     }
     
+    open func getEnemies(of entity: Entity) -> [Entity] {
+    
+        return teams
+            .filter { $0.id != entity.teamId }
+            .flatMap { $0.entities }
+    }
 }

@@ -1,6 +1,9 @@
 
 open class Entity: Temporal {
     
+    open var id: String = ""
+    open var teamId: String?
+    
     open var currentTick: RPTimeIncrement = 0
     open var maximumTick: RPTimeIncrement = 0
     

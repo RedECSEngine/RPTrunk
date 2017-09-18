@@ -34,7 +34,8 @@ public struct Targeting: Component {
         case .oneself, .singleEnemy, .singleFriendly:
             return [first]
         case .random, .randomEnemy, .randomFriendly:
-            return [validTargets.shuffle().first!]
+            let randomIndex = Int(arc4random_uniform(UInt32(validTargets.count)))
+            return [validTargets[randomIndex]]
         default:
         return validTargets
         }
