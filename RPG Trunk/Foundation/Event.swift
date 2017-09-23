@@ -10,6 +10,8 @@ public struct EventResult {
 }
 
 public struct Event {
+    
+    public let id = UUID().uuidString
     weak public private(set) var initiator: Entity!
     public let ability:Ability
     

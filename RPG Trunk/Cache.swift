@@ -44,7 +44,9 @@ open class RPCache {
             
             let cooldown: RPTimeIncrement? = dict["cooldown"] as? RPTimeIncrement
             
-            let ability = Ability(name:name, components:components, cooldown: cooldown)
+            var ability = Ability(name:name, components:components, cooldown: cooldown)
+            ability.animationName = dict["animationName"] as? String
+            
             RPCache.abilities[name] = ability
             
             print("Loaded ability:", name)
