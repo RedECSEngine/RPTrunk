@@ -1,12 +1,13 @@
 
 public struct Ability: ComponentContainer {
 
-    public var name:String
-    public var components:[Component]
-    public var cooldown:RPTimeIncrement
-    public var repeats:Int = 1
+    public var name: String
+    public var components: [Component]
+    public var cooldown: RPTimeIncrement
+    public var repeats: Int = 1
+    public var metadata: [String:AnyObject]?
     
-    public init(name:String, components:[Component] = [], shouldUseDefaults:Bool = true, cooldown: RPTimeIncrement?) {
+    public init(name: String, components: [Component] = [], shouldUseDefaults: Bool = true, cooldown: RPTimeIncrement?) {
         self.name = name
         self.components = components
         self.cooldown = cooldown ?? 0
