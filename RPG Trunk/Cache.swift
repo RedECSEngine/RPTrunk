@@ -12,8 +12,6 @@ open class RPCache {
 
     open static func load(_ data:[String:AnyObject]) throws {
         
-        print(String(describing: self), ">> start loading")
-
         if let se = data["Status Effects"] as? [String:AnyObject] {
             try RPCache.loadStatusEffects(se)
         }
@@ -25,9 +23,6 @@ open class RPCache {
         if let entities = data["Entities"] as? [String:AnyObject] {
             try RPCache.loadEntities(entities)
         }
-        
-        print(String(describing: self), ">> done loading")
-
     }
 
     open static func loadAbilities(_ abilities:[String:AnyObject]) throws {
@@ -45,11 +40,9 @@ open class RPCache {
             let cooldown: RPTimeIncrement? = dict["cooldown"] as? RPTimeIncrement
             
             var ability = Ability(name:name, components:components, cooldown: cooldown)
-            ability.animationName = dict["animationName"] as? String
+            ability.metadata = dict
             
             RPCache.abilities[name] = ability
-            
-            print("Loaded ability:", name)
         }
     }
 
@@ -73,8 +66,6 @@ open class RPCache {
             let se = StatusEffect(identity: id, components: components, duration: duration, charges: charges, impairsAction: impairsAction)
             
             RPCache.statusEffects[name] = se
-            
-            print("Loaded status effect:", name)
         }
     }
 
@@ -104,8 +95,6 @@ open class RPCache {
                     }
                 }
             }
-            
-            print("Loaded entity:", name)
         }
     }
     

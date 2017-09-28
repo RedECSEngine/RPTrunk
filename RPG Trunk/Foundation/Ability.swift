@@ -2,10 +2,10 @@
 public struct Ability: ComponentContainer {
 
     public var name: String
-    public var animationName: String?
     public var components: [Component]
     public var cooldown: RPTimeIncrement
     public var repeats: Int = 1
+    public var metadata: [String:AnyObject]?
     
     public init(name: String, components: [Component] = [], shouldUseDefaults: Bool = true, cooldown: RPTimeIncrement?) {
         self.name = name
