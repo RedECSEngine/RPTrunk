@@ -32,14 +32,14 @@ open class Battle {
     open func getAllPendingPassiveEvents() -> [Event] {
         return teams
             .flatMap { $0.entities }
-            .flatMap { $0.getPendingPassiveEvents() }
+            .flatMap { $0.getPendingPassiveEvents(in: self) }
             .reduce([], +)
     }
     
     open func getAllPendingExecutableEvents() -> [Event] {
         return teams
             .flatMap { $0.entities }
-            .flatMap { $0.getPendingExecutableEvents() }
+            .flatMap { $0.getPendingExecutableEvents(in: self) }
             .reduce([], +)
     }
     
@@ -59,7 +59,7 @@ open class Battle {
             (eventResult) -> [Event] in
             eventResult.effects.flatMap({
                 conflictResult -> [Event] in
-                return conflictResult.entity.getPendingPassiveEvents()
+                return conflictResult.entity.getPendingPassiveEvents(in: self)
             })
         }
         .map { $0.execute() }
@@ -67,10 +67,20 @@ open class Battle {
         return mainEventResults + reactionEventResults
     }
     
-    open func getEnemies(of entity: Entity) -> [Entity] {
+    open func getEntities() -> [Entity] {
+        return teams
+            .flatMap { $0.entities }
+    }
     
+    open func getEnemies(of entity: Entity) -> [Entity] {
         return teams
             .filter { $0.id != entity.teamId }
+            .flatMap { $0.entities }
+    }
+    
+    open func getFriends(of entity: Entity) -> [Entity] {
+        return teams
+            .filter { $0.id == entity.teamId }
             .flatMap { $0.entities }
     }
 }

@@ -101,8 +101,8 @@ func targetParser() -> Parser<String, ParserResultType> {
 }
 
 func getTarget(_ input:ParserResultType) -> ParserResultType {
-    if case let .entityResult(e) = input, e.getTarget() != nil {
-        return .entityResult(entity: e.getTarget()!)
+    if case let .entityResult(e) = input, let target = e.getTarget() {
+        return .entityResult(entity: target)
     }
     return .nothing
 }

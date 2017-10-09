@@ -156,10 +156,17 @@ open class Entity: Temporal {
             _ = executableAbilities[name]?.tick(newMoment)
         }
         
-        return getPendingPassiveEvents() + statusEffectEvents + getPendingExecutableEvents()
+        var events = statusEffectEvents
+        
+        if let battle = moment.parents.first as? Battle {
+            events = getPendingPassiveEvents(in: battle) + events
+            events += getPendingExecutableEvents(in: battle)
+        }
+        
+        return events
     }
     
-    func getPendingExecutableEvents() -> [Event] {
+    func getPendingExecutableEvents(in battle: Battle) -> [Event] {
         
         guard !isCoolingDown() && canPerformEvents() else {
             return []
@@ -167,21 +174,19 @@ open class Entity: Temporal {
         
         // Get any events that should execute based on priorities
         var abilityEvents = [Event]()
-        for activeAbility in executableAbilities.values where activeAbility.canExecute() {
-                
-                abilityEvents += activeAbility.getEvents()
-                break
+        if let activeAbility = executableAbilities.values.first(where: { $0.canExecute() }) {
+            abilityEvents.append(contentsOf: activeAbility.createEvents(in: battle))
         }
         abilityEvents = abilityEvents.filter { false == $0.targets.isEmpty }
         
         return abilityEvents
     }
     
-    open func getPendingPassiveEvents() -> [Event] {
+    open func getPendingPassiveEvents(in battle: Battle) -> [Event] {
         var abilityEvents = [Event]()
         
         for activeAbility in passiveAbilities.values where activeAbility.canExecute() {
-            abilityEvents += activeAbility.getEvents()
+            abilityEvents += activeAbility.createEvents(in: battle)
         }
         return abilityEvents
     }

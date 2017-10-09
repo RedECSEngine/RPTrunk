@@ -70,8 +70,9 @@ public struct ActiveStatusEffect: Temporal {
         currentTick += moment.delta
         
         if let entity = moment.parents.last as? Entity,
-            let ability = statusEffect.ability {
-            return [Event(initiator:entity, ability: ability)]
+            let ability = statusEffect.ability,
+            let battle = moment.parents.first(where: { $0 is Battle }) as? Battle {
+            return [Event(initiator:entity, ability: ability, battle: battle)]
         }
         
         return []

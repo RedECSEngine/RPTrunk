@@ -12,30 +12,15 @@ public struct EventResult {
 public struct Event {
     
     public let id = UUID().uuidString
-    weak public private(set) var initiator: Entity!
     public let ability:Ability
+    weak public private(set) var initiator: Entity!
     
-    public var targets: [Entity] {
-        
-        //TODO: Iterate over components and potentially modify target selection (i.e 'All' component)
-        switch ability.targeting.type {
-        case .oneself:
-            return [initiator]
-        case .singleEnemy:
-            if let t = initiator.getTarget() {
-                return [t]
-            }
-            return []
-        case .all:
-            return initiator.targets
-        default:
-            return []
-        }
-    }
+    public var targets: [Entity] = []
     
-    public init(initiator: Entity, ability:Ability) {
+    public init(initiator: Entity, ability: Ability, battle: Battle) {
         self.initiator = initiator
         self.ability = ability
+        self.targets = ability.targeting.getValidTargets(for: initiator, in: battle)
     }
     
     func getStats() -> Stats {

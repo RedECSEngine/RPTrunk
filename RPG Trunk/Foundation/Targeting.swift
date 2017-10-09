@@ -22,40 +22,38 @@ public struct Targeting: Component {
         self.conditional = conditional
     }
     
-    public func validTargets(_ potentialTargets:[Entity], forEntity entity:Entity) -> [Entity] {
+    public func getValidTargets(for entity:Entity, in battle: Battle) -> [Entity] {
         
-        let validTargets = potentialTargets.filter { isValid($0, forEntity: entity) }
-        
-        guard let first = validTargets.first else {
-            return validTargets
-        }
+        let validTargets = getValidTargetSet(for: entity, in: battle)
+            .filter { possibleTarget in entity.targets.contains(where: { $0 === possibleTarget }) }
+            .filter { conditional.exec($0) }
         
         switch type {
         case .oneself, .singleEnemy, .singleFriendly:
-            return [first]
+            return validTargets.first.map { [$0] } ?? []
         case .random, .randomEnemy, .randomFriendly:
             let randomIndex = Int(arc4random_uniform(UInt32(validTargets.count)))
             return [validTargets[randomIndex]]
         default:
-        return validTargets
+            return validTargets
         }
         
     }
     
-    public func isValid(_ potentialTarget:Entity, forEntity entity:Entity) -> Bool {
-        
+    fileprivate func getValidTargetSet(for entity: Entity, in battle: Battle) -> [Entity] {
         switch type {
-        case .all:
-            return conditional.exec(potentialTarget)
-        case .random:
-            return conditional.exec(potentialTarget)
+        case .randomEnemy, .allEnemy, .singleEnemy:
+            return battle.getEnemies(of: entity)
+        case .randomFriendly, .allFriendly, .singleFriendly:
+            return battle.getFriends(of: entity)
+        case .all, .random:
+            return battle.getEntities()
         case .oneself:
-            return potentialTarget === entity && conditional.exec(potentialTarget)
-        default:
-            //TODO: Make cases for enemy/friendly types
-            return false
+            return [entity]
+            
         }
     }
+
 }
 
 extension Targeting {

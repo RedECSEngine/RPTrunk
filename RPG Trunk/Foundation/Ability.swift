@@ -49,10 +49,10 @@ public struct ActiveAbility: Temporal {
         return conditional.exec(e)
     }
     
-    public func getEvents() -> [Event] {
+    public func createEvents(in battle: Battle) -> [Event] {
     
         if let e = entity {
-            return (0..<ability.repeats).map { _ in Event(initiator: e, ability: ability) }
+            return (0..<ability.repeats).map { _ in Event(initiator: e, ability: ability, battle: battle) }
         }
         return []
     }
