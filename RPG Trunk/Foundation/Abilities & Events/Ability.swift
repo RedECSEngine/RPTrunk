@@ -17,7 +17,7 @@ public struct Ability: ComponentContainer {
     }
 }
 
-extension Ability:Equatable {}
+extension Ability: Equatable {}
 public func ==(lhs:Ability, rhs:Ability) -> Bool {
     return
         lhs.name == rhs.name
@@ -25,13 +25,13 @@ public func ==(lhs:Ability, rhs:Ability) -> Bool {
 }
 
 public struct ActiveAbility: Temporal {
-    
+
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { return ability.cooldown }
     public var conditional: Conditional
     public weak var entity: Entity?
     
-    let ability:Ability
+    let ability: Ability
     
     public init(_ a: Ability, _ c:Conditional) {
         ability = a
@@ -46,23 +46,34 @@ public struct ActiveAbility: Temporal {
         guard let e = entity else {
             return false
         }
+        
+        // TODO: consider stats cost
+        // TODO: consider requirements
+        // TODO: consider item exchange cost
+        
         return conditional.exec(e)
     }
     
-    public func createEvents(in battle: Battle) -> [Event] {
+    public func getPendingEvents(in rpSpace: RPSpace) -> [Event] {
+        guard isCoolingDown() == false else {
+            return []
+        }
+        return createEvents(in: rpSpace)
+    }
+    
+    fileprivate func createEvents(in rpSpace: RPSpace) -> [Event] {
     
         if let e = entity {
-            return (0..<ability.repeats).map { _ in Event(initiator: e, ability: ability, battle: battle) }
+            return (0..<ability.repeats).map { _ in Event(initiator: e, ability: ability, rpSpace: rpSpace) }
         }
         return []
     }
     
-    mutating public func tick(_ moment:Moment) -> [Event] {
+    mutating public func tick(_ moment:Moment) {
         
         if isCoolingDown() {
             currentTick += moment.delta
         }
-        return []
     }
     
     mutating public func resetCooldown() {

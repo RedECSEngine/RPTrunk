@@ -8,11 +8,17 @@ public enum Conditional {
     case custom(String, Predicate)
     
     public init(_ condition:String) {
+        
+        guard condition != "always" else {
+            self = .always
+            return
+        }
+        
         do {
             let predicate = try interpretStringCondition(condition)
             self = .custom(condition, predicate)
         } catch {
-            print("WARNING: Failed to parse conditional (\(condition))", error)
+            print("WARNING: Failed to parse conditional (\(condition)). Will NEVER fire", error)
             self = .never
         }
     }

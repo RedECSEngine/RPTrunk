@@ -1,5 +1,5 @@
 
-public struct Targeting: Component {
+public struct Targeting {
 
     public enum SelectionType {
         
@@ -22,9 +22,9 @@ public struct Targeting: Component {
         self.conditional = conditional
     }
     
-    public func getValidTargets(for entity:Entity, in battle: Battle) -> [Entity] {
+    public func getValidTargets(for entity:Entity, in rpSpace: RPSpace) -> [Entity] {
         
-        let validTargets = getValidTargetSet(for: entity, in: battle)
+        let validTargets = getValidTargetSet(for: entity, in: rpSpace)
             .filter { possibleTarget in entity.targets.contains(where: { $0 === possibleTarget }) }
             .filter { conditional.exec($0) }
         
@@ -40,14 +40,14 @@ public struct Targeting: Component {
         
     }
     
-    fileprivate func getValidTargetSet(for entity: Entity, in battle: Battle) -> [Entity] {
+    fileprivate func getValidTargetSet(for entity: Entity, in rpSpace: RPSpace) -> [Entity] {
         switch type {
         case .randomEnemy, .allEnemy, .singleEnemy:
-            return battle.getEnemies(of: entity)
+            return rpSpace.getEnemies(of: entity)
         case .randomFriendly, .allFriendly, .singleFriendly:
-            return battle.getFriends(of: entity)
+            return rpSpace.getFriends(of: entity)
         case .all, .random:
-            return battle.getEntities()
+            return rpSpace.getEntities()
         case .oneself:
             return [entity]
             
@@ -81,7 +81,7 @@ extension Targeting {
             return Targeting(.allFriendly, condition)
         case "allEnemies":
             return Targeting(.allEnemy, condition)
-        case "ally":
+        case "ally", "singleFriendly":
             return Targeting(.singleFriendly, condition)
         case "randomFriendly":
             return Targeting(.randomFriendly, condition)
@@ -98,4 +98,35 @@ extension Targeting: Equatable {}
 
 public func ==(lhs:Targeting, rhs:Targeting) -> Bool {
     return lhs.type == rhs.type && lhs.conditional == rhs.conditional
+}
+
+extension Targeting: Component {
+    
+    public func getTargeting() -> Targeting? {
+        return self
+    }
+    
+    public func getStats() -> Stats? {
+        return nil
+    }
+    
+    public func getCost() -> Stats? {
+        return nil
+    }
+    
+    public func getRequirements() -> Stats? {
+        return nil
+    }
+    
+    public func getDischargedStatusEffects() -> [String] {
+        return []
+    }
+    
+    public func getStatusEffects() -> [StatusEffect] {
+        return []
+    }
+    
+    public func getItemExchange() -> ItemExchange? {
+        return nil
+    }
 }

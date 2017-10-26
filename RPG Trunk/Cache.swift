@@ -1,31 +1,33 @@
 
 open class RPCache {
     
-    public enum CacheError:Error {
+    public enum CacheError: Error {
         case notFound(String)
         case invalidFormat(String)
     }
     
-    open fileprivate(set) static var abilities: [String:Ability] = [:]
-    open fileprivate(set) static var statusEffects: [String:StatusEffect] = [:]
-    open fileprivate(set) static var entities: [String:Entity] = [:]
+    open fileprivate(set) static var abilities: [String: Ability] = [:]
+    open fileprivate(set) static var statusEffects: [String: StatusEffect] = [:]
+    open fileprivate(set) static var entities: [String: Entity] = [:]
 
-    open static func load(_ data:[String:AnyObject]) throws {
+    open static func load(_ data: [String: AnyObject]) throws {
         
-        if let se = data["Status Effects"] as? [String:AnyObject] {
+        if let se = data["Status Effects"] as? [String: AnyObject] {
             try RPCache.loadStatusEffects(se)
         }
         
-        if let abilities = data["Abilities"] as? [String:AnyObject] {
+        if let abilities = data["Abilities"] as? [String: AnyObject] {
             try RPCache.loadAbilities(abilities)
         }
 
-        if let entities = data["Entities"] as? [String:AnyObject] {
+        if let entities = data["Entities"] as? [String: AnyObject] {
             try RPCache.loadEntities(entities)
         }
+        
+        //TODO: Handle items
     }
 
-    open static func loadAbilities(_ abilities:[String:AnyObject]) throws {
+    open static func loadAbilities(_ abilities:[String: AnyObject]) throws {
 
         try abilities.forEach {
             (arg) in
@@ -35,11 +37,11 @@ open class RPCache {
                 throw CacheError.invalidFormat("Ability should be defined with a dictionary")
             }
             
-            let components:[Component] = try dict.flatMap(RPCache.buildComponent)
+            let components: [Component] = try dict.flatMap(RPCache.buildComponent)
             
             let cooldown: RPTimeIncrement? = dict["cooldown"] as? RPTimeIncrement
             
-            var ability = Ability(name:name, components:components, cooldown: cooldown)
+            var ability = Ability(name: name, components: components, cooldown: cooldown)
             ability.metadata = dict
             
             RPCache.abilities[name] = ability
@@ -56,7 +58,7 @@ open class RPCache {
                 throw CacheError.invalidFormat("Status effect should be defined with a dictionary")
             }
             
-            let components:[Component] = try dict.flatMap(RPCache.buildComponent)
+            let components: [Component] = try dict.flatMap(RPCache.buildComponent)
             
             let duration: Double? = dict["duration"] as? RPTimeIncrement
             let charges: Int? = dict["charges"] as? Int
@@ -85,13 +87,18 @@ open class RPCache {
             
             RPCache.entities[name] = entity
             
-            if let abilities = dict["abilities"] as? [String] {
+            if let abilities = dict["abilities"] as? [[String: AnyObject]] {
                 abilities.forEach {
-                    name in
+                    dict in
                     
+                    guard let name = dict["name"] as? String
+                        , let conditionalString = dict["conditional"] as? String else {
+                            return
+                    }
+                    
+                    let conditional = Conditional(conditionalString)
                     if let ability = RPCache.abilities[name] {
-                    
-                        entity.addExecutableAbility(ability, conditional: .always)
+                        entity.addExecutableAbility(ability, conditional: conditional)
                     }
                 }
             }

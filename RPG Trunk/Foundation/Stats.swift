@@ -1,5 +1,8 @@
 
 public struct Stats: Component {
+    
+    public static let zero = Stats([:])
+    
     fileprivate let values:[String:RPValue]
     
     public init(_ data:[String:RPValue], asPartial:Bool = false) {
@@ -9,11 +12,7 @@ public struct Stats: Component {
         }
         values = stats
     }
-    
-    public init() {
-        values = [:]
-    }
-    
+
     public subscript(index:String) -> RPValue {
         return values[index] ?? 0
     }
@@ -111,4 +110,31 @@ public func * (a: Stats, amount: Int) -> Stats {
         dict[type] = val * amount
     }
     return Stats(dict)
+}
+
+extension Stats {
+    
+    public func getCost() -> Stats? {
+        return nil
+    }
+    
+    public func getRequirements() -> Stats? {
+        return nil
+    }
+    
+    public func getTargeting() -> Targeting? {
+        return nil
+    }
+    
+    public func getDischargedStatusEffects() -> [String] {
+        return []
+    }
+    
+    public func getStatusEffects() -> [StatusEffect] {
+        return []
+    }
+    
+    public func getItemExchange() -> ItemExchange? {
+        return nil
+    }
 }

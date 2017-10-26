@@ -7,62 +7,37 @@ public protocol Component {
     func getTargeting() -> Targeting?
     func getStatusEffects() -> [StatusEffect]
     func getDischargedStatusEffects() -> [String]
-}
-
-extension Component {
-    public func getStats() -> Stats? {
-        return nil
-    }
-    
-    public func getTargeting() -> Targeting? {
-        return nil
-    }
-    
-    public func getCost() -> Stats? {
-        return nil
-    }
-    
-    public func getRequirements() -> Stats? {
-        return nil
-    }
-    
-    public func getStatusEffects() -> [StatusEffect] {
-        return []
-    }
-    
-    public func getDischargedStatusEffects() -> [String] {
-        return []
-    }
+    func getItemExchange() -> ItemExchange?
 }
 
 public protocol ComponentContainer {
-    var components:[Component] { get }
+    var components: [Component] { get }
 }
 
 extension ComponentContainer {
 
-    public var stats:Stats {
+    public var stats: Stats {
         
         return components
             .flatMap { $0.getStats() }
             .reduce(Stats(), +)
     }
 
-    public var cost:Stats {
+    public var cost: Stats {
         
         return components
             .flatMap { $0.getCost() }
             .reduce(Stats(), +)
     }
 
-    public var requirements:Stats {
+    public var requirements: Stats {
         
         return components
             .flatMap { $0.getRequirements() }
             .reduce(Stats(), +)
     }
 
-    public var targeting:Targeting {
+    public var targeting: Targeting {
 
         for component in components {
             if let t = component.getTargeting() {
@@ -77,9 +52,19 @@ extension ComponentContainer {
             .flatMap { $0.getStatusEffects() }
     }
 
-    public var dischargedStatusEffects:[String] {
+    public var dischargedStatusEffects: [String] {
         return components
             .flatMap { $0.getDischargedStatusEffects() }
+    }
+    
+    public var itemExchange: ItemExchange? {
+        
+        for component in components {
+            if let exchange = component.getItemExchange() {
+                return exchange
+            }
+        }
+        return nil
     }
 }
 
@@ -98,70 +83,45 @@ public struct BasicComponent: Component {
         let components: [Component]
     }
 
-    public let stats: Stats?
-    public let cost: Stats?
-    public let requirements: Stats?
-    public let targeting:Targeting?
-    public let statusEffects: [StatusEffect]?
-    public let dischargedStatusEffects: [String]?
+    public var stats: Stats?
+    public var cost: Stats?
+    public var requirements: Stats?
+    public var targeting:Targeting?
+    public var statusEffects: [StatusEffect]?
+    public var dischargedStatusEffects: [String]?
+    public var itemExchange: ItemExchange?
     
     public init(stats: Stats) {
         self.stats = stats
-        self.cost = nil
-        self.requirements = nil
-        self.targeting = nil
-        self.statusEffects = nil
-        self.dischargedStatusEffects = nil
     }
     
     public init(cost: Stats) {
-        self.stats = nil
         self.cost = cost
-        self.requirements = nil
-        self.targeting = nil
-        self.statusEffects = nil
-        self.dischargedStatusEffects = nil
     }
     
     public init(requirements: Stats) {
-        self.stats = nil
-        self.cost = nil
         self.requirements = requirements
-        self.targeting = nil
-        self.statusEffects = nil
-        self.dischargedStatusEffects = nil
     }
     
-    public init(targetType:Targeting) {
-        self.stats = nil
-        self.cost = nil
-        self.requirements = nil
+    public init(targetType: Targeting) {
         self.targeting = targetType
-        self.statusEffects = nil
-        self.dischargedStatusEffects = nil
     }
     
-    public init(statusEffects:[StatusEffect]) {
-        self.stats = nil
-        self.cost = nil
-        self.requirements = nil
-        self.targeting = nil
+    public init(statusEffects: [StatusEffect]) {
         self.statusEffects = statusEffects
-        self.dischargedStatusEffects = nil
     }
     
-    public init(dischargedStatusEffects:[String]) {
-        self.stats = nil
-        self.cost = nil
-        self.requirements = nil
-        self.targeting = nil
-        self.statusEffects = nil
+    public init(dischargedStatusEffects: [String]) {
         self.dischargedStatusEffects = dischargedStatusEffects
     }
     
-    public init(fromComponents:[Component]) {
+    public init(itemExchange: ItemExchange) {
+        self.itemExchange = itemExchange
+    }
+    
+    public init(flattenedFrom components: [Component]) {
         
-        let container = IntermediaryContainer(components:fromComponents)
+        let container = IntermediaryContainer(components: components)
         
         self.stats = container.stats
         self.cost = container.cost
@@ -169,6 +129,7 @@ public struct BasicComponent: Component {
         self.targeting = container.targeting
         self.statusEffects = container.statusEffects
         self.dischargedStatusEffects = container.dischargedStatusEffects
+        self.itemExchange = container.itemExchange
     }
     
     public func getStats() -> Stats? { return stats }
@@ -177,5 +138,6 @@ public struct BasicComponent: Component {
     public func getTargeting() -> Targeting? { return targeting }
     public func getStatusEffects() -> [StatusEffect] { return statusEffects ?? [] }
     public func getDischargedStatusEffects() -> [String] { return dischargedStatusEffects ?? [] }
+    public func getItemExchange() -> ItemExchange? { return itemExchange }
     
 }
