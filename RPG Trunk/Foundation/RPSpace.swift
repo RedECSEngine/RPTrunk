@@ -1,23 +1,28 @@
 public class Team: InventoryManager {
     
-    public var id: String = UUID().uuidString
-    public private(set) var entities: [Entity] = []
-    public var inventory: [Storable] = []
+    public typealias TeamID = String
     
-    public init() {
+    public let id: TeamID
+    public private(set) var entities: Set<Entity> = []
+    public var allies: Set<TeamID> = []
+    public var enemies: Set<TeamID> = []
     
+    public var inventory: [Item] = []
+    
+    public init(id: String) {
+        self.id = id
     }
     
     public func add(_ entity: Entity) {
     
         entity.teamId = self.id
-        entities.append(entity)
+        entities.insert(entity)
     }
 }
 
 open class RPSpace: Temporal, InventoryManager {
 
-    public var inventory: [Storable] = []
+    public var inventory: [Item] = []
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement = -1
     
@@ -76,7 +81,7 @@ open class RPSpace: Temporal, InventoryManager {
     }
     
     //TODO: hook it in
-    open func give(item: Storable, to entity: Entity) -> Event {
+    open func give(item: Item, to entity: Entity) -> Event {
         
         let exchange = ItemExchange(exchangeType: .target, requiresInitiatorOwnItem: false, removesItemFromInitiator: false, item: item)
         let targeting = Targeting.init(.oneself, .always)
@@ -90,21 +95,58 @@ open class RPSpace: Temporal, InventoryManager {
         return event
     }
     
-    open func getEntities() -> [Entity] {
+    open func getEntities() -> Set<Entity> {
         return teams.values
-            .flatMap { $0.entities }
+            .reduce(Set(), {
+                (accumulated, team) -> Set<Entity> in
+                return accumulated.union(team.entities)
+            })
     }
     
-    open func getEnemies(of entity: Entity) -> [Entity] {
-        return teams.values
-            .filter { $0.id != entity.teamId }
-            .flatMap { $0.entities }
+    open func getEnemies(of entity: Entity) -> Set<Entity> {
+        
+        guard let teamId = entity.teamId
+            , let team = teams[teamId] else {
+            return []
+        }
+        
+        return team.enemies.reduce(Set()) {
+            (accumulated, enemyTeamId) -> Set<Entity> in
+            
+            guard let enemies = teams[enemyTeamId]?.entities else {
+                return accumulated
+            }
+            return accumulated.union(enemies)
+        }
     }
     
-    open func getFriends(of entity: Entity) -> [Entity] {
-        return teams.values
-            .filter { $0.id == entity.teamId }
-            .flatMap { $0.entities }
+    open func getFriends(of entity: Entity) -> Set<Entity> {
+        
+        guard let teamId = entity.teamId
+            , let team = teams[teamId] else {
+                return []
+        }
+        
+        let teamEntities = team.entities
+        return teamEntities.union(getAllies(of: entity))
+    }
+    
+    
+    open func getAllies(of entity: Entity) -> Set<Entity> {
+        
+        guard let teamId = entity.teamId
+            , let team = teams[teamId] else {
+                return []
+        }
+        
+        return team.allies.reduce(Set()) {
+            (accumulated, allyTeamId) -> Set<Entity> in
+            
+            guard let enemies = teams[allyTeamId]?.entities else {
+                return accumulated
+            }
+            return accumulated.union(enemies)
+        }
     }
     
     public func resetCooldown() { /* noop */ }

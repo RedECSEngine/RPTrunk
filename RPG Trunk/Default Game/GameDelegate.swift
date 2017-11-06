@@ -11,9 +11,9 @@ import Foundation
 public protocol RPGameDelegate {
 
     // instance managers
-    var statTypes:[String] { get }
+    var statTypes: [String] { get }
     
-    var abilityDefaults:[Component] { get }
+    var abilityDefaults: [Component] { get }
     
     func createDefaultEntity() -> Entity
     

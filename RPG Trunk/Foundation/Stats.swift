@@ -3,10 +3,10 @@ public struct Stats: Component {
     
     public static let zero = Stats([:])
     
-    fileprivate let values:[String:RPValue]
+    fileprivate let values: [String: RPValue]
     
-    public init(_ data:[String:RPValue], asPartial:Bool = false) {
-        var stats:[String:RPValue] = [:]
+    public init(_ data: [String: RPValue], asPartial: Bool = false) {
+        var stats: [String: RPValue] = [:]
         for type in RPGameEnvironment.statTypes {
             stats[type] = data[type] ?? (asPartial ? nil : 0) //either set it, initialize to 0 or set as nil, if asP
         }

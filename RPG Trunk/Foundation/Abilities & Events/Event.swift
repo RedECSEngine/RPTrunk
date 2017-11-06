@@ -20,7 +20,7 @@ public struct Event {
     public let id = UUID().uuidString
     public let category: Category
     public let ability: Ability
-    public let targets: [Entity]
+    public let targets: Set<Entity>
 
     weak public private(set) var initiator: Entity!
 
@@ -44,9 +44,9 @@ public struct Event {
     public func getResults() -> [ConflictResult] {
         let totalStats = getStats()
         let results = targets.map { (target) -> ConflictResult in
-            return RPGameEnvironment.current.delegate.resolveConflict(self, target:target, conflict: totalStats)
+            return RPGameEnvironment.current.delegate.resolveConflict(self, target: target, conflict: totalStats)
         }
-        let costResult = RPGameEnvironment.current.delegate.resolveConflict(self, target:initiator, conflict: getCost())
+        let costResult = RPGameEnvironment.current.delegate.resolveConflict(self, target: initiator, conflict: getCost())
         return results + [costResult]
     }
     
@@ -59,7 +59,7 @@ public struct Event {
         applyItemExchange(in: rpSpace)
     }
     
-    func applyStatusEffectChanges(to targets: [Entity]) {
+    fileprivate func applyStatusEffectChanges(to targets: Set<Entity>) {
         
         ability.dischargedStatusEffects
             .forEach {
@@ -79,15 +79,20 @@ public struct Event {
         guard let exchange = ability.itemExchange else { return }
         
         if exchange.requiresInitiatorOwnItem
-            && false == initiator.inventory.contains(where: { $0.id == exchange.item.id }) {
+            && false == initiator.inventory.contains(where: { $0.name == exchange.item.name }) {
             // should not exchange since initiator does not currently own the item
             return
         }
         
         if exchange.removesItemFromInitiator
-            , let idx = initiator.inventory.index(where: { $0.id == exchange.item.id }) {
-            
-            initiator.inventory.remove(at: idx)
+            , let idx = initiator.inventory.index(where: { $0.name == exchange.item.name }) {
+            var newItemState = initiator.inventory[idx]
+            newItemState.amount -= 1
+            if newItemState.amount <= 0 {
+                initiator.inventory.remove(at: idx)
+            } else {
+                initiator.inventory[idx] = newItemState
+            }
         }
         
         switch exchange.exchangeType {

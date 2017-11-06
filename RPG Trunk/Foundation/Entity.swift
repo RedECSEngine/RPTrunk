@@ -10,33 +10,30 @@ open class Entity: Temporal, InventoryManager {
     open var baseStats: Stats = [:]
     open var currentStats: Stats = [:] //when a value is nil, for a given key, it means it's at max
     open var body = Body()
-    open var inventory: [Storable] = []
+    open var inventory: [Item] = []
     
     open fileprivate(set) var executableAbilities: [String: ActiveAbility] = [:]
     open fileprivate(set) var passiveAbilities: [String: ActiveAbility] = [:]
     open fileprivate(set) var statusEffects: [String: ActiveStatusEffect] = [:]
     
-    open var targets: [Entity] = []
+    open var targets: Set<Entity> = []
     
     open weak var data:AnyObject?
     
     open var stats: Stats {
         var totalStats = self.baseStats
-        for weapon in self.body.weapons {
-            totalStats = totalStats + weapon.stats
-        }
-        for equip in self.body.equipment {
-            totalStats = totalStats + equip.stats
+        for item in self.body.wornItems {
+            totalStats = totalStats + item.stats
         }
         return totalStats
     }
     
-    open subscript(index:String) -> RPValue {
+    open subscript(index: String) -> RPValue {
         return currentStats.get(index) ?? stats[index]
     }
     
     open func allCurrentStats() -> Stats {
-        var cs:[String:RPValue] = [:]
+        var cs:[String: RPValue] = [:]
         let maxStats = stats
         for type in RPGameEnvironment.statTypes {
             cs[type] = currentStats.get(type) ?? maxStats[type]
@@ -45,7 +42,7 @@ open class Entity: Temporal, InventoryManager {
     }
     
     open func setCurrentStats(_ newStats: Stats) {
-        var cs:[String:RPValue] = [:]
+        var cs:[String: RPValue] = [:]
         let maxStats = stats
         for type in RPGameEnvironment.statTypes {
             cs[type] = newStats[type] < maxStats[type] ? newStats[type] : nil
@@ -60,7 +57,7 @@ open class Entity: Temporal, InventoryManager {
         }
         
         return executableAbilities.values
-            .filter { $0.canExecute() && allCurrentStats() > $0.ability.cost }
+            .filter { $0.canExecute() && allCurrentStats() >= $0.ability.cost }
     }
     
     
@@ -78,7 +75,7 @@ open class Entity: Temporal, InventoryManager {
         self.init([:])
     }
     
-    open func getPossibleTargets() -> [Entity]? {
+    open func getPossibleTargets() -> Set<Entity>? {
         
         if targets.count > 0 {
             return targets
@@ -91,13 +88,13 @@ open class Entity: Temporal, InventoryManager {
         return targets.first
     }
     
-    open func addExecutableAbility(_ ability:Ability, conditional:Conditional) {
+    open func addExecutableAbility(_ ability: Ability, conditional: Conditional) {
         var activeAbility = ActiveAbility(ability, conditional)
         activeAbility.entity = self
         executableAbilities[ability.name] = activeAbility
     }
     
-    open func addPassiveAbility(_ ability:Ability, conditional:Conditional) {
+    open func addPassiveAbility(_ ability: Ability, conditional: Conditional) {
         var activeAbility = ActiveAbility(ability, conditional)
         activeAbility.entity = self
         passiveAbilities[ability.name] = activeAbility
@@ -246,4 +243,16 @@ extension Entity: CustomStringConvertible {
         return "Entity:\n " + o.description
     }
     
+}
+
+extension Entity: Equatable { }
+
+public func ==(_ lhs: Entity, _ rhs: Entity) -> Bool {
+    return lhs.id == rhs.id
+}
+
+extension Entity: Hashable {
+    public var hashValue: Int {
+        return id.hashValue
+    }
 }

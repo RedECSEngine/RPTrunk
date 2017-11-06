@@ -1,4 +1,3 @@
-
 open class RPCache {
     
     public enum CacheError: Error {
@@ -27,7 +26,7 @@ open class RPCache {
         //TODO: Handle items
     }
 
-    open static func loadAbilities(_ abilities:[String: AnyObject]) throws {
+    open static func loadAbilities(_ abilities: [String: AnyObject]) throws {
 
         try abilities.forEach {
             (arg) in
@@ -48,7 +47,7 @@ open class RPCache {
         }
     }
 
-    open static func loadStatusEffects(_ statusEffects:[String:AnyObject]) throws {
+    open static func loadStatusEffects(_ statusEffects: [String: AnyObject]) throws {
 
         try statusEffects.forEach {
             (arg) in
@@ -71,15 +70,17 @@ open class RPCache {
         }
     }
 
-    open static func loadEntities(_ entities:[String:AnyObject]) throws {
+    open static func loadEntities(_ entities: [String: AnyObject]) throws {
 
         try entities.forEach {
             (arg) in
             let (name, data) = arg
             
-            guard let dict = data as? [String: AnyObject], let stats = dict["stats"] as? [String:RPValue] else {
+            guard let dict = data as? [String: AnyObject] else {
                 throw CacheError.invalidFormat("Entities should be defined with a dictionary that includes stats")
             }
+            
+            let stats: [String: RPValue] = (dict["stats"] as? [String: RPValue]) ?? [:]
             
             let entity = Entity.new()
             entity.baseStats = entity.baseStats + Stats(stats)
@@ -105,22 +106,22 @@ open class RPCache {
         }
     }
     
-    open static func buildComponent(_ component:(String, AnyObject)) throws -> [Component] {
+    open static func buildComponent(_ component: (String, AnyObject)) throws -> [Component] {
         
         let (key, val) = component
         switch key {
         case "stats":
-            guard let stats = val as? [String:RPValue] else {
+            guard let stats = val as? [String: RPValue] else {
                 throw CacheError.invalidFormat("stats should be in format of [Key:Value]")
             }
             return [Stats(stats)]
         case "cost":
-            guard let cost = val as? [String:RPValue] else {
+            guard let cost = val as? [String: RPValue] else {
                 throw CacheError.invalidFormat("cost should be in format of [Key:Value]")
             }
             return [BasicComponent(cost:Stats(cost))]
         case "requirements":
-            guard let req = val as? [String:RPValue] else {
+            guard let req = val as? [String: RPValue] else {
                 throw CacheError.invalidFormat("cost should be in format of [Key:Value]")
             }
             return [BasicComponent(requirements:Stats(req))]
@@ -150,7 +151,7 @@ open class RPCache {
         }
     }
     
-    open static func buildConditional(_ data:[String: AnyObject]) -> Conditional {
+    open static func buildConditional(_ data: [String: AnyObject]) -> Conditional {
         
         if let query = data["conditional"] as? String {
             return Conditional(query)
@@ -190,7 +191,7 @@ open class RPCache {
         return se
     }
     
-    open static func newEntity(_ name:String) throws -> Entity {
+    open static func newEntity(_ name: String) throws -> Entity {
         guard let entity = RPCache.entities[name] else {
             throw RPCache.CacheError.notFound(name)
         }

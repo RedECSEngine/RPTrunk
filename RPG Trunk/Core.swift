@@ -13,4 +13,12 @@ extension Array {
             return new
         }
     }
+    
+}
+
+extension Array where Element: Hashable {
+    
+    public func toSet() -> Set<Element> {
+        return Set(self)
+    }
 }
