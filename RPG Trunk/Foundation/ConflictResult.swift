@@ -1,9 +1,9 @@
 
 public struct ConflictResult {
 
-    public let entity:Entity
-    public let change:Stats
-    public let meta:[String:RPValue]
+    public let entity: Entity
+    public let change: Stats
+    public let meta: [String: RPValue]
 
     public init(_ entity:Entity, _ change:Stats, _ meta:[String:RPValue] = [:]) {
 

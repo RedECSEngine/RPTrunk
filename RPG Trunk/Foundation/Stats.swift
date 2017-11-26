@@ -1,7 +1,7 @@
 
 public struct Stats: Component {
     
-    public static let zero = Stats([:])
+    public static let empty = Stats([:])
     
     fileprivate let values: [String: RPValue]
     
@@ -50,12 +50,7 @@ extension Stats: Sequence {
 extension Stats: ExpressibleByDictionaryLiteral {
     
     public init(dictionaryLiteral elements: (String, RPValue)...) {
-        values = elements.reduce([:]) {
-            prev, current in
-            var new = prev
-            new[current.0] = current.1
-            return new
-        }
+        values = Dictionary(uniqueKeysWithValues: elements)
     }
 }
 
