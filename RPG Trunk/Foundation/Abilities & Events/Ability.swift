@@ -1,11 +1,11 @@
 
-public struct Ability: ComponentContainer {
+public struct Ability: ComponentContainer, Codable {
 
     public var name: String
     public var components: [Component]
     public var cooldown: RPTimeIncrement
     public var repeats: Int = 1
-    public var metadata: [String:AnyObject]?
+    public var metadata: [String: String]?
     
     public init(name: String, components: [Component] = [], shouldUseDefaults: Bool = true, cooldown: RPTimeIncrement?) {
         self.name = name
@@ -24,26 +24,27 @@ public func ==(lhs:Ability, rhs:Ability) -> Bool {
     && lhs as ComponentContainer == rhs as ComponentContainer
 }
 
-public struct ActiveAbility: Temporal {
+public struct ActiveAbility: Temporal, Codable {
 
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { return ability.cooldown }
-    public var conditional: Conditional
-    public weak var entity: Entity?
+
+    public var entityId: String
+    public let ability: Ability
+    public let conditional: Conditional
     
-    let ability: Ability
-    
-    public init(_ a: Ability, _ c:Conditional) {
-        ability = a
-        conditional = c
+    public init(entityId: String, ability: Ability, conditional: Conditional) {
+        self.entityId = entityId
+        self.ability = ability
+        self.conditional = conditional
     }
     
-    public func canExecute() -> Bool {
+    public func canExecute(in rpSpace: RPSpace) -> Bool {
         guard false == isCoolingDown() else {
             return false
         }
         
-        guard let e = entity else {
+        guard let e = rpSpace.entities[entityId] else {
             return false
         }
         
@@ -63,7 +64,7 @@ public struct ActiveAbility: Temporal {
     
     fileprivate func createEvents(in rpSpace: RPSpace) -> [Event] {
     
-        if let e = entity {
+        if let e = rpSpace.entities[entityId] {
             return (0..<ability.repeats).map { _ in Event(initiator: e, ability: ability, rpSpace: rpSpace) }
         }
         return []
@@ -80,11 +81,9 @@ public struct ActiveAbility: Temporal {
         currentTick = 0
     }
     
-    public func copyForEntity(_ entity:Entity) -> ActiveAbility {
+    public func copyForEntity(_ entity: Entity) -> ActiveAbility {
         
-        var newActiveAbility = ActiveAbility(ability, conditional)
-        newActiveAbility.entity = entity
-        return newActiveAbility
+        return ActiveAbility(entityId: entity.id, ability: ability, conditional: conditional)
     }
     
 }

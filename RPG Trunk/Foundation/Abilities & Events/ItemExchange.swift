@@ -1,5 +1,4 @@
 import Foundation
-
 /*
      Situations to handle
  
@@ -8,9 +7,9 @@ import Foundation
      - exchange item between entities (trade, steal, drop)
      - use item, to initiate an ability
  */
-public struct ItemExchange {
+public struct ItemExchange: Codable {
     
-    public enum ExchangeType: String {
+    public enum ExchangeType: String, Codable {
         case target
         case targetTeam
         case rpSpace
@@ -20,35 +19,4 @@ public struct ItemExchange {
     public let requiresInitiatorOwnItem: Bool
     public let removesItemFromInitiator: Bool
     public let item: Item
-}
-
-extension ItemExchange: Component {
-    
-    public func getTargeting() -> Targeting? {
-        return nil
-    }
-    
-    public func getStats() -> Stats? {
-        return nil
-    }
-    
-    public func getCost() -> Stats? {
-        return nil
-    }
-    
-    public func getRequirements() -> Stats? {
-        return nil
-    }
-    
-    public func getDischargedStatusEffects() -> [String] {
-        return []
-    }
-    
-    public func getStatusEffects() -> [StatusEffect] {
-        return []
-    }
-    
-    public func getItemExchange() -> ItemExchange? {
-        return self
-    }
 }

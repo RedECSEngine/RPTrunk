@@ -1,7 +1,25 @@
 
-open class Entity: Temporal, InventoryManager {
+open class Entity: Temporal, InventoryManager, Codable {
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case teamId
+        case currentTick
+        case maximumTick
+        case baseStats
+        case currentStats
+        case body
+        case inventory
+        case executableAbilities
+        case passiveAbilities
+        case statusEffects
+    }
 
-    open var id: String = ""
+    open var id: String = "" {
+        didSet {
+            updateIds()
+        }
+    }
     open var teamId: String?
     
     open var currentTick: RPTimeIncrement = 0
@@ -18,7 +36,7 @@ open class Entity: Temporal, InventoryManager {
     
     open var targets: Set<Entity> = []
     
-    open weak var data:AnyObject?
+    open weak var data: AnyObject?
     
     open var stats: Stats {
         var totalStats = self.baseStats
@@ -30,6 +48,49 @@ open class Entity: Temporal, InventoryManager {
     
     open subscript(index: String) -> RPValue {
         return currentStats.get(index) ?? stats[index]
+    }
+
+    open static func new() -> Entity {
+        return RPGameEnvironment.current.delegate.createDefaultEntity()
+    }
+    
+    public init(_ data: [String: RPValue]) {
+        self.baseStats = Stats(data)
+        self.currentStats = baseStats
+    }
+    
+    public convenience init() {
+        self.init([:])
+    }
+    
+    public required init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(String.self, forKey: .id)
+        teamId = try values.decodeIfPresent(String.self, forKey: .teamId)
+        currentTick = try values.decode(RPTimeIncrement.self, forKey: .currentTick)
+        maximumTick = try values.decode(RPTimeIncrement.self, forKey: .maximumTick)
+        baseStats = try values.decode(Stats.self, forKey: .baseStats)
+        currentStats = try values.decode(Stats.self, forKey: .currentStats)
+        body = try values.decode(Body.self, forKey: .body)
+        inventory = try values.decode([Item].self, forKey: .inventory)
+        executableAbilities = try values.decode([String: ActiveAbility].self, forKey: .executableAbilities)
+        passiveAbilities = try values.decode([String: ActiveAbility].self, forKey: .passiveAbilities)
+        statusEffects = try values.decode([String: ActiveStatusEffect].self, forKey: .statusEffects)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encodeIfPresent(teamId, forKey: .teamId)
+        try container.encode(currentTick, forKey: .currentTick)
+        try container.encode(maximumTick, forKey: .maximumTick)
+        try container.encode(baseStats, forKey: .baseStats)
+        try container.encode(currentStats, forKey: .currentStats)
+        try container.encode(body, forKey: .body)
+        try container.encode(inventory, forKey: .inventory)
+        try container.encode(executableAbilities, forKey: .executableAbilities)
+        try container.encode(passiveAbilities, forKey: .passiveAbilities)
+        try container.encode(statusEffects, forKey: .statusEffects)
     }
     
     open func allCurrentStats() -> Stats {
@@ -50,31 +111,16 @@ open class Entity: Temporal, InventoryManager {
         currentStats = Stats(cs, asPartial: true)
     }
     
-    open func usableAbilities() -> [ActiveAbility] {
+    open func usableAbilities(in rpSpace: RPSpace) -> [ActiveAbility] {
         
         guard !isCoolingDown() else {
             return []
         }
         
         return executableAbilities.values
-            .filter { $0.canExecute() && allCurrentStats() >= $0.ability.cost }
+            .filter { $0.canExecute(in: rpSpace) && allCurrentStats() >= $0.ability.cost }
     }
-    
-    
-    //MARK: - Initialization
-    
-    open static func new() -> Entity {
-        return RPGameEnvironment.current.delegate.createDefaultEntity()
-    }
-    
-    public init(_ data:[String:RPValue]) {
-        self.baseStats = Stats(data)
-    }
-    
-    public convenience init() {
-        self.init([:])
-    }
-    
+
     open func getPossibleTargets() -> Set<Entity>? {
         
         if targets.count > 0 {
@@ -89,24 +135,22 @@ open class Entity: Temporal, InventoryManager {
     }
     
     open func addExecutableAbility(_ ability: Ability, conditional: Conditional) {
-        var activeAbility = ActiveAbility(ability, conditional)
-        activeAbility.entity = self
+        let activeAbility = ActiveAbility(entityId: id, ability: ability, conditional: conditional)
         executableAbilities[ability.name] = activeAbility
     }
     
     open func addPassiveAbility(_ ability: Ability, conditional: Conditional) {
-        var activeAbility = ActiveAbility(ability, conditional)
-        activeAbility.entity = self
+        let activeAbility = ActiveAbility(entityId: id, ability: ability, conditional: conditional)
         passiveAbilities[ability.name] = activeAbility
     }
     
-    open func applyStatusEffect(_ se: StatusEffect) {
+    open func applyStatusEffect(_ statusEffect: StatusEffect) {
         
-        if statusEffects[se.identity.name] != nil {
+        if statusEffects[statusEffect.identity.name] != nil {
             //TODO: Handle stackability of status effects rather than just resetting
-            statusEffects[se.identity.name]?.resetCooldown()
+            statusEffects[statusEffect.identity.name]?.resetCooldown()
         } else {
-            statusEffects[se.identity.name] = ActiveStatusEffect(se)
+            statusEffects[statusEffect.identity.name] = ActiveStatusEffect(entityId: id, statusEffect: statusEffect)
         }
     }
     
@@ -174,7 +218,7 @@ open class Entity: Temporal, InventoryManager {
         }
         
         // Get any events that should execute based on priorities
-        let abilityEvents = usableAbilities()
+        let abilityEvents = usableAbilities(in: rpSpace)
             .first(where: {
                 ability in
                 guard let firstEvent = ability.getPendingEvents(in: rpSpace).first else {
@@ -190,10 +234,26 @@ open class Entity: Temporal, InventoryManager {
     open func getPendingPassiveEvents(in rpSpace: RPSpace) -> [Event] {
         var abilityEvents = [Event]()
         
-        for activeAbility in passiveAbilities.values where activeAbility.canExecute() {
+        for activeAbility in passiveAbilities.values where activeAbility.canExecute(in: rpSpace) {
             abilityEvents += activeAbility.getPendingEvents(in: rpSpace)
         }
         return abilityEvents
+    }
+    
+    fileprivate func updateIds() {
+        
+        executableAbilities.keys.forEach {
+            abilityName in
+            executableAbilities[abilityName]?.entityId = id
+        }
+        passiveAbilities.keys.forEach {
+            abilityName in
+            passiveAbilities[abilityName]?.entityId = id
+        }
+        statusEffects.keys.forEach {
+            abilityName in
+            statusEffects[abilityName]?.entityId = id
+        }
     }
 
     //Querying

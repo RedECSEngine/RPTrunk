@@ -1,8 +1,16 @@
 import Foundation
 
-public struct Item: Temporal, ComponentContainer {
+public struct Item: Temporal, ComponentContainer, Codable {
     
-    public let name: String = "Untitled Item"
+    enum CodingKeys: String, CodingKey {
+        case name
+        case amount
+        case currentTick
+        case ability
+        case conditional
+    }
+    
+    public let name: String
     public var amount: Int = 1
     
     public var currentTick: RPTimeIncrement = 0
@@ -15,8 +23,27 @@ public struct Item: Temporal, ComponentContainer {
     public var components: [Component] = []
 
     public init(ability: Ability? = nil, conditional: Conditional) {
+        self.name = "Untitled Item"
         self.ability = ability
         self.conditional = conditional
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        name = try values.decode(String.self, forKey: .name)
+        amount = try values.decode(Int.self, forKey: .amount)
+        currentTick = try values.decode(RPTimeIncrement.self, forKey: .currentTick)
+        ability = try values.decodeIfPresent(Ability.self, forKey: .ability)
+        conditional = try values.decode(Conditional.self, forKey: .conditional)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(name, forKey: .name)
+        try container.encode(amount, forKey: .amount)
+        try container.encode(currentTick, forKey: .currentTick)
+        try container.encodeIfPresent(ability, forKey: .ability)
+        try container.encode(conditional, forKey: .conditional)
     }
     
     public func canExecute() -> Bool {

@@ -1,7 +1,7 @@
 
-public struct Targeting {
+public struct Targeting: Codable {
 
-    public enum SelectionType {
+    public enum SelectionType: String, Codable {
         
         case oneself
         case random
@@ -15,8 +15,8 @@ public struct Targeting {
         case allyTeam
     }
 
-    public let type:SelectionType
-    public let conditional:Conditional
+    public let type: SelectionType
+    public let conditional: Conditional
     
     public init(_ type: SelectionType, _ conditional: Conditional) {
         self.type = type
@@ -110,33 +110,9 @@ public func ==(lhs:Targeting, rhs:Targeting) -> Bool {
     return lhs.type == rhs.type && lhs.conditional == rhs.conditional
 }
 
-extension Targeting: Component {
+extension Targeting {
     
-    public func getTargeting() -> Targeting? {
-        return self
-    }
-    
-    public func getStats() -> Stats? {
-        return nil
-    }
-    
-    public func getCost() -> Stats? {
-        return nil
-    }
-    
-    public func getRequirements() -> Stats? {
-        return nil
-    }
-    
-    public func getDischargedStatusEffects() -> [String] {
-        return []
-    }
-    
-    public func getStatusEffects() -> [StatusEffect] {
-        return []
-    }
-    
-    public func getItemExchange() -> ItemExchange? {
-        return nil
+    func toComponent() -> Component {
+        return Component(targetType: self)
     }
 }

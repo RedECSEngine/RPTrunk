@@ -41,7 +41,7 @@ open class RPCache {
             let cooldown: RPTimeIncrement? = dict["cooldown"] as? RPTimeIncrement
             
             var ability = Ability(name: name, components: components, cooldown: cooldown)
-            ability.metadata = dict
+            ability.metadata = dict.filter({ $0.value is String }) as? [String: String]
             
             RPCache.abilities[name] = ability
         }
@@ -114,17 +114,17 @@ open class RPCache {
             guard let stats = val as? [String: RPValue] else {
                 throw CacheError.invalidFormat("stats should be in format of [Key:Value]")
             }
-            return [Stats(stats)]
+            return [Component(stats: Stats(stats))]
         case "cost":
             guard let cost = val as? [String: RPValue] else {
                 throw CacheError.invalidFormat("cost should be in format of [Key:Value]")
             }
-            return [BasicComponent(cost:Stats(cost))]
+            return [Component(cost: Stats(cost))]
         case "requirements":
             guard let req = val as? [String: RPValue] else {
                 throw CacheError.invalidFormat("cost should be in format of [Key:Value]")
             }
-            return [BasicComponent(requirements:Stats(req))]
+            return [Component(requirements: Stats(req))]
         case "statusEffects":
             guard let effects = val as? [String] else {
                 throw CacheError.invalidFormat("components should be in format of [String]")
@@ -135,12 +135,12 @@ open class RPCache {
                 throw CacheError.invalidFormat("invalid target type provided")
             }
             let type = Targeting.fromString(t)
-            return [type]
+            return [Component(targetType: type)]
         case "discharge":
             guard let r = val as? [String] else {
                 throw CacheError.invalidFormat("invalid discharged status effect format provided; Should be [String]")
             }
-            return [BasicComponent(dischargedStatusEffects:r)]
+            return [Component(dischargedStatusEffects:r)]
         case "components":
             guard let components = val as? [String] else {
                 throw CacheError.invalidFormat("components should be in format of [String]")
@@ -174,7 +174,7 @@ open class RPCache {
         
         if let se = RPCache.statusEffects[name] {
             
-            return se
+            return Component.init(statusEffects: [se])
         }
         
         throw RPCache.CacheError.notFound(name)

@@ -1,6 +1,6 @@
 
-public struct StatusEffect: Component {
-    
+public struct StatusEffect: Codable {
+   
     public let identity: Identity
     
     //both duration and charge can be used or one or the other
@@ -9,7 +9,7 @@ public struct StatusEffect: Component {
     let impairsAction: Bool
     let ability: Ability?
     
-    public init(identity:Identity, components:[Component], duration:Double?, charges:Int?, impairsAction:Bool = false) {
+    public init(identity: Identity, components: [Component], duration: Double?, charges: Int?, impairsAction: Bool = false) {
         self.identity = identity
         self.duration = duration
         self.charges = charges
@@ -17,7 +17,7 @@ public struct StatusEffect: Component {
         
         if components.count > 0 {
         
-            let components:[Component] = components + [Targeting(.oneself, .always)]
+            let components: [Component] = components + [Targeting(.oneself, .always).toComponent()]
             ability = Ability(name: identity.name, components: components, cooldown: nil)
         } else {
             ability = nil
@@ -29,32 +29,6 @@ public struct StatusEffect: Component {
     }
 }
 
-extension StatusEffect {
-    public func getStats() -> Stats? {
-        return nil
-    }
-    
-    public func getCost() -> Stats? {
-        return nil
-    }
-    
-    public func getRequirements() -> Stats? {
-        return nil
-    }
-    
-    public func getTargeting() -> Targeting? {
-        return nil
-    }
-    
-    public func getDischargedStatusEffects() -> [String] {
-        return []
-    }
-    
-    public func getItemExchange() -> ItemExchange? {
-        return nil
-    }
-}
-
 extension StatusEffect: Equatable {}
 
 public func ==(lhs:StatusEffect, rhs:StatusEffect) -> Bool {
@@ -62,7 +36,7 @@ public func ==(lhs:StatusEffect, rhs:StatusEffect) -> Bool {
         && lhs.ability == rhs.ability
 }
 
-public struct ActiveStatusEffect: Temporal {
+public struct ActiveStatusEffect: Temporal, Codable {
 
     fileprivate var deltaTick: RPTimeIncrement = 0
     public var currentTick: RPTimeIncrement = 0
@@ -72,15 +46,15 @@ public struct ActiveStatusEffect: Temporal {
     
     var level: Int? // power level of the buff, if it is stackable
     
-    public weak var entity: Entity?
-    
+    public var entityId: String
     fileprivate let statusEffect: StatusEffect
     
     public var identity: Identity { return statusEffect.identity }
 
-    public init(_ se: StatusEffect) {
-        statusEffect = se
-        currentCharge = se.charges ?? 0
+    public init(entityId: String, statusEffect: StatusEffect) {
+        self.entityId = entityId
+        self.statusEffect = statusEffect
+        self.currentCharge = statusEffect.charges ?? 0
     }
     
     public func shouldDisableEntity() -> Bool {
@@ -92,7 +66,7 @@ public struct ActiveStatusEffect: Temporal {
         guard deltaTick > 1 else {
             return []
         }
-        if let entity = self.entity
+        if let entity = rpSpace.entities[entityId]
             , let ability = statusEffect.ability {
             
             return [Event(category: .periodicEffect, initiator: entity, ability: ability, rpSpace: rpSpace)]

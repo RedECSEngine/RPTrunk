@@ -1,5 +1,5 @@
 
-public struct Stats: Component {
+public struct Stats: Codable {
     
     public static let empty = Stats([:])
     
@@ -105,31 +105,4 @@ public func * (a: Stats, amount: Int) -> Stats {
         dict[type] = val * amount
     }
     return Stats(dict)
-}
-
-extension Stats {
-    
-    public func getCost() -> Stats? {
-        return nil
-    }
-    
-    public func getRequirements() -> Stats? {
-        return nil
-    }
-    
-    public func getTargeting() -> Targeting? {
-        return nil
-    }
-    
-    public func getDischargedStatusEffects() -> [String] {
-        return []
-    }
-    
-    public func getStatusEffects() -> [StatusEffect] {
-        return []
-    }
-    
-    public func getItemExchange() -> ItemExchange? {
-        return nil
-    }
 }

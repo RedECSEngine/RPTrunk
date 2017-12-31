@@ -1,30 +1,53 @@
 
-public enum Conditional {
+public enum Conditional: Codable {
+    
+    private enum CodingKeys: String, CodingKey {
+        case rawValue
+    }
     
     public typealias Predicate = (Entity) -> Bool
     
     case always
     case never
     case custom(String, Predicate)
-    
-    public init(_ condition:String) {
+
+    public static func fromString(_ condition: String) -> Conditional {
         
         guard condition != "always" else {
-            self = .always
-            return
+            return .always
         }
         
         do {
             let predicate = try interpretStringCondition(condition)
-            self = .custom(condition, predicate)
+            return .custom(condition, predicate)
         } catch {
             print("WARNING: Failed to parse conditional (\(condition)). Will NEVER fire", error)
-            self = .never
+            return .never
         }
     }
     
-    public init(_ condition:String, _ predicate: @escaping (Entity) -> Bool) {
-        self = .custom(condition, predicate)
+    public init(_ condition: String) {
+        self = Conditional.fromString(condition)
+    }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        let rawValue = try values.decode(String.self, forKey: .rawValue)
+        self.init(rawValue)
+    }
+    
+    public func toString() -> String {
+        switch self {
+        case .always: return "always"
+        case .never: return ""
+        case .custom(let predicateAsString, _):
+            return predicateAsString
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(toString(), forKey: .rawValue)
     }
     
     public func exec(_ e: Entity) -> Bool {
@@ -76,6 +99,13 @@ extension Conditional: ExpressibleByStringLiteral {
     }
 }
 
+extension Conditional {
+    
+    fileprivate init(_ condition: String, _ predicate: @escaping (Entity) -> Bool) {
+        self = .custom(condition, predicate)
+    }
+}
+
 public func && (a: Conditional, b: Conditional) -> Conditional {
     let condition = a.description + " && " + b.description
     return Conditional(condition) { e in
@@ -99,11 +129,35 @@ enum ConditionalQueryType: Int {
 }
 
 enum ConditionalInterpretationError: Error {
-    case incorrectComponentCount(reason:String)
-    case invalidSyntax(reason:String)
+    case incorrectComponentCount(reason: String)
+    case invalidSyntax(reason: String)
 }
 
-func interpretStringCondition(_ condition:String) throws -> Conditional.Predicate {
+func buildConditionalFromString(_ conditionString: String) throws -> Conditional {
+    let statements = conditionString.components(separatedBy: "&&")
+    if statements.count == 1 {
+        let predicate = try interpretStringCondition(statements[0])
+        return .custom(conditionString, predicate)
+    } else {
+        var predicates = [Conditional.Predicate]()
+        try statements.forEach {
+            statement in
+            try predicates.append(interpretStringCondition(statement))
+        }
+        
+        let finalPredicate: Conditional.Predicate = {
+            entity in
+            //iterate over all predicates and confirm that none are 'false'
+            return predicates.contains(where: { (predicate) -> Bool in
+                return !predicate(entity)
+            }) == false
+        }
+        return .custom(conditionString, finalPredicate)
+        
+    }
+}
+
+func interpretStringCondition(_ condition: String) throws -> Conditional.Predicate {
     
     let components = try breakdownConditionToComponents(condition)
     
@@ -112,9 +166,9 @@ func interpretStringCondition(_ condition:String) throws -> Conditional.Predicat
         throw ConditionalInterpretationError.incorrectComponentCount(reason: "Invalid number of components in query")
     }
     
-    let lhs:ArraySlice<String> = breakdownComponentDotNotation(components[0])
-    let rhs:ArraySlice<String>
-    let condOperator:ConditionalOperator
+    let lhs: ArraySlice<String> = breakdownComponentDotNotation(components[0])
+    let rhs: ArraySlice<String>
+    let condOperator: ConditionalOperator
     
     switch queryType {
     case .examination:

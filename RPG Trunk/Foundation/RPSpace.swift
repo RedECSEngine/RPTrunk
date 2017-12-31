@@ -26,11 +26,23 @@ open class RPSpace: Temporal, InventoryManager {
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement = -1
     
-    open var teams: [String: Team] = [:]
+    open private(set) var entities: [String: Entity] = [:]
+    open private(set) var teams: [String: Team] = [:]
     
     public init() {
         
     }
+    
+    public func setTeams(_ newTeams: [Team]) {
+        
+        var teamDict: [String: Team] = [:]
+        newTeams.forEach { team in
+            teamDict[team.id] = team
+            team.entities.forEach { entities[$0.id] = $0 }
+        }
+        self.teams = teamDict
+    }
+    
     
     open func tick(_ moment: Moment) {
         let newMoment = moment.addSibling(self)
@@ -83,8 +95,8 @@ open class RPSpace: Temporal, InventoryManager {
     //TODO: hook it in
     open func give(item: Item, to entity: Entity) -> Event {
         
-        let exchange = ItemExchange(exchangeType: .target, requiresInitiatorOwnItem: false, removesItemFromInitiator: false, item: item)
-        let targeting = Targeting.init(.oneself, .always)
+        let exchange = Component(itemExchange: ItemExchange(exchangeType: .target, requiresInitiatorOwnItem: false, removesItemFromInitiator: false, item: item))
+        let targeting = Component(targetType: Targeting(.oneself, .always))
         
         let collect = Ability(name: "", components: [
             exchange,

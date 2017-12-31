@@ -1,5 +1,5 @@
 
-public struct Identity {
+public struct Identity: Codable {
     
     public let name: String
     public let labels: [String]
