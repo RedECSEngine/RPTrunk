@@ -10,9 +10,6 @@
 		0597AE0BC7FE140F1963877C /* Pods_RPTrunkTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E64E1F2676B46AA97CA00E70 /* Pods_RPTrunkTests.framework */; };
 		6CACE529EDBCE106E4560445 /* Pods_RPTrunk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA07F332DAABC8334590AD80 /* Pods_RPTrunk.framework */; };
 		752EEF0D1CF1290F006B86AD /* StatusEffects_Spec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752EEF0C1CF1290F006B86AD /* StatusEffects_Spec.swift */; };
-		753D301C1CD6CF6A003D0013 /* Position.swift in Sources */ = {isa = PBXBuildFile; fileRef = 753D301A1CD6CF6A003D0013 /* Position.swift */; };
-		753D301D1CD6CF6A003D0013 /* StatusEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 753D301B1CD6CF6A003D0013 /* StatusEffect.swift */; };
-		753D301F1CD6CF75003D0013 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 753D301E1CD6CF75003D0013 /* Cache.swift */; };
 		75889B571CEEB4C70013DD39 /* Entity_spec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75889B561CEEB4C70013DD39 /* Entity_spec.swift */; };
 		75889B581CEEB5E40013DD39 /* Stats_spec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 753D30201CD6D6AB003D0013 /* Stats_spec.swift */; };
 		758AAB1C1C39F6820019238C /* RPGTrunkDemo.h in Headers */ = {isa = PBXBuildFile; fileRef = 758AAB1B1C39F6820019238C /* RPGTrunkDemo.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -20,26 +17,34 @@
 		758AAB281C39F6820019238C /* RPGTrunkDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 758AAB271C39F6820019238C /* RPGTrunkDemoTests.swift */; };
 		758AAB311C39F6980019238C /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 758AAB301C39F6980019238C /* Extensions.swift */; };
 		758AAB321C39F7C90019238C /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 758AAB301C39F6980019238C /* Extensions.swift */; };
-		75B181CB1CEEA9C0004C51B0 /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B181C91CEEA9C0004C51B0 /* Parser.swift */; };
-		75B181CC1CEEA9C0004C51B0 /* Operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B181CA1CEEA9C0004C51B0 /* Operators.swift */; };
-		75B181CF1CEEA9EB004C51B0 /* ConflictResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B181CD1CEEA9EB004C51B0 /* ConflictResult.swift */; };
-		75B181D01CEEA9EB004C51B0 /* Time.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B181CE1CEEA9EB004C51B0 /* Time.swift */; };
-		75B181D31CEEAA01004C51B0 /* GameDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B181D11CEEAA01004C51B0 /* GameDelegate.swift */; };
-		75B181D41CEEAA01004C51B0 /* GameEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B181D21CEEAA01004C51B0 /* GameEnvironment.swift */; };
-		75B6AD1A1CF2802200D9A818 /* Targeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B6AD191CF2802200D9A818 /* Targeting.swift */; };
-		75B6AD2F1CF2AAF500D9A818 /* Identity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B6AD2E1CF2AAF500D9A818 /* Identity.swift */; };
-		75EE2C221C3865D100BF8437 /* RPG Trunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 75EE2C211C3865D100BF8437 /* RPG Trunk.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		75CC434020E5C82D0037F296 /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC432320E5C82C0037F296 /* Parser.swift */; };
+		75CC434120E5C82D0037F296 /* Conditional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC432420E5C82C0037F296 /* Conditional.swift */; };
+		75CC434220E5C82D0037F296 /* Operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC432520E5C82C0037F296 /* Operators.swift */; };
+		75CC434320E5C82D0037F296 /* Equipment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC432720E5C82C0037F296 /* Equipment.swift */; };
+		75CC434420E5C82D0037F296 /* StatusEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC432820E5C82C0037F296 /* StatusEffect.swift */; };
+		75CC434520E5C82D0037F296 /* Identity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC432920E5C82C0037F296 /* Identity.swift */; };
+		75CC434620E5C82D0037F296 /* Entity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC432A20E5C82C0037F296 /* Entity.swift */; };
+		75CC434720E5C82D0037F296 /* ComponentContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC432B20E5C82C0037F296 /* ComponentContainer.swift */; };
+		75CC434820E5C82D0037F296 /* RPSpace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC432C20E5C82C0037F296 /* RPSpace.swift */; };
+		75CC434920E5C82D0037F296 /* Temporal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC432D20E5C82C0037F296 /* Temporal.swift */; };
+		75CC434A20E5C82D0037F296 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC432F20E5C82C0037F296 /* Event.swift */; };
+		75CC434B20E5C82D0037F296 /* Ability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433020E5C82C0037F296 /* Ability.swift */; };
+		75CC434C20E5C82D0037F296 /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433120E5C82C0037F296 /* Item.swift */; };
+		75CC434D20E5C82D0037F296 /* ItemExchange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433220E5C82C0037F296 /* ItemExchange.swift */; };
+		75CC434E20E5C82D0037F296 /* Component.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433320E5C82C0037F296 /* Component.swift */; };
+		75CC434F20E5C82D0037F296 /* Stats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433420E5C82C0037F296 /* Stats.swift */; };
+		75CC435020E5C82D0037F296 /* Position.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433520E5C82C0037F296 /* Position.swift */; };
+		75CC435120E5C82D0037F296 /* ConflictResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433620E5C82C0037F296 /* ConflictResult.swift */; };
+		75CC435220E5C82D0037F296 /* Targeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433720E5C82C0037F296 /* Targeting.swift */; };
+		75CC435320E5C82D0037F296 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 75CC433820E5C82C0037F296 /* README.md */; };
+		75CC435420E5C82D0037F296 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433920E5C82C0037F296 /* Cache.swift */; };
+		75CC435520E5C82D0037F296 /* Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433A20E5C82C0037F296 /* Core.swift */; };
+		75CC435620E5C82D0037F296 /* RPG Trunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 75CC433B20E5C82C0037F296 /* RPG Trunk.h */; };
+		75CC435720E5C82D0037F296 /* GameEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433D20E5C82C0037F296 /* GameEnvironment.swift */; };
+		75CC435820E5C82D0037F296 /* GameDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC433E20E5C82C0037F296 /* GameDelegate.swift */; };
+		75CC435920E5C82D0037F296 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 75CC433F20E5C82C0037F296 /* Info.plist */; };
 		75EE2C291C3865D100BF8437 /* RPTrunk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75EE2C1E1C3865D100BF8437 /* RPTrunk.framework */; };
 		75EE2C2E1C3865D100BF8437 /* Parser_Spec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C2D1C3865D100BF8437 /* Parser_Spec.swift */; };
-		75EE2C391C3865F000BF8437 /* Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C381C3865F000BF8437 /* Core.swift */; };
-		75EE2C3F1C386E8700BF8437 /* Stats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C3E1C386E8700BF8437 /* Stats.swift */; };
-		75EE2C411C386F1900BF8437 /* Equipment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C401C386F1900BF8437 /* Equipment.swift */; };
-		75EE2C431C38702A00BF8437 /* Component.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C421C38702A00BF8437 /* Component.swift */; };
-		75EE2C451C38722600BF8437 /* Ability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C441C38722600BF8437 /* Ability.swift */; };
-		75EE2C471C3874F000BF8437 /* Entity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C461C3874F000BF8437 /* Entity.swift */; };
-		75EE2C491C38751A00BF8437 /* Battle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C481C38751A00BF8437 /* Battle.swift */; };
-		75EE2C4B1C387B4800BF8437 /* Conditional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C4A1C387B4800BF8437 /* Conditional.swift */; };
-		75EE2C511C389A7A00BF8437 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EE2C501C389A7A00BF8437 /* Event.swift */; };
 		AF9E41CD06BC9F9A06DE06C6 /* Pods_RPTrunkDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FA2DCBD478BF03E9008FD12 /* Pods_RPTrunkDemo.framework */; };
 		FB36852A14CA3B7117681CBE /* Pods_RPTrunkDemoTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9487B0D32767AA1F667CCD0 /* Pods_RPTrunkDemoTests.framework */; };
 /* End PBXBuildFile section */
@@ -67,9 +72,6 @@
 		512A1BC6B4864CB199EC9238 /* Pods-RPTrunk.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RPTrunk.debug.xcconfig"; path = "Pods/Target Support Files/Pods-RPTrunk/Pods-RPTrunk.debug.xcconfig"; sourceTree = "<group>"; };
 		68022CF7A3AB5BB2BB2534AA /* Pods-RPTrunkDemoTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RPTrunkDemoTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-RPTrunkDemoTests/Pods-RPTrunkDemoTests.release.xcconfig"; sourceTree = "<group>"; };
 		752EEF0C1CF1290F006B86AD /* StatusEffects_Spec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StatusEffects_Spec.swift; sourceTree = "<group>"; };
-		753D301A1CD6CF6A003D0013 /* Position.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Position.swift; sourceTree = "<group>"; };
-		753D301B1CD6CF6A003D0013 /* StatusEffect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StatusEffect.swift; sourceTree = "<group>"; };
-		753D301E1CD6CF75003D0013 /* Cache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		753D30201CD6D6AB003D0013 /* Stats_spec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stats_spec.swift; sourceTree = "<group>"; };
 		75889B561CEEB4C70013DD39 /* Entity_spec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Entity_spec.swift; sourceTree = "<group>"; };
 		758AAB191C39F6820019238C /* RPTrunkDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RPTrunkDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -79,30 +81,36 @@
 		758AAB271C39F6820019238C /* RPGTrunkDemoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPGTrunkDemoTests.swift; sourceTree = "<group>"; };
 		758AAB291C39F6820019238C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		758AAB301C39F6980019238C /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Extensions.swift; path = RPGTrunkDemoTests/Extensions.swift; sourceTree = SOURCE_ROOT; };
-		75B181C91CEEA9C0004C51B0 /* Parser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Parser.swift; path = "RPG Trunk/Logic/Parser/Parser.swift"; sourceTree = SOURCE_ROOT; };
-		75B181CA1CEEA9C0004C51B0 /* Operators.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Operators.swift; sourceTree = "<group>"; };
-		75B181CD1CEEA9EB004C51B0 /* ConflictResult.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictResult.swift; sourceTree = "<group>"; };
-		75B181CE1CEEA9EB004C51B0 /* Time.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Time.swift; sourceTree = "<group>"; };
-		75B181D11CEEAA01004C51B0 /* GameDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameDelegate.swift; sourceTree = "<group>"; };
-		75B181D21CEEAA01004C51B0 /* GameEnvironment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameEnvironment.swift; sourceTree = "<group>"; };
-		75B6AD191CF2802200D9A818 /* Targeting.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Targeting.swift; sourceTree = "<group>"; };
-		75B6AD2E1CF2AAF500D9A818 /* Identity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Identity.swift; sourceTree = "<group>"; };
-		75C322871CB35F2D00441038 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		75CC432320E5C82C0037F296 /* Parser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.swift; sourceTree = "<group>"; };
+		75CC432420E5C82C0037F296 /* Conditional.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Conditional.swift; sourceTree = "<group>"; };
+		75CC432520E5C82C0037F296 /* Operators.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Operators.swift; sourceTree = "<group>"; };
+		75CC432720E5C82C0037F296 /* Equipment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Equipment.swift; sourceTree = "<group>"; };
+		75CC432820E5C82C0037F296 /* StatusEffect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StatusEffect.swift; sourceTree = "<group>"; };
+		75CC432920E5C82C0037F296 /* Identity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Identity.swift; sourceTree = "<group>"; };
+		75CC432A20E5C82C0037F296 /* Entity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Entity.swift; sourceTree = "<group>"; };
+		75CC432B20E5C82C0037F296 /* ComponentContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComponentContainer.swift; sourceTree = "<group>"; };
+		75CC432C20E5C82C0037F296 /* RPSpace.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPSpace.swift; sourceTree = "<group>"; };
+		75CC432D20E5C82C0037F296 /* Temporal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Temporal.swift; sourceTree = "<group>"; };
+		75CC432F20E5C82C0037F296 /* Event.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Event.swift; sourceTree = "<group>"; };
+		75CC433020E5C82C0037F296 /* Ability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Ability.swift; sourceTree = "<group>"; };
+		75CC433120E5C82C0037F296 /* Item.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
+		75CC433220E5C82C0037F296 /* ItemExchange.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ItemExchange.swift; sourceTree = "<group>"; };
+		75CC433320E5C82C0037F296 /* Component.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Component.swift; sourceTree = "<group>"; };
+		75CC433420E5C82C0037F296 /* Stats.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stats.swift; sourceTree = "<group>"; };
+		75CC433520E5C82C0037F296 /* Position.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Position.swift; sourceTree = "<group>"; };
+		75CC433620E5C82C0037F296 /* ConflictResult.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictResult.swift; sourceTree = "<group>"; };
+		75CC433720E5C82C0037F296 /* Targeting.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Targeting.swift; sourceTree = "<group>"; };
+		75CC433820E5C82C0037F296 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		75CC433920E5C82C0037F296 /* Cache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
+		75CC433A20E5C82C0037F296 /* Core.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
+		75CC433B20E5C82C0037F296 /* RPG Trunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "RPG Trunk.h"; sourceTree = "<group>"; };
+		75CC433D20E5C82C0037F296 /* GameEnvironment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameEnvironment.swift; sourceTree = "<group>"; };
+		75CC433E20E5C82C0037F296 /* GameDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameDelegate.swift; sourceTree = "<group>"; };
+		75CC433F20E5C82C0037F296 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		75EE2C1E1C3865D100BF8437 /* RPTrunk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RPTrunk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		75EE2C211C3865D100BF8437 /* RPG Trunk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RPG Trunk.h"; sourceTree = "<group>"; };
-		75EE2C231C3865D100BF8437 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		75EE2C281C3865D100BF8437 /* RP TrunkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "RP TrunkTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EE2C2D1C3865D100BF8437 /* Parser_Spec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser_Spec.swift; sourceTree = "<group>"; };
 		75EE2C2F1C3865D100BF8437 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		75EE2C381C3865F000BF8437 /* Core.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
-		75EE2C3E1C386E8700BF8437 /* Stats.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stats.swift; sourceTree = "<group>"; };
-		75EE2C401C386F1900BF8437 /* Equipment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Equipment.swift; sourceTree = "<group>"; };
-		75EE2C421C38702A00BF8437 /* Component.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Component.swift; sourceTree = "<group>"; };
-		75EE2C441C38722600BF8437 /* Ability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Ability.swift; sourceTree = "<group>"; };
-		75EE2C461C3874F000BF8437 /* Entity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Entity.swift; sourceTree = "<group>"; };
-		75EE2C481C38751A00BF8437 /* Battle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Battle.swift; sourceTree = "<group>"; };
-		75EE2C4A1C387B4800BF8437 /* Conditional.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Conditional.swift; sourceTree = "<group>"; };
-		75EE2C501C389A7A00BF8437 /* Event.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Event.swift; sourceTree = "<group>"; };
 		8FA2DCBD478BF03E9008FD12 /* Pods_RPTrunkDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RPTrunkDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2222FAACCAAD255290F1154 /* Pods-RPTrunkTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RPTrunkTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-RPTrunkTests/Pods-RPTrunkTests.debug.xcconfig"; sourceTree = "<group>"; };
 		C9487B0D32767AA1F667CCD0 /* Pods_RPTrunkDemoTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RPTrunkDemoTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -177,15 +185,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		7570CC9D1CB096C30019459E /* Default Game */ = {
-			isa = PBXGroup;
-			children = (
-				75B181D11CEEAA01004C51B0 /* GameDelegate.swift */,
-				75B181D21CEEAA01004C51B0 /* GameEnvironment.swift */,
-			);
-			path = "Default Game";
-			sourceTree = "<group>";
-		};
 		758AAB1A1C39F6820019238C /* RPGTrunkDemo */ = {
 			isa = PBXGroup;
 			children = (
@@ -205,30 +204,83 @@
 			path = RPGTrunkDemoTests;
 			sourceTree = "<group>";
 		};
-		75A05B961C3A13EF000E97B2 /* Foundation */ = {
+		75CC432020E5C82C0037F296 /* RPTrunk */ = {
 			isa = PBXGroup;
 			children = (
-				75EE2C441C38722600BF8437 /* Ability.swift */,
-				75EE2C481C38751A00BF8437 /* Battle.swift */,
-				75EE2C421C38702A00BF8437 /* Component.swift */,
-				75B181CD1CEEA9EB004C51B0 /* ConflictResult.swift */,
-				75EE2C461C3874F000BF8437 /* Entity.swift */,
-				75EE2C401C386F1900BF8437 /* Equipment.swift */,
-				75EE2C501C389A7A00BF8437 /* Event.swift */,
-				75B6AD2E1CF2AAF500D9A818 /* Identity.swift */,
-				753D301A1CD6CF6A003D0013 /* Position.swift */,
-				75EE2C3E1C386E8700BF8437 /* Stats.swift */,
-				753D301B1CD6CF6A003D0013 /* StatusEffect.swift */,
-				75B6AD191CF2802200D9A818 /* Targeting.swift */,
-				75B181CE1CEEA9EB004C51B0 /* Time.swift */,
+				75CC432120E5C82C0037F296 /* Logic */,
+				75CC432620E5C82C0037F296 /* Foundation */,
+				75CC433820E5C82C0037F296 /* README.md */,
+				75CC433920E5C82C0037F296 /* Cache.swift */,
+				75CC433A20E5C82C0037F296 /* Core.swift */,
+				75CC433B20E5C82C0037F296 /* RPG Trunk.h */,
+				75CC433C20E5C82C0037F296 /* Default Game */,
+				75CC433F20E5C82C0037F296 /* Info.plist */,
+			);
+			path = RPTrunk;
+			sourceTree = "<group>";
+		};
+		75CC432120E5C82C0037F296 /* Logic */ = {
+			isa = PBXGroup;
+			children = (
+				75CC432220E5C82C0037F296 /* Parser */,
+				75CC432420E5C82C0037F296 /* Conditional.swift */,
+				75CC432520E5C82C0037F296 /* Operators.swift */,
+			);
+			path = Logic;
+			sourceTree = "<group>";
+		};
+		75CC432220E5C82C0037F296 /* Parser */ = {
+			isa = PBXGroup;
+			children = (
+				75CC432320E5C82C0037F296 /* Parser.swift */,
+			);
+			path = Parser;
+			sourceTree = "<group>";
+		};
+		75CC432620E5C82C0037F296 /* Foundation */ = {
+			isa = PBXGroup;
+			children = (
+				75CC432720E5C82C0037F296 /* Equipment.swift */,
+				75CC432820E5C82C0037F296 /* StatusEffect.swift */,
+				75CC432920E5C82C0037F296 /* Identity.swift */,
+				75CC432A20E5C82C0037F296 /* Entity.swift */,
+				75CC432B20E5C82C0037F296 /* ComponentContainer.swift */,
+				75CC432C20E5C82C0037F296 /* RPSpace.swift */,
+				75CC432D20E5C82C0037F296 /* Temporal.swift */,
+				75CC432E20E5C82C0037F296 /* Abilities & Events */,
+				75CC433320E5C82C0037F296 /* Component.swift */,
+				75CC433420E5C82C0037F296 /* Stats.swift */,
+				75CC433520E5C82C0037F296 /* Position.swift */,
+				75CC433620E5C82C0037F296 /* ConflictResult.swift */,
+				75CC433720E5C82C0037F296 /* Targeting.swift */,
 			);
 			path = Foundation;
+			sourceTree = "<group>";
+		};
+		75CC432E20E5C82C0037F296 /* Abilities & Events */ = {
+			isa = PBXGroup;
+			children = (
+				75CC432F20E5C82C0037F296 /* Event.swift */,
+				75CC433020E5C82C0037F296 /* Ability.swift */,
+				75CC433120E5C82C0037F296 /* Item.swift */,
+				75CC433220E5C82C0037F296 /* ItemExchange.swift */,
+			);
+			path = "Abilities & Events";
+			sourceTree = "<group>";
+		};
+		75CC433C20E5C82C0037F296 /* Default Game */ = {
+			isa = PBXGroup;
+			children = (
+				75CC433D20E5C82C0037F296 /* GameEnvironment.swift */,
+				75CC433E20E5C82C0037F296 /* GameDelegate.swift */,
+			);
+			path = "Default Game";
 			sourceTree = "<group>";
 		};
 		75EE2C141C3865D100BF8437 = {
 			isa = PBXGroup;
 			children = (
-				75EE2C201C3865D100BF8437 /* RPTrunk */,
+				75CC432020E5C82C0037F296 /* RPTrunk */,
 				75EE2C2C1C3865D100BF8437 /* RPTrunkTests */,
 				758AAB1A1C39F6820019238C /* RPGTrunkDemo */,
 				758AAB261C39F6820019238C /* RPGTrunkDemoTests */,
@@ -249,22 +301,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		75EE2C201C3865D100BF8437 /* RPTrunk */ = {
-			isa = PBXGroup;
-			children = (
-				75EE2C381C3865F000BF8437 /* Core.swift */,
-				753D301E1CD6CF75003D0013 /* Cache.swift */,
-				75EE2C4C1C3899E100BF8437 /* Logic */,
-				75A05B961C3A13EF000E97B2 /* Foundation */,
-				7570CC9D1CB096C30019459E /* Default Game */,
-				75EE2C211C3865D100BF8437 /* RPG Trunk.h */,
-				75EE2C231C3865D100BF8437 /* Info.plist */,
-				75C322871CB35F2D00441038 /* README.md */,
-			);
-			name = RPTrunk;
-			path = "RPG Trunk";
-			sourceTree = "<group>";
-		};
 		75EE2C2C1C3865D100BF8437 /* RPTrunkTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -276,16 +312,6 @@
 			);
 			name = RPTrunkTests;
 			path = "RPG TrunkTests";
-			sourceTree = "<group>";
-		};
-		75EE2C4C1C3899E100BF8437 /* Logic */ = {
-			isa = PBXGroup;
-			children = (
-				75B181C91CEEA9C0004C51B0 /* Parser.swift */,
-				75B181CA1CEEA9C0004C51B0 /* Operators.swift */,
-				75EE2C4A1C387B4800BF8437 /* Conditional.swift */,
-			);
-			path = Logic;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -303,7 +329,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				75EE2C221C3865D100BF8437 /* RPG Trunk.h in Headers */,
+				75CC435620E5C82D0037F296 /* RPG Trunk.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -459,6 +485,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				75CC435920E5C82D0037F296 /* Info.plist in Resources */,
+				75CC435320E5C82D0037F296 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -646,26 +674,29 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				75EE2C391C3865F000BF8437 /* Core.swift in Sources */,
-				75EE2C511C389A7A00BF8437 /* Event.swift in Sources */,
-				75EE2C4B1C387B4800BF8437 /* Conditional.swift in Sources */,
-				75EE2C3F1C386E8700BF8437 /* Stats.swift in Sources */,
-				75B181CC1CEEA9C0004C51B0 /* Operators.swift in Sources */,
-				75B6AD1A1CF2802200D9A818 /* Targeting.swift in Sources */,
-				753D301F1CD6CF75003D0013 /* Cache.swift in Sources */,
-				75B181D01CEEA9EB004C51B0 /* Time.swift in Sources */,
-				75B181D31CEEAA01004C51B0 /* GameDelegate.swift in Sources */,
-				75EE2C471C3874F000BF8437 /* Entity.swift in Sources */,
-				753D301D1CD6CF6A003D0013 /* StatusEffect.swift in Sources */,
-				75EE2C491C38751A00BF8437 /* Battle.swift in Sources */,
-				75B6AD2F1CF2AAF500D9A818 /* Identity.swift in Sources */,
-				75EE2C451C38722600BF8437 /* Ability.swift in Sources */,
-				75B181D41CEEAA01004C51B0 /* GameEnvironment.swift in Sources */,
-				75B181CB1CEEA9C0004C51B0 /* Parser.swift in Sources */,
-				75B181CF1CEEA9EB004C51B0 /* ConflictResult.swift in Sources */,
-				75EE2C411C386F1900BF8437 /* Equipment.swift in Sources */,
-				753D301C1CD6CF6A003D0013 /* Position.swift in Sources */,
-				75EE2C431C38702A00BF8437 /* Component.swift in Sources */,
+				75CC434420E5C82D0037F296 /* StatusEffect.swift in Sources */,
+				75CC434A20E5C82D0037F296 /* Event.swift in Sources */,
+				75CC434720E5C82D0037F296 /* ComponentContainer.swift in Sources */,
+				75CC435720E5C82D0037F296 /* GameEnvironment.swift in Sources */,
+				75CC435520E5C82D0037F296 /* Core.swift in Sources */,
+				75CC434D20E5C82D0037F296 /* ItemExchange.swift in Sources */,
+				75CC434E20E5C82D0037F296 /* Component.swift in Sources */,
+				75CC434F20E5C82D0037F296 /* Stats.swift in Sources */,
+				75CC435820E5C82D0037F296 /* GameDelegate.swift in Sources */,
+				75CC435420E5C82D0037F296 /* Cache.swift in Sources */,
+				75CC434520E5C82D0037F296 /* Identity.swift in Sources */,
+				75CC435220E5C82D0037F296 /* Targeting.swift in Sources */,
+				75CC435020E5C82D0037F296 /* Position.swift in Sources */,
+				75CC434620E5C82D0037F296 /* Entity.swift in Sources */,
+				75CC434120E5C82D0037F296 /* Conditional.swift in Sources */,
+				75CC434020E5C82D0037F296 /* Parser.swift in Sources */,
+				75CC434C20E5C82D0037F296 /* Item.swift in Sources */,
+				75CC434320E5C82D0037F296 /* Equipment.swift in Sources */,
+				75CC434220E5C82D0037F296 /* Operators.swift in Sources */,
+				75CC434820E5C82D0037F296 /* RPSpace.swift in Sources */,
+				75CC434B20E5C82D0037F296 /* Ability.swift in Sources */,
+				75CC435120E5C82D0037F296 /* ConflictResult.swift in Sources */,
+				75CC434920E5C82D0037F296 /* Temporal.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -854,7 +885,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = "RPG Trunk/Info.plist";
+				INFOPLIST_FILE = RPTrunk/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ca.bitwit.RPTrunk;
@@ -874,7 +905,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = "RPG Trunk/Info.plist";
+				INFOPLIST_FILE = RPTrunk/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ca.bitwit.RPTrunk;
@@ -888,6 +919,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = C2222FAACCAAD255290F1154 /* Pods-RPTrunkTests.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				INFOPLIST_FILE = "RPG TrunkTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "ca.bitwit.RPG-TrunkTests";
@@ -900,6 +932,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = FF1496C151E18F3B8CD9C4BA /* Pods-RPTrunkTests.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				INFOPLIST_FILE = "RPG TrunkTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "ca.bitwit.RPG-TrunkTests";

@@ -1,3 +1,4 @@
+import Foundation
 
 public struct Targeting: Codable {
 
@@ -37,7 +38,7 @@ public struct Targeting: Codable {
             let entity = validTargets[randomIndex]
             return Set([entity])
         default:
-            return validTargets
+            return Set(validTargets)
         }
     }
     

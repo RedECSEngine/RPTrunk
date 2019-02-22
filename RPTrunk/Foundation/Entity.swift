@@ -161,10 +161,10 @@ open class Entity: Temporal, InventoryManager, Codable {
             .map { $0.identity.name }
             
         relevantEffectNames
-            .forEach { statusEffects[$0]?.expendCharge() }
+            .forEach { self.statusEffects[$0]?.expendCharge() }
         
         relevantEffectNames
-            .filter { statusEffects[$0]?.isCoolingDown() == false }
+            .filter { self.statusEffects[$0]?.isCoolingDown() == false }
             .forEach {
                 statusEffects[$0] = nil
         }

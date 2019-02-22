@@ -1,3 +1,4 @@
+import Foundation
 
 public struct EventResult {
     public let event: Event

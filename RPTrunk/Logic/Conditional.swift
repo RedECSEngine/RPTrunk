@@ -18,8 +18,7 @@ public enum Conditional: Codable {
         }
         
         do {
-            let predicate = try interpretStringCondition(condition)
-            return .custom(condition, predicate)
+            return try buildConditionalFromString(condition)
         } catch {
             print("WARNING: Failed to parse conditional (\(condition)). Will NEVER fire", error)
             return .never
@@ -134,7 +133,7 @@ enum ConditionalInterpretationError: Error {
 }
 
 func buildConditionalFromString(_ conditionString: String) throws -> Conditional {
-    let statements = conditionString.components(separatedBy: "&&")
+    let statements = conditionString.components(separatedBy: " && ")
     if statements.count == 1 {
         let predicate = try interpretStringCondition(statements[0])
         return .custom(conditionString, predicate)
