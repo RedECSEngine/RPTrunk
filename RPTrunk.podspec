@@ -6,7 +6,7 @@ Pod::Spec.new do |spec|
 	spec.authors          = { 'Kyle Newsome' => 'kyle@bitwit.ca' }
 	spec.summary          = 'A flexible state machine for games'
 	spec.source           = { :git => 'https://github.com/bitwit/RPTrunk.git', :tag => '0.0.0' }
-	spec.source_files     = 'RPG Trunk/**/**.{swift}'
+	spec.source_files     = 'RPTrunk/**/**.{swift}'
 	spec.ios.deployment_target = "8.0"
 	spec.tvos.deployment_target = "9.0"
 	spec.requires_arc     = true
