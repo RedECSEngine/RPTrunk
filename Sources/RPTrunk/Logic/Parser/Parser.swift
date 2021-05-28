@@ -2,7 +2,7 @@ import Foundation
 
 extension ArraySlice {
     var decompose: (Element, ArraySlice<Element>)? {
-        return isEmpty ? nil : (self[startIndex], ArraySlice(dropFirst()))
+        isEmpty ? nil : (self[startIndex], ArraySlice(dropFirst()))
     }
 }
 
@@ -19,15 +19,15 @@ public func + <G: IteratorProtocol, H: IteratorProtocol>(first: G, second: H) ->
 }
 
 public func + <A>(l: AnySequence<A>, r: AnySequence<A>) -> AnySequence<A> {
-    return AnySequence { l.makeIterator() + r.makeIterator() }
+    AnySequence { l.makeIterator() + r.makeIterator() }
 }
 
 public func one<A>(_ x: A) -> AnySequence<A> {
-    return AnySequence(CollectionOfOne(x))
+    AnySequence(CollectionOfOne(x))
 }
 
 public func none<A>() -> AnySequence<A> {
-    return AnySequence(AnyIterator { nil })
+    AnySequence(AnyIterator { nil })
 }
 
 precedencegroup OrPipe {
@@ -36,7 +36,7 @@ precedencegroup OrPipe {
 
 infix operator <|>: OrPipe
 public func <|> <Token, A>(l: Parser<Token, A>, r: Parser<Token, A>) -> Parser<Token, A> {
-    return Parser { l.p($0) + r.p($0) }
+    Parser { l.p($0) + r.p($0) }
 }
 
 public enum ParserResultType {
@@ -87,7 +87,7 @@ public func extractResult(_ entity: Entity, evaluators: [ParserResultType]) -> R
 }
 
 func targetParser() -> Parser<String, ParserResultType> {
-    return Parser { x in
+    Parser { x in
         guard let (head, tail) = x.decompose, head == "target" else {
             return none()
         }
@@ -103,7 +103,7 @@ func getTarget(_ input: ParserResultType) -> ParserResultType {
 }
 
 func statParser() -> Parser<String, ParserResultType> {
-    return Parser { x in
+    Parser { x in
         guard let (head, tail) = x.decompose else {
             return none()
         }
@@ -127,7 +127,7 @@ func statParser() -> Parser<String, ParserResultType> {
 }
 
 func getStat(_ type: String, usePercent: Bool) -> (ParserResultType) -> ParserResultType {
-    return {
+    {
         input in
 
         if case let .entityResult(e) = input {
@@ -146,7 +146,7 @@ func getStat(_ type: String, usePercent: Bool) -> (ParserResultType) -> ParserRe
 }
 
 func statusParser() -> Parser<String, ParserResultType> {
-    return Parser { x in
+    Parser { x in
         guard let (head, tail) = x.decompose else {
             return none()
         }
@@ -163,7 +163,7 @@ func statusParser() -> Parser<String, ParserResultType> {
 }
 
 func getStatus(_ status: String) -> (ParserResultType) -> ParserResultType {
-    return {
+    {
         input in
         if case let .entityResult(e) = input {
             let found = e.hasStatus(status)
@@ -174,7 +174,7 @@ func getStatus(_ status: String) -> (ParserResultType) -> ParserResultType {
 }
 
 func valueParser() -> Parser<String, ParserResultType> {
-    return Parser { x in
+    Parser { x in
         guard let (head, tail) = x.decompose, let value = RPValue(head) else {
             return none()
         }
@@ -183,7 +183,7 @@ func valueParser() -> Parser<String, ParserResultType> {
 }
 
 func boolParser() -> Parser<String, ParserResultType> {
-    return Parser { x in
+    Parser { x in
         guard let (head, tail) = x.decompose else {
             return none()
         }

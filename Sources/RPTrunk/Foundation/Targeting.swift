@@ -102,11 +102,11 @@ public extension Targeting {
 extension Targeting: Equatable {}
 
 public func == (lhs: Targeting, rhs: Targeting) -> Bool {
-    return lhs.type == rhs.type && lhs.conditional == rhs.conditional
+    lhs.type == rhs.type && lhs.conditional == rhs.conditional
 }
 
 extension Targeting {
     func toComponent() -> Component {
-        return Component(targetType: self)
+        Component(targetType: self)
     }
 }

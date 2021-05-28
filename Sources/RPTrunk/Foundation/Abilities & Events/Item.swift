@@ -13,7 +13,7 @@ public struct Item: Temporal, ComponentContainer, Codable {
     public var amount: Int = 1
 
     public var currentTick: RPTimeIncrement = 0
-    public var maximumTick: RPTimeIncrement { return ability?.cooldown ?? 0 }
+    public var maximumTick: RPTimeIncrement { ability?.cooldown ?? 0 }
 
     public weak var entity: Entity?
     let ability: Ability?

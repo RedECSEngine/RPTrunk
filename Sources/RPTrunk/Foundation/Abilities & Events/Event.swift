@@ -37,11 +37,11 @@ public struct Event {
     }
 
     func getStats() -> Stats {
-        return ability.stats
+        ability.stats
     }
 
     func getCost() -> Stats {
-        return ability.cost * -1
+        ability.cost * -1
     }
 
     // MARK: - Results calculation and application
@@ -64,7 +64,7 @@ public struct Event {
         applyItemExchange(in: rpSpace)
     }
 
-    fileprivate func applyStatusEffectChanges(to targets: Set<Entity>) {
+    private func applyStatusEffectChanges(to targets: Set<Entity>) {
         ability.dischargedStatusEffects
             .forEach {
                 name in

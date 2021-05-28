@@ -13,11 +13,11 @@ public struct Stats: Codable {
     }
 
     public subscript(index: String) -> RPValue {
-        return values[index] ?? 0
+        values[index] ?? 0
     }
 
     public func get(_ key: String) -> RPValue? {
-        return values[key]
+        values[key]
     }
 
     public func nonZeroes() -> Stats {
@@ -34,13 +34,13 @@ public struct Stats: Codable {
     }
 
     public func getStats() -> Stats? {
-        return self
+        self
     }
 }
 
 extension Stats: Sequence {
     public func makeIterator() -> DictionaryIterator<String, RPValue> {
-        return values.makeIterator()
+        values.makeIterator()
     }
 }
 

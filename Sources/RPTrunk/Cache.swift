@@ -1,4 +1,4 @@
-open enum RPCache {
+public enum RPCache {
     public enum CacheError: Error {
         case notFound(String)
         case invalidFormat(String)

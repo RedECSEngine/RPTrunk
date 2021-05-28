@@ -7,7 +7,7 @@ open class RPGameEnvironment {
     fileprivate static var environments: [RPGameEnvironment] = []
 
     public static var statTypes: [String] {
-        return RPGameEnvironment.current.delegate.statTypes
+        RPGameEnvironment.current.delegate.statTypes
     }
 
     open var delegate: RPGameDelegate

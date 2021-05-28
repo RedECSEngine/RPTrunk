@@ -47,11 +47,11 @@ open class Entity: Temporal, InventoryManager, Codable {
     }
 
     open subscript(index: String) -> RPValue {
-        return currentStats.get(index) ?? stats[index]
+        currentStats.get(index) ?? stats[index]
     }
 
     public static func new() -> Entity {
-        return RPGameEnvironment.current.delegate.createDefaultEntity()
+        RPGameEnvironment.current.delegate.createDefaultEntity()
     }
 
     public init(_ data: [String: RPValue]) {
@@ -129,7 +129,7 @@ open class Entity: Temporal, InventoryManager, Codable {
     }
 
     open func getTarget() -> Entity? {
-        return targets.first
+        targets.first
     }
 
     open func addExecutableAbility(_ ability: Ability, conditional: Conditional) {
@@ -154,7 +154,7 @@ open class Entity: Temporal, InventoryManager, Codable {
     open func dischargeStatusEffect(_ label: String) {
         let relevantEffectNames = statusEffects.values
             .filter { $0.identity.labels.contains(label) }
-            .map { $0.identity.name }
+            .map(\.identity.name)
 
         relevantEffectNames
             .forEach { self.statusEffects[$0]?.expendCharge() }
@@ -199,11 +199,11 @@ open class Entity: Temporal, InventoryManager, Codable {
     }
 
     public func getPendingEvents(in rpSpace: RPSpace) -> [Event] {
-        return getPendingPassiveEvents(in: rpSpace) + getPendingExecutableEvents(in: rpSpace)
+        getPendingPassiveEvents(in: rpSpace) + getPendingExecutableEvents(in: rpSpace)
     }
 
     func getPendingStatusEffectEvents(in rpSpace: RPSpace) -> [Event] {
-        return statusEffects.values.flatMap { $0.getPendingEvents(in: rpSpace) }
+        statusEffects.values.flatMap { $0.getPendingEvents(in: rpSpace) }
     }
 
     open func getPendingExecutableEvents(in rpSpace: RPSpace) -> [Event] {
@@ -259,7 +259,7 @@ open class Entity: Temporal, InventoryManager, Codable {
     }
 
     open func hasStatus(_ name: String) -> Bool {
-        return statusEffects[name] != nil
+        statusEffects[name] != nil
     }
 }
 
@@ -296,11 +296,11 @@ extension Entity: CustomStringConvertible {
 extension Entity: Equatable {}
 
 public func == (_ lhs: Entity, _ rhs: Entity) -> Bool {
-    return lhs.id == rhs.id
+    lhs.id == rhs.id
 }
 
 extension Entity: Hashable {
     public var hashValue: Int {
-        return id.hashValue
+        id.hashValue
     }
 }

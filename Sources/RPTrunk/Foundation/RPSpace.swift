@@ -40,27 +40,27 @@ open class RPSpace: Temporal, InventoryManager {
     open func tick(_ moment: Moment) {
         let newMoment = moment.addSibling(self)
         teams.values
-            .flatMap { $0.entities }
+            .flatMap(\.entities)
             .forEach { $0.tick(newMoment) }
     }
 
     public func getPendingEvents() -> [Event] {
-        return getPendingEvents(in: self)
+        getPendingEvents(in: self)
     }
 
     public func getPendingEvents(in _: RPSpace) -> [Event] {
-        return getAllPendingPassiveEvents() + getAllPendingExecutableEvents()
+        getAllPendingPassiveEvents() + getAllPendingExecutableEvents()
     }
 
     private func getAllPendingPassiveEvents() -> [Event] {
-        return teams.values
-            .flatMap { $0.entities }
+        teams.values
+            .flatMap(\.entities)
             .flatMap { $0.getPendingPassiveEvents(in: self) }
     }
 
     private func getAllPendingExecutableEvents() -> [Event] {
-        return teams.values
-            .flatMap { $0.entities }
+        teams.values
+            .flatMap(\.entities)
             .flatMap { $0.getPendingExecutableEvents(in: self) }
     }
 
@@ -99,7 +99,7 @@ open class RPSpace: Temporal, InventoryManager {
     }
 
     open func getEntities() -> Set<Entity> {
-        return teams.values
+        teams.values
             .reduce(Set()) {
                 accumulated, team -> Set<Entity> in
                 accumulated.union(team.entities)

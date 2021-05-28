@@ -1,5 +1,5 @@
 
-public protocol InventoryManager: class {
+public protocol InventoryManager: AnyObject {
     var inventory: [Item] { get set }
 }
 

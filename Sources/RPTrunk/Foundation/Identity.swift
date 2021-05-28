@@ -17,7 +17,7 @@ public struct Identity: Codable {
 extension Identity: Equatable {}
 
 public func == (lhs: Identity, rhs: Identity) -> Bool {
-    return lhs.name == rhs.name
+    lhs.name == rhs.name
         && lhs.labels == rhs.labels
 }
 

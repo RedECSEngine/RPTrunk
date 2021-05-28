@@ -23,21 +23,21 @@ public struct StatusEffect: Codable {
     }
 
     public func getStatusEffects() -> [StatusEffect] {
-        return [self]
+        [self]
     }
 }
 
 extension StatusEffect: Equatable {}
 
 public func == (lhs: StatusEffect, rhs: StatusEffect) -> Bool {
-    return lhs.identity == rhs.identity
+    lhs.identity == rhs.identity
         && lhs.ability == rhs.ability
 }
 
 public struct ActiveStatusEffect: Temporal, Codable {
     fileprivate var deltaTick: RPTimeIncrement = 0
     public var currentTick: RPTimeIncrement = 0
-    public var maximumTick: RPTimeIncrement { return statusEffect.duration ?? 0 }
+    public var maximumTick: RPTimeIncrement { statusEffect.duration ?? 0 }
 
     var currentCharge: Int = 0
 
@@ -46,7 +46,7 @@ public struct ActiveStatusEffect: Temporal, Codable {
     public var entityId: String
     fileprivate let statusEffect: StatusEffect
 
-    public var identity: Identity { return statusEffect.identity }
+    public var identity: Identity { statusEffect.identity }
 
     public init(entityId: String, statusEffect: StatusEffect) {
         self.entityId = entityId
@@ -55,7 +55,7 @@ public struct ActiveStatusEffect: Temporal, Codable {
     }
 
     public func shouldDisableEntity() -> Bool {
-        return statusEffect.impairsAction
+        statusEffect.impairsAction
     }
 
     public func getPendingEvents(in rpSpace: RPSpace) -> [Event] {

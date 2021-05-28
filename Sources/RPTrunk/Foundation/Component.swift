@@ -53,11 +53,11 @@ public struct Component: Codable {
         itemExchange = container.itemExchange
     }
 
-    public func getStats() -> Stats? { return stats }
-    public func getCost() -> Stats? { return cost }
-    public func getRequirements() -> Stats? { return requirements }
-    public func getTargeting() -> Targeting? { return targeting }
-    public func getStatusEffects() -> [StatusEffect] { return statusEffects ?? [] }
-    public func getDischargedStatusEffects() -> [String] { return dischargedStatusEffects ?? [] }
-    public func getItemExchange() -> ItemExchange? { return itemExchange }
+    public func getStats() -> Stats? { stats }
+    public func getCost() -> Stats? { cost }
+    public func getRequirements() -> Stats? { requirements }
+    public func getTargeting() -> Targeting? { targeting }
+    public func getStatusEffects() -> [StatusEffect] { statusEffects ?? [] }
+    public func getDischargedStatusEffects() -> [String] { dischargedStatusEffects ?? [] }
+    public func getItemExchange() -> ItemExchange? { itemExchange }
 }

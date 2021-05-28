@@ -10,7 +10,7 @@ public struct Moment {
     }
 
     public func addSibling(_ sibling: Temporal) -> Moment {
-        return Moment(delta: delta, parents: parents + [sibling])
+        Moment(delta: delta, parents: parents + [sibling])
     }
 }
 
@@ -26,6 +26,6 @@ public protocol Temporal {
 
 extension Temporal {
     func isCoolingDown() -> Bool {
-        return currentTick < maximumTick
+        currentTick < maximumTick
     }
 }

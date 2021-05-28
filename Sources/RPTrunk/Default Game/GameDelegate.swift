@@ -32,7 +32,7 @@ public struct DefaultGame: RPGameDelegate {
     public var abilityDefaults = [Component]()
 
     public func createDefaultEntity() -> Entity {
-        return Entity()
+        Entity()
     }
 
     public func resolveConflict(_: Event, target: Entity, conflict: Stats) -> ConflictResult {

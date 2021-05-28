@@ -23,14 +23,13 @@ public struct Ability: ComponentContainer, Codable {
 
 extension Ability: Equatable {}
 public func == (lhs: Ability, rhs: Ability) -> Bool {
-    return
-        lhs.name == rhs.name
-            && lhs as ComponentContainer == rhs as ComponentContainer
+    lhs.name == rhs.name
+        && lhs as ComponentContainer == rhs as ComponentContainer
 }
 
 public struct ActiveAbility: Temporal, Codable {
     public var currentTick: RPTimeIncrement = 0
-    public var maximumTick: RPTimeIncrement { return ability.cooldown }
+    public var maximumTick: RPTimeIncrement { ability.cooldown }
 
     public var entityId: String
     public let ability: Ability
@@ -83,6 +82,6 @@ public struct ActiveAbility: Temporal, Codable {
     }
 
     public func copyForEntity(_ entity: Entity) -> ActiveAbility {
-        return ActiveAbility(entityId: entity.id, ability: ability, conditional: conditional)
+        ActiveAbility(entityId: entity.id, ability: ability, conditional: conditional)
     }
 }

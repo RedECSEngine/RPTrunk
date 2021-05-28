@@ -6,19 +6,19 @@ public protocol ComponentContainer {
 
 public extension ComponentContainer {
     var stats: Stats {
-        return components
+        components
             .flatMap { $0.getStats() }
             .reduce(Stats(), +)
     }
 
     var cost: Stats {
-        return components
+        components
             .flatMap { $0.getCost() }
             .reduce(Stats(), +)
     }
 
     var requirements: Stats {
-        return components
+        components
             .flatMap { $0.getRequirements() }
             .reduce(Stats(), +)
     }
@@ -33,12 +33,12 @@ public extension ComponentContainer {
     }
 
     var statusEffects: [StatusEffect] {
-        return components
+        components
             .flatMap { $0.getStatusEffects() }
     }
 
     var dischargedStatusEffects: [String] {
-        return components
+        components
             .flatMap { $0.getDischargedStatusEffects() }
     }
 
@@ -53,7 +53,7 @@ public extension ComponentContainer {
 }
 
 func == (a: ComponentContainer, b: ComponentContainer) -> Bool {
-    return a.stats == b.stats
+    a.stats == b.stats
         && a.cost == b.cost
         && a.requirements == b.requirements
         && a.targeting == b.targeting

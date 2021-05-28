@@ -75,7 +75,7 @@ extension Conditional: CustomStringConvertible {
 extension Conditional: Equatable {}
 
 public func == (lhs: Conditional, rhs: Conditional) -> Bool {
-    return lhs.description == rhs.description
+    lhs.description == rhs.description
 }
 
 extension Conditional: ExpressibleByStringLiteral {
