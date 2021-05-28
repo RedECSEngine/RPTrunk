@@ -1,6 +1,5 @@
 
 open class Entity: Temporal, InventoryManager, Codable {
-    
     enum CodingKeys: String, CodingKey {
         case id
         case teamId
@@ -20,24 +19,25 @@ open class Entity: Temporal, InventoryManager, Codable {
             updateIds()
         }
     }
+
     open var teamId: String?
-    
+
     open var currentTick: RPTimeIncrement = 0
     open var maximumTick: RPTimeIncrement = 0
-    
+
     open var baseStats: Stats = [:]
-    open var currentStats: Stats = [:] //when a value is nil, for a given key, it means it's at max
+    open var currentStats: Stats = [:] // when a value is nil, for a given key, it means it's at max
     open var body = Body()
     open var inventory: [Item] = []
-    
+
     open fileprivate(set) var executableAbilities: [String: ActiveAbility] = [:]
     open fileprivate(set) var passiveAbilities: [String: ActiveAbility] = [:]
     open fileprivate(set) var statusEffects: [String: ActiveStatusEffect] = [:]
-    
+
     open var targets: Set<Entity> = []
-    
+
     open weak var data: AnyObject?
-    
+
     open var stats: Stats {
         var totalStats = self.baseStats
         for item in self.body.wornItems {
@@ -45,7 +45,7 @@ open class Entity: Temporal, InventoryManager, Codable {
         }
         return totalStats
     }
-    
+
     open subscript(index: String) -> RPValue {
         return currentStats.get(index) ?? stats[index]
     }
@@ -53,16 +53,16 @@ open class Entity: Temporal, InventoryManager, Codable {
     public static func new() -> Entity {
         return RPGameEnvironment.current.delegate.createDefaultEntity()
     }
-    
+
     public init(_ data: [String: RPValue]) {
-        self.baseStats = Stats(data)
-        self.currentStats = baseStats
+        baseStats = Stats(data)
+        currentStats = baseStats
     }
-    
+
     public convenience init() {
         self.init([:])
     }
-    
+
     public required init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         id = try values.decode(String.self, forKey: .id)
@@ -77,7 +77,7 @@ open class Entity: Temporal, InventoryManager, Codable {
         passiveAbilities = try values.decode([String: ActiveAbility].self, forKey: .passiveAbilities)
         statusEffects = try values.decode([String: ActiveStatusEffect].self, forKey: .statusEffects)
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
@@ -92,117 +92,112 @@ open class Entity: Temporal, InventoryManager, Codable {
         try container.encode(passiveAbilities, forKey: .passiveAbilities)
         try container.encode(statusEffects, forKey: .statusEffects)
     }
-    
+
     open func allCurrentStats() -> Stats {
-        var cs:[String: RPValue] = [:]
+        var cs: [String: RPValue] = [:]
         let maxStats = stats
         for type in RPGameEnvironment.statTypes {
             cs[type] = currentStats.get(type) ?? maxStats[type]
         }
         return Stats(cs)
     }
-    
+
     open func setCurrentStats(_ newStats: Stats) {
-        var cs:[String: RPValue] = [:]
+        var cs: [String: RPValue] = [:]
         let maxStats = stats
         for type in RPGameEnvironment.statTypes {
             cs[type] = newStats[type] < maxStats[type] ? newStats[type] : nil
         }
         currentStats = Stats(cs, asPartial: true)
     }
-    
+
     open func usableAbilities(in rpSpace: RPSpace) -> [ActiveAbility] {
-        
         guard !isCoolingDown() else {
             return []
         }
-        
+
         return executableAbilities.values
             .filter { $0.canExecute(in: rpSpace) && allCurrentStats() >= $0.ability.cost }
     }
 
     open func getPossibleTargets() -> Set<Entity>? {
-        
         if targets.count > 0 {
             return targets
         }
-        
+
         return nil
     }
-    
+
     open func getTarget() -> Entity? {
         return targets.first
     }
-    
+
     open func addExecutableAbility(_ ability: Ability, conditional: Conditional) {
         let activeAbility = ActiveAbility(entityId: id, ability: ability, conditional: conditional)
         executableAbilities[ability.name] = activeAbility
     }
-    
+
     open func addPassiveAbility(_ ability: Ability, conditional: Conditional) {
         let activeAbility = ActiveAbility(entityId: id, ability: ability, conditional: conditional)
         passiveAbilities[ability.name] = activeAbility
     }
-    
+
     open func applyStatusEffect(_ statusEffect: StatusEffect) {
-        
         if statusEffects[statusEffect.identity.name] != nil {
-            //TODO: Handle stackability of status effects rather than just resetting
+            // TODO: Handle stackability of status effects rather than just resetting
             statusEffects[statusEffect.identity.name]?.resetCooldown()
         } else {
             statusEffects[statusEffect.identity.name] = ActiveStatusEffect(entityId: id, statusEffect: statusEffect)
         }
     }
-    
+
     open func dischargeStatusEffect(_ label: String) {
-        
         let relevantEffectNames = statusEffects.values
             .filter { $0.identity.labels.contains(label) }
             .map { $0.identity.name }
-            
+
         relevantEffectNames
             .forEach { self.statusEffects[$0]?.expendCharge() }
-        
+
         relevantEffectNames
             .filter { self.statusEffects[$0]?.isCoolingDown() == false }
             .forEach {
                 statusEffects[$0] = nil
-        }
+            }
     }
-    
+
     open func resetCooldown() {
         currentTick = 0
     }
-    
+
     open func resetAbility(byName name: String) {
         executableAbilities[name]?.resetCooldown()
     }
-    
+
     open func incrementTickForStatusEffect(byName name: String) {
         statusEffects[name]?.incrementTick()
-        
-        if false == statusEffects[name]?.isCoolingDown() {
+
+        if statusEffects[name]?.isCoolingDown() == false {
             statusEffects[name] = nil
         }
     }
-    
-    open func tick(_ moment:Moment) {
-        
+
+    open func tick(_ moment: Moment) {
         if currentTick < maximumTick {
             currentTick += moment.delta
         }
-        
+
         let newMoment = moment.addSibling(self)
-        
+
         for key in statusEffects.keys {
             statusEffects[key]?.tick(newMoment)
         }
-        
+
         for name in executableAbilities.keys {
             executableAbilities[name]?.tick(newMoment)
         }
     }
-    
+
     public func getPendingEvents(in rpSpace: RPSpace) -> [Event] {
         return getPendingPassiveEvents(in: rpSpace) + getPendingExecutableEvents(in: rpSpace)
     }
@@ -210,13 +205,12 @@ open class Entity: Temporal, InventoryManager, Codable {
     func getPendingStatusEffectEvents(in rpSpace: RPSpace) -> [Event] {
         return statusEffects.values.flatMap { $0.getPendingEvents(in: rpSpace) }
     }
-    
+
     open func getPendingExecutableEvents(in rpSpace: RPSpace) -> [Event] {
-        
-        guard !isCoolingDown() && canPerformEvents() else {
+        guard !isCoolingDown(), canPerformEvents() else {
             return []
         }
-        
+
         // Get any events that should execute based on priorities
         let abilityEvents = usableAbilities(in: rpSpace)
             .first(where: {
@@ -227,21 +221,20 @@ open class Entity: Temporal, InventoryManager, Codable {
                 return firstEvent.targets.isEmpty == false
             })
             .map { $0.getPendingEvents(in: rpSpace) } ?? []
-        
+
         return abilityEvents
     }
-    
+
     open func getPendingPassiveEvents(in rpSpace: RPSpace) -> [Event] {
         var abilityEvents = [Event]()
-        
+
         for activeAbility in passiveAbilities.values where activeAbility.canExecute(in: rpSpace) {
             abilityEvents += activeAbility.getPendingEvents(in: rpSpace)
         }
         return abilityEvents
     }
-    
+
     fileprivate func updateIds() {
-        
         executableAbilities.keys.forEach {
             abilityName in
             executableAbilities[abilityName]?.entityId = id
@@ -256,58 +249,53 @@ open class Entity: Temporal, InventoryManager, Codable {
         }
     }
 
-    //Querying
-    
+    // Querying
+
     open func canPerformEvents() -> Bool {
-        
         for se in statusEffects.values where se.shouldDisableEntity() {
             return false
         }
         return true
     }
-    
+
     open func hasStatus(_ name: String) -> Bool {
         return statusEffects[name] != nil
     }
 }
 
-extension Entity {
-
-    public func copy() -> Entity {
-        
+public extension Entity {
+    func copy() -> Entity {
         let entity = Entity()
-        entity.currentTick = self.currentTick
-        entity.maximumTick = self.maximumTick
-        entity.baseStats = self.baseStats
-        entity.currentStats = self.currentStats
-        entity.body = self.body
-        entity.executableAbilities = self.executableAbilities
+        entity.currentTick = currentTick
+        entity.maximumTick = maximumTick
+        entity.baseStats = baseStats
+        entity.currentStats = currentStats
+        entity.body = body
+        entity.executableAbilities = executableAbilities
             .map { $0.value.copyForEntity(entity) }
             .toDictionary { $0.ability.name }
-        entity.passiveAbilities = self.passiveAbilities
+        entity.passiveAbilities = passiveAbilities
             .map { $0.value.copyForEntity(entity) }
             .toDictionary { $0.ability.name }
-        entity.statusEffects = self.statusEffects
+        entity.statusEffects = statusEffects
         return entity
     }
 }
 
 extension Entity: CustomStringConvertible {
-    
-    public var description:String {
-        var o:[String:String] = [:]
+    public var description: String {
+        var o: [String: String] = [:]
         let maxStats = stats
         for type in RPGameEnvironment.statTypes {
             o[type] = " \(currentStats.get(type) ?? maxStats[type])/\(maxStats[type])"
         }
         return "Entity:\n " + o.description
     }
-    
 }
 
-extension Entity: Equatable { }
+extension Entity: Equatable {}
 
-public func ==(_ lhs: Entity, _ rhs: Entity) -> Bool {
+public func == (_ lhs: Entity, _ rhs: Entity) -> Bool {
     return lhs.id == rhs.id
 }
 

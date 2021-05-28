@@ -3,7 +3,7 @@ import Foundation
 public struct EventResult {
     public let event: Event
     public let effects: [ConflictResult]
-    
+
     init(_ event: Event, _ effects: [ConflictResult]) {
         self.event = event
         self.effects = effects
@@ -11,7 +11,6 @@ public struct EventResult {
 }
 
 public struct Event {
-    
     public enum Category {
         case standardConflict
         case periodicEffect
@@ -23,7 +22,7 @@ public struct Event {
     public let ability: Ability
     public let targets: Set<Entity>
 
-    weak public private(set) var initiator: Entity!
+    public private(set) weak var initiator: Entity!
 
     public init(
         category: Category = .standardConflict,
@@ -34,64 +33,64 @@ public struct Event {
         self.category = category
         self.initiator = initiator
         self.ability = ability
-        self.targets = ability.targeting.getValidTargets(for: initiator, in: rpSpace)
+        targets = ability.targeting.getValidTargets(for: initiator, in: rpSpace)
     }
 
     func getStats() -> Stats {
         return ability.stats
     }
-    
+
     func getCost() -> Stats {
         return ability.cost * -1
     }
-    
-    //MARK: - Results calculation and application
-    
+
+    // MARK: - Results calculation and application
+
     public func getResults() -> [ConflictResult] {
         let totalStats = getStats()
-        let results = targets.map { (target) -> ConflictResult in
-            return RPGameEnvironment.current.delegate.resolveConflict(self, target: target, conflict: totalStats)
+        let results = targets.map { target -> ConflictResult in
+            RPGameEnvironment.current.delegate.resolveConflict(self, target: target, conflict: totalStats)
         }
         let costResult = RPGameEnvironment.current.delegate.resolveConflict(self, target: initiator, conflict: getCost())
         return results + [costResult]
     }
-    
-    func applyResults(_ results:[ConflictResult], in rpSpace: RPSpace){
-        results.forEach { (result) -> () in
+
+    func applyResults(_ results: [ConflictResult], in rpSpace: RPSpace) {
+        results.forEach { result -> Void in
             let newStats = result.entity.allCurrentStats() + result.change
             result.entity.setCurrentStats(newStats)
         }
         applyStatusEffectChanges(to: targets)
         applyItemExchange(in: rpSpace)
     }
-    
+
     fileprivate func applyStatusEffectChanges(to targets: Set<Entity>) {
-        
         ability.dischargedStatusEffects
             .forEach {
                 name in
                 targets.forEach { $0.dischargeStatusEffect(name) }
-        }
-        
+            }
+
         ability.statusEffects
             .forEach {
                 se in
                 targets.forEach { $0.applyStatusEffect(se) }
-        }
+            }
     }
-    
+
     func applyItemExchange(in rpSpace: RPSpace) {
-        
         guard let exchange = ability.itemExchange else { return }
-        
-        if exchange.requiresInitiatorOwnItem
-            && false == initiator.inventory.contains(where: { $0.name == exchange.item.name }) {
+
+        if exchange.requiresInitiatorOwnItem,
+           initiator.inventory.contains(where: { $0.name == exchange.item.name }) == false
+        {
             // should not exchange since initiator does not currently own the item
             return
         }
-        
-        if exchange.removesItemFromInitiator
-            , let idx = initiator.inventory.index(where: { $0.name == exchange.item.name }) {
+
+        if exchange.removesItemFromInitiator,
+           let idx = initiator.inventory.index(where: { $0.name == exchange.item.name })
+        {
             var newItemState = initiator.inventory[idx]
             newItemState.amount -= 1
             if newItemState.amount <= 0 {
@@ -100,7 +99,7 @@ public struct Event {
                 initiator.inventory[idx] = newItemState
             }
         }
-        
+
         switch exchange.exchangeType {
         case .rpSpace:
             rpSpace.inventory.append(exchange.item)
@@ -114,17 +113,16 @@ public struct Event {
             }
         }
     }
-    
+
     public func execute(in rpSpace: RPSpace) -> EventResult {
         let results = getResults()
         applyResults(results, in: rpSpace)
         return EventResult(self, results)
     }
-    
+
     public func resetCooldowns() {
         initiator.resetCooldown()
-        //reset cooldown if it is an executable
+        // reset cooldown if it is an executable
         initiator.resetAbility(byName: ability.name)
     }
-    
 }

@@ -1,9 +1,7 @@
 import Foundation
 
 public struct Targeting: Codable {
-
     public enum SelectionType: String, Codable {
-        
         case oneself
         case random
         case all
@@ -18,16 +16,16 @@ public struct Targeting: Codable {
 
     public let type: SelectionType
     public let conditional: Conditional
-    
+
     public init(_ type: SelectionType, _ conditional: Conditional) {
         self.type = type
         self.conditional = conditional
     }
-    
+
     public func getValidTargets(for entity: Entity, in rpSpace: RPSpace) -> Set<Entity> {
         let validTargets = getValidTargetSet(for: entity, in: rpSpace)
             .filter { conditional.exec($0) }
-        
+
         switch type {
         case .oneself, .singleEnemy, .singleFriendly:
             return validTargets.first.map { [$0] } ?? []
@@ -41,7 +39,7 @@ public struct Targeting: Codable {
             return Set(validTargets)
         }
     }
-    
+
     fileprivate func getValidTargetSet(for entity: Entity, in rpSpace: RPSpace) -> Set<Entity> {
         switch type {
         case .randomEnemy, .allEnemy, .singleEnemy:
@@ -54,30 +52,27 @@ public struct Targeting: Codable {
             return [entity]
         case .allyTeam:
             let allies = rpSpace.getAllies(of: entity)
-            if let nearbyAlly = allies.intersection(entity.targets).first
-                , let teamId = nearbyAlly.teamId
-                , let teamEntities = rpSpace.teams[teamId]?.entities {
+            if let nearbyAlly = allies.intersection(entity.targets).first,
+               let teamId = nearbyAlly.teamId,
+               let teamEntities = rpSpace.teams[teamId]?.entities
+            {
                 return teamEntities
             }
             return []
         }
     }
-
 }
 
-extension Targeting {
-    
-    public static func fromString(_ query:String) -> Targeting {
-        
+public extension Targeting {
+    static func fromString(_ query: String) -> Targeting {
         let components = query.components(separatedBy: ":")
         guard let type = components.first else {
             fatalError("Unexpected format for string translation to target")
         }
-        
+
         let condition: Conditional = components.count > 1 ? Conditional(components[1]) : .always
-        
+
         switch type {
-            
         case "self":
             return Targeting(.oneself, condition)
         case "enemy":
@@ -99,20 +94,18 @@ extension Targeting {
         case "allyTeam":
             return Targeting(.allyTeam, condition)
         default:
-            return Targeting(.all, condition) //type would be the condition in this case
-            
+            return Targeting(.all, condition) // type would be the condition in this case
         }
     }
 }
 
 extension Targeting: Equatable {}
 
-public func ==(lhs:Targeting, rhs:Targeting) -> Bool {
+public func == (lhs: Targeting, rhs: Targeting) -> Bool {
     return lhs.type == rhs.type && lhs.conditional == rhs.conditional
 }
 
 extension Targeting {
-    
     func toComponent() -> Component {
         return Component(targetType: self)
     }

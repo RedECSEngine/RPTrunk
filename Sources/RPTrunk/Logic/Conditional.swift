@@ -1,22 +1,20 @@
 
 public enum Conditional: Codable {
-    
     private enum CodingKeys: String, CodingKey {
         case rawValue
     }
-    
+
     public typealias Predicate = (Entity) -> Bool
-    
+
     case always
     case never
     case custom(String, Predicate)
 
     public static func fromString(_ condition: String) -> Conditional {
-        
         guard condition != "always" else {
             return .always
         }
-        
+
         do {
             return try buildConditionalFromString(condition)
         } catch {
@@ -24,7 +22,7 @@ public enum Conditional: Codable {
             return .never
         }
     }
-    
+
     public init(_ condition: String) {
         self = Conditional.fromString(condition)
     }
@@ -34,73 +32,71 @@ public enum Conditional: Codable {
         let rawValue = try values.decode(String.self, forKey: .rawValue)
         self.init(rawValue)
     }
-    
+
     public func toString() -> String {
         switch self {
         case .always: return "always"
         case .never: return ""
-        case .custom(let predicateAsString, _):
+        case let .custom(predicateAsString, _):
             return predicateAsString
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(toString(), forKey: .rawValue)
     }
-    
+
     public func exec(_ e: Entity) -> Bool {
         switch self {
         case .always:
             return true
         case .never:
             return false
-        case .custom(_ ,let query):
+        case let .custom(_, query):
             return query(e)
         }
     }
 }
 
 extension Conditional: CustomStringConvertible {
-    public var description:String {
+    public var description: String {
         switch self {
         case .always:
             return "Always"
         case .never:
             return "Never"
-        case .custom(let condition, _):
+        case let .custom(condition, _):
             return condition
         }
     }
 }
 
-extension Conditional: Equatable { }
+extension Conditional: Equatable {}
 
-public func ==(lhs:Conditional, rhs:Conditional) -> Bool {
+public func == (lhs: Conditional, rhs: Conditional) -> Bool {
     return lhs.description == rhs.description
 }
 
 extension Conditional: ExpressibleByStringLiteral {
-
     public typealias ExtendedGraphemeClusterLiteralType = StringLiteralType
     public typealias UnicodeScalarLiteralType = Character
-    
+
     public init(unicodeScalarLiteral value: UnicodeScalarLiteralType) {
         self.init("\(value)")
     }
-    
+
     public init(extendedGraphemeClusterLiteral value: ExtendedGraphemeClusterLiteralType) {
         self.init(value)
     }
-    
+
     public init(stringLiteral value: StringLiteralType) {
         self.init(value)
     }
 }
 
-extension Conditional {
-    
-    fileprivate init(_ condition: String, _ predicate: @escaping (Entity) -> Bool) {
+private extension Conditional {
+    init(_ condition: String, _ predicate: @escaping (Entity) -> Bool) {
         self = .custom(condition, predicate)
     }
 }
@@ -108,17 +104,16 @@ extension Conditional {
 public func && (a: Conditional, b: Conditional) -> Conditional {
     let condition = a.description + " && " + b.description
     return Conditional(condition) { e in
-        return a.exec(e) && b.exec(e)
+        a.exec(e) && b.exec(e)
     }
 }
 
 public func || (a: Conditional, b: Conditional) -> Conditional {
     let condition = a.description + " || " + b.description
     return Conditional(condition) { e in
-        return a.exec(e) || b.exec(e)
+        a.exec(e) || b.exec(e)
     }
 }
-
 
 // MARK: - Internal access types & functions
 
@@ -143,68 +138,65 @@ func buildConditionalFromString(_ conditionString: String) throws -> Conditional
             statement in
             try predicates.append(interpretStringCondition(statement))
         }
-        
+
         let finalPredicate: Conditional.Predicate = {
             entity in
-            //iterate over all predicates and confirm that none are 'false'
-            return predicates.contains(where: { (predicate) -> Bool in
-                return !predicate(entity)
+            // iterate over all predicates and confirm that none are 'false'
+            predicates.contains(where: { predicate -> Bool in
+                !predicate(entity)
             }) == false
         }
         return .custom(conditionString, finalPredicate)
-        
     }
 }
 
 func interpretStringCondition(_ condition: String) throws -> Conditional.Predicate {
-    
     let components = try breakdownConditionToComponents(condition)
-    
+
     guard let queryType = ConditionalQueryType(rawValue: components.count) else {
-        
         throw ConditionalInterpretationError.incorrectComponentCount(reason: "Invalid number of components in query")
     }
-    
+
     let lhs: ArraySlice<String> = breakdownComponentDotNotation(components[0])
     let rhs: ArraySlice<String>
     let condOperator: ConditionalOperator
-    
+
     switch queryType {
     case .examination:
-       condOperator = .Equal
-       rhs = ["true"]
+        condOperator = .Equal
+        rhs = ["true"]
     case .comparison:
         rhs = breakdownComponentDotNotation(components[2])
-        
+
         guard let op = ConditionalOperator(rawValue: components[1]) else {
             throw ConditionalInterpretationError.invalidSyntax(reason: "Operator `\(components[1])` is not recognized")
         }
-        
+
         condOperator = op
     }
-    
+
     let lhsEvaluators = parse(lhs)
     let rhsEvaluators = parse(rhs)
-    
-    return { (entity) -> Bool in
-        
+
+    return { entity -> Bool in
+
         let lhsResult = extractResult(entity, evaluators: lhsEvaluators)
         let rhsResult = extractResult(entity, evaluators: rhsEvaluators)
-        
+
         guard let l = lhsResult, let r = rhsResult else {
             return false
         }
-        
+
         return condOperator.evaluate(l, r)
     }
 }
 
-func breakdownConditionToComponents(_ condition:String) throws -> [String] {
+func breakdownConditionToComponents(_ condition: String) throws -> [String] {
     let components = condition.components(separatedBy: " ")
     return components
 }
 
-func breakdownComponentDotNotation(_ termString:String) -> ArraySlice<String> {
+func breakdownComponentDotNotation(_ termString: String) -> ArraySlice<String> {
     let components = termString.components(separatedBy: ".")
     return ArraySlice(components)
 }

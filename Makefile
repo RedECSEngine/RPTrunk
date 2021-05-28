@@ -1,3 +1,3 @@
 
 format:
-    swift run -c release swiftformat ./
+	swift run -c release swiftformat ./
