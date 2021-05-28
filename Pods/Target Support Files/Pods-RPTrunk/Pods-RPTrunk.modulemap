@@ -1,6 +1,0 @@
-framework module Pods_RPTrunk {
-  umbrella header "Pods-RPTrunk-umbrella.h"
-
-  export *
-  module * { export * }
-}
