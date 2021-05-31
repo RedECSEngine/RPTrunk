@@ -6,7 +6,7 @@ open class RPGameEnvironment {
     public fileprivate(set) static var current: RPGameEnvironment! = RPGameEnvironment(delegate: DefaultGame())
     fileprivate static var environments: [RPGameEnvironment] = []
 
-    public static var statTypes: [String] {
+    public static var statTypes: Set<String> {
         RPGameEnvironment.current.delegate.statTypes
     }
 

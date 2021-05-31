@@ -7,19 +7,19 @@ public protocol ComponentContainer {
 public extension ComponentContainer {
     var stats: Stats {
         components
-            .flatMap { $0.getStats() }
+            .compactMap { $0.getStats() }
             .reduce(Stats(), +)
     }
 
     var cost: Stats {
         components
-            .flatMap { $0.getCost() }
+            .compactMap { $0.getCost() }
             .reduce(Stats(), +)
     }
 
     var requirements: Stats {
         components
-            .flatMap { $0.getRequirements() }
+            .compactMap { $0.getRequirements() }
             .reduce(Stats(), +)
     }
 

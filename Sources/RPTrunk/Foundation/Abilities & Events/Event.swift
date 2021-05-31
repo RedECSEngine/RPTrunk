@@ -89,7 +89,7 @@ public struct Event {
         }
 
         if exchange.removesItemFromInitiator,
-           let idx = initiator.inventory.index(where: { $0.name == exchange.item.name })
+           let idx = initiator.inventory.firstIndex(where: { $0.name == exchange.item.name })
         {
             var newItemState = initiator.inventory[idx]
             newItemState.amount -= 1

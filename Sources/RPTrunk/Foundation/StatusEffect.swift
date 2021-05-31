@@ -1,22 +1,30 @@
 
 public struct StatusEffect: Codable {
-    public let identity: Identity
-
+    public let name: String
+    public let labels: [String]
     // both duration and charge can be used or one or the other
     let duration: RPTimeIncrement?
     let charges: Int? // the number of charges left
     let impairsAction: Bool
     let ability: Ability?
 
-    public init(identity: Identity, components: [Component], duration: Double?, charges: Int?, impairsAction: Bool = false) {
-        self.identity = identity
+    public init(
+        name: String,
+        labels: [String],
+        components: [Component],
+        duration: Double?,
+        charges: Int?,
+        impairsAction: Bool = false
+    ) {
+        self.name = name
+        self.labels = labels
         self.duration = duration
         self.charges = charges
         self.impairsAction = impairsAction
 
         if components.count > 0 {
             let components: [Component] = components + [Targeting(.oneself, .always).toComponent()]
-            ability = Ability(name: identity.name, components: components, cooldown: nil)
+            ability = Ability(name: name, components: components, cooldown: nil)
         } else {
             ability = nil
         }
@@ -30,7 +38,8 @@ public struct StatusEffect: Codable {
 extension StatusEffect: Equatable {}
 
 public func == (lhs: StatusEffect, rhs: StatusEffect) -> Bool {
-    lhs.identity == rhs.identity
+    lhs.name == rhs.name
+        && lhs.labels == rhs.labels
         && lhs.ability == rhs.ability
 }
 
@@ -46,9 +55,13 @@ public struct ActiveStatusEffect: Temporal, Codable {
     public var entityId: String
     fileprivate let statusEffect: StatusEffect
 
-    public var identity: Identity { statusEffect.identity }
+    public var name: String { statusEffect.name }
+    public var labels: [String] { statusEffect.labels }
 
-    public init(entityId: String, statusEffect: StatusEffect) {
+    public init(
+        entityId: String,
+        statusEffect: StatusEffect
+    ) {
         self.entityId = entityId
         self.statusEffect = statusEffect
         currentCharge = statusEffect.charges ?? 0

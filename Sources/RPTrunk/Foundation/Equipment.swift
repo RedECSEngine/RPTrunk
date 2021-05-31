@@ -4,5 +4,5 @@ public protocol InventoryManager: AnyObject {
 }
 
 public struct Body: Codable {
-    let wornItems: [Item] = []
+    var wornItems: [Item] = []
 }

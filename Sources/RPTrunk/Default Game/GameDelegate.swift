@@ -10,17 +10,14 @@ import Foundation
 
 public protocol RPGameDelegate {
     // instance managers
-    var statTypes: [String] { get }
-
-    var abilityDefaults: [Component] { get }
+    var statTypes: Set<String> { get }
 
     func createDefaultEntity() -> Entity
-
     func resolveConflict(_ event: Event, target: Entity, conflict: Stats) -> ConflictResult
 }
 
 public struct DefaultGame: RPGameDelegate {
-    public let statTypes: [String] = [
+    public let statTypes: Set<String> = [
         "hp",
         "mp",
         "damage",
@@ -28,8 +25,6 @@ public struct DefaultGame: RPGameDelegate {
         "magic",
         "defense",
     ]
-
-    public var abilityDefaults = [Component]()
 
     public func createDefaultEntity() -> Entity {
         Entity()

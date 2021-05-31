@@ -57,7 +57,7 @@ public struct Item: Temporal, ComponentContainer, Codable {
             return false
         }
 
-        return conditional.exec(e)
+        return (try? conditional.exec(e)) ?? false
     }
 
     public func getPendingEvents(in rpSpace: RPSpace) -> [Event] {

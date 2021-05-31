@@ -7,7 +7,7 @@ final class StatusEffectsTests: XCTestCase {
     ]
 
     func testCooldown() {
-        let se = StatusEffect(identity: "Test", components: [], duration: nil, charges: 1)
+        let se = StatusEffect(name: "Test", labels: [], components: [], duration: nil, charges: 1)
         let activeSE = ActiveStatusEffect(entityId: "", statusEffect: se)
 
         XCTAssertEqual(activeSE.isCoolingDown(), true)

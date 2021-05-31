@@ -1,24 +1,4 @@
-public class Team: InventoryManager {
-    public typealias TeamID = String
-
-    public let id: TeamID
-    public private(set) var entities: Set<Entity> = []
-    public var allies: Set<TeamID> = []
-    public var enemies: Set<TeamID> = []
-
-    public var inventory: [Item] = []
-
-    public init(id: String) {
-        self.id = id
-    }
-
-    public func add(_ entity: Entity) {
-        entity.teamId = id
-        entities.insert(entity)
-    }
-}
-
-open class RPSpace: Temporal, InventoryManager {
+public class RPSpace: Temporal, InventoryManager {
     public var inventory: [Item] = []
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement = -1
@@ -89,10 +69,14 @@ open class RPSpace: Temporal, InventoryManager {
         let exchange = Component(itemExchange: ItemExchange(exchangeType: .target, requiresInitiatorOwnItem: false, removesItemFromInitiator: false, item: item))
         let targeting = Component(targetType: Targeting(.oneself, .always))
 
-        let collect = Ability(name: "", components: [
-            exchange,
-            targeting,
-        ], shouldUseDefaults: true, cooldown: nil)
+        let collect = Ability(
+            name: "",
+            components: [
+                exchange,
+                targeting,
+            ],
+            cooldown: nil
+        )
 
         let event = Event(category: .itemExchangeOnly, initiator: entity, ability: collect, rpSpace: self)
         return event

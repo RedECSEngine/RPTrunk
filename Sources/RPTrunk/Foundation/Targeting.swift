@@ -24,7 +24,7 @@ public struct Targeting: Codable {
 
     public func getValidTargets(for entity: Entity, in rpSpace: RPSpace) -> Set<Entity> {
         let validTargets = getValidTargetSet(for: entity, in: rpSpace)
-            .filter { conditional.exec($0) }
+            .filter { (try? conditional.exec($0)) ?? false }
 
         switch type {
         case .oneself, .singleEnemy, .singleFriendly:

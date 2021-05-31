@@ -49,8 +49,7 @@ final class EntityTests: XCTestCase {
     }
 
     func test_status_effects_should_be_able_to_remove_status_effect_by_name() {
-        let id = Identity(name: "Death", labels: ["KO"])
-        let se = StatusEffect(identity: id, components: [], duration: nil, charges: 1)
+        let se = StatusEffect(name: "Death", labels: ["KO"], components: [], duration: nil, charges: 1)
         entity.applyStatusEffect(se)
 
         XCTAssertEqual(entity.hasStatus("Death"), true)
@@ -60,8 +59,7 @@ final class EntityTests: XCTestCase {
     }
 
     func test_status_effects_discharges_to_remove_a_status_effect_with_multiple_charges() {
-        let id = Identity(name: "Charge", labels: ["boost"])
-        let se = StatusEffect(identity: id, components: [], duration: nil, charges: 2)
+        let se = StatusEffect(name: "Charge", labels: ["boost"], components: [], duration: nil, charges: 2)
         entity.applyStatusEffect(se)
 
         XCTAssertEqual(entity.hasStatus("Charge"), true)

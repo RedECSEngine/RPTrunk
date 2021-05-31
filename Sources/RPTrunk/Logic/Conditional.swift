@@ -4,7 +4,7 @@ public enum Conditional: Codable {
         case rawValue
     }
 
-    public typealias Predicate = (Entity) -> Bool
+    public typealias Predicate = (Entity) throws -> Bool
 
     case always
     case never
@@ -47,14 +47,14 @@ public enum Conditional: Codable {
         try container.encode(toString(), forKey: .rawValue)
     }
 
-    public func exec(_ e: Entity) -> Bool {
+    public func exec(_ e: Entity) throws -> Bool {
         switch self {
         case .always:
             return true
         case .never:
             return false
         case let .custom(_, query):
-            return query(e)
+            return try query(e)
         }
     }
 }
@@ -95,36 +95,36 @@ extension Conditional: ExpressibleByStringLiteral {
     }
 }
 
-private extension Conditional {
-    init(_ condition: String, _ predicate: @escaping (Entity) -> Bool) {
-        self = .custom(condition, predicate)
-    }
-}
+//private extension Conditional {
+//    init(_ condition: String, _ predicate: @escaping (Entity) -> Bool) {
+//        self = .custom(condition, predicate)
+//    }
+//}
 
-public func && (a: Conditional, b: Conditional) -> Conditional {
-    let condition = a.description + " && " + b.description
-    return Conditional(condition) { e in
-        a.exec(e) && b.exec(e)
-    }
-}
-
-public func || (a: Conditional, b: Conditional) -> Conditional {
-    let condition = a.description + " || " + b.description
-    return Conditional(condition) { e in
-        a.exec(e) || b.exec(e)
-    }
-}
+//public func && (a: Conditional, b: Conditional) -> Conditional {
+//    let condition = a.description + " && " + b.description
+//    return Conditional(condition) { e in
+//        a.exec(e) && b.exec(e)
+//    }
+//}
+//
+//public func || (a: Conditional, b: Conditional) -> Conditional {
+//    let condition = a.description + " || " + b.description
+//    return Conditional(condition) { e in
+//        a.exec(e) || b.exec(e)
+//    }
+//}
 
 // MARK: - Internal access types & functions
-
-enum ConditionalQueryType: Int {
-    case comparison = 3
-    case examination = 1
-}
+//
+//enum ConditionalQueryType: Int {
+//    case comparison = 3
+//    case examination = 1
+//}
 
 enum ConditionalInterpretationError: Error {
-    case incorrectComponentCount(reason: String)
     case invalidSyntax(reason: String)
+    case cantCompareValues
 }
 
 func buildConditionalFromString(_ conditionString: String) throws -> Conditional {
@@ -142,8 +142,8 @@ func buildConditionalFromString(_ conditionString: String) throws -> Conditional
         let finalPredicate: Conditional.Predicate = {
             entity in
             // iterate over all predicates and confirm that none are 'false'
-            predicates.contains(where: { predicate -> Bool in
-                !predicate(entity)
+            try predicates.contains(where: { predicate -> Bool in
+                try !predicate(entity)
             }) == false
         }
         return .custom(conditionString, finalPredicate)
@@ -151,52 +151,52 @@ func buildConditionalFromString(_ conditionString: String) throws -> Conditional
 }
 
 func interpretStringCondition(_ condition: String) throws -> Conditional.Predicate {
-    let components = try breakdownConditionToComponents(condition)
-
-    guard let queryType = ConditionalQueryType(rawValue: components.count) else {
-        throw ConditionalInterpretationError.incorrectComponentCount(reason: "Invalid number of components in query")
-    }
-
-    let lhs: ArraySlice<String> = breakdownComponentDotNotation(components[0])
-    let rhs: ArraySlice<String>
-    let condOperator: ConditionalOperator
-
-    switch queryType {
-    case .examination:
-        condOperator = .Equal
-        rhs = ["true"]
-    case .comparison:
-        rhs = breakdownComponentDotNotation(components[2])
-
-        guard let op = ConditionalOperator(rawValue: components[1]) else {
-            throw ConditionalInterpretationError.invalidSyntax(reason: "Operator `\(components[1])` is not recognized")
+    if let (lhs, op, rhs) = logicalComparisonParser.parse(condition) {
+        return { entity -> Bool in
+            let lhsResult = extractValue(entity, evaluators: lhs)
+            let rhsResult = extractValue(entity, evaluators: rhs)
+            guard let l = lhsResult, let r = rhsResult else {
+                return false
+            }
+            guard l.canCompare(to: r) else {
+                throw ConditionalInterpretationError.cantCompareValues
+            }
+            return op.evaluate(l, r)
         }
-
-        condOperator = op
-    }
-
-    let lhsEvaluators = parse(lhs)
-    let rhsEvaluators = parse(rhs)
-
-    return { entity -> Bool in
-
-        let lhsResult = extractResult(entity, evaluators: lhsEvaluators)
-        let rhsResult = extractResult(entity, evaluators: rhsEvaluators)
-
-        guard let l = lhsResult, let r = rhsResult else {
-            return false
+    } else if let statusInquiry = statusParser.parse(condition) {
+        return { entity -> Bool in
+            return extractValue(entity, evaluators: [statusInquiry]) == .bool(true)
         }
-
-        return condOperator.evaluate(l, r)
+    } else {
+        throw ConditionalInterpretationError.invalidSyntax(reason: "Could not parse")
     }
 }
 
-func breakdownConditionToComponents(_ condition: String) throws -> [String] {
-    let components = condition.components(separatedBy: " ")
-    return components
+func extractValue(_ entity: Entity, evaluators: [ParserResultType]) -> ParserValueType? {
+    let initial = ParserResultType.entityResult(entity: entity)
+    
+    let final = evaluators.reduce(initial, {
+        prev, current -> ParserResultType in
+
+        if case let .evaluationFunction(f) = current {
+            return f(prev)
+        }
+
+        return current
+    })
+    
+    switch final {
+    case let .valueResult(v):
+        return v
+    default:
+        return nil
+    }
 }
 
-func breakdownComponentDotNotation(_ termString: String) -> ArraySlice<String> {
-    let components = termString.components(separatedBy: ".")
-    return ArraySlice(components)
+public func extractValue(_ entity: Entity, evaluate evaluationString: String) -> ParserValueType? {
+    guard let evaluationResult = dotNotationParser
+            .parse(evaluationString) else {
+        return nil
+    }
+    return extractValue(entity, evaluators: evaluationResult)
 }

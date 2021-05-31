@@ -1,5 +1,5 @@
 
-public enum ConditionalOperator: String {
+public enum ConditionalOperator: String, CaseIterable {
     case GreaterThan = ">"
     case LessThan = "<"
     case Equal = "=="

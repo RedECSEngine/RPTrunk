@@ -59,8 +59,13 @@ public enum RPCache {
             let charges: Int? = dict["charges"] as? Int
             let impairsAction: Bool = (dict["impairsAction"] as? Bool) ?? false
 
-            let id = Identity(name: name)
-            let se = StatusEffect(identity: id, components: components, duration: duration, charges: charges, impairsAction: impairsAction)
+            let se = StatusEffect(
+                name: name, labels: [],
+                components: components,
+                duration: duration,
+                charges: charges,
+                impairsAction: impairsAction
+            )
 
             RPCache.statusEffects[name] = se
         }

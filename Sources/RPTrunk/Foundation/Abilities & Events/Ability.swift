@@ -9,15 +9,11 @@ public struct Ability: ComponentContainer, Codable {
     public init(
         name: String,
         components: [Component] = [],
-        shouldUseDefaults: Bool = true,
         cooldown: RPTimeIncrement? = nil
     ) {
         self.name = name
         self.components = components
         self.cooldown = cooldown ?? 0
-        if shouldUseDefaults {
-            self.components += RPGameEnvironment.current.delegate.abilityDefaults
-        }
     }
 }
 
@@ -54,7 +50,7 @@ public struct ActiveAbility: Temporal, Codable {
         // TODO: consider requirements
         // TODO: consider item exchange cost
 
-        return conditional.exec(e)
+        return (try? conditional.exec(e)) ?? false
     }
 
     public func getPendingEvents(in rpSpace: RPSpace) -> [Event] {

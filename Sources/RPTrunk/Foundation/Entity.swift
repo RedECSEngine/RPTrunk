@@ -143,18 +143,18 @@ open class Entity: Temporal, InventoryManager, Codable {
     }
 
     open func applyStatusEffect(_ statusEffect: StatusEffect) {
-        if statusEffects[statusEffect.identity.name] != nil {
+        if statusEffects[statusEffect.name] != nil {
             // TODO: Handle stackability of status effects rather than just resetting
-            statusEffects[statusEffect.identity.name]?.resetCooldown()
+            statusEffects[statusEffect.name]?.resetCooldown()
         } else {
-            statusEffects[statusEffect.identity.name] = ActiveStatusEffect(entityId: id, statusEffect: statusEffect)
+            statusEffects[statusEffect.name] = ActiveStatusEffect(entityId: id, statusEffect: statusEffect)
         }
     }
 
     open func dischargeStatusEffect(_ label: String) {
         let relevantEffectNames = statusEffects.values
-            .filter { $0.identity.labels.contains(label) }
-            .map(\.identity.name)
+            .filter { $0.labels.contains(label) }
+            .map(\.name)
 
         relevantEffectNames
             .forEach { self.statusEffects[$0]?.expendCharge() }
@@ -300,7 +300,7 @@ public func == (_ lhs: Entity, _ rhs: Entity) -> Bool {
 }
 
 extension Entity: Hashable {
-    public var hashValue: Int {
-        id.hashValue
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
