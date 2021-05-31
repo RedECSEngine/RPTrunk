@@ -3,13 +3,13 @@ public class RPSpace: Temporal, InventoryManager {
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement = -1
 
-    open private(set) var entities: [String: Entity] = [:]
-    open private(set) var teams: [String: Team] = [:]
+    open private(set) var entities: [Id<Entity>: Entity] = [:]
+    open private(set) var teams: [Id<Team>: Team] = [:]
 
     public init() {}
 
     public func setTeams(_ newTeams: [Team]) {
-        var teamDict: [String: Team] = [:]
+        var teamDict: [Id<Team>: Team] = [:]
         newTeams.forEach { team in
             teamDict[team.id] = team
             team.entities.forEach { entities[$0.id] = $0 }

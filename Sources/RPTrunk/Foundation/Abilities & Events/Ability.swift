@@ -27,11 +27,11 @@ public struct ActiveAbility: Temporal, Codable {
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { ability.cooldown }
 
-    public var entityId: String
+    public var entityId: Id<Entity>
     public let ability: Ability
     public let conditional: Conditional
 
-    public init(entityId: String, ability: Ability, conditional: Conditional) {
+    public init(entityId: Id<Entity>, ability: Ability, conditional: Conditional) {
         self.entityId = entityId
         self.ability = ability
         self.conditional = conditional

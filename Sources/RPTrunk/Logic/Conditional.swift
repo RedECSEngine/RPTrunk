@@ -95,33 +95,6 @@ extension Conditional: ExpressibleByStringLiteral {
     }
 }
 
-//private extension Conditional {
-//    init(_ condition: String, _ predicate: @escaping (Entity) -> Bool) {
-//        self = .custom(condition, predicate)
-//    }
-//}
-
-//public func && (a: Conditional, b: Conditional) -> Conditional {
-//    let condition = a.description + " && " + b.description
-//    return Conditional(condition) { e in
-//        a.exec(e) && b.exec(e)
-//    }
-//}
-//
-//public func || (a: Conditional, b: Conditional) -> Conditional {
-//    let condition = a.description + " || " + b.description
-//    return Conditional(condition) { e in
-//        a.exec(e) || b.exec(e)
-//    }
-//}
-
-// MARK: - Internal access types & functions
-//
-//enum ConditionalQueryType: Int {
-//    case comparison = 3
-//    case examination = 1
-//}
-
 enum ConditionalInterpretationError: Error {
     case invalidSyntax(reason: String)
     case cantCompareValues

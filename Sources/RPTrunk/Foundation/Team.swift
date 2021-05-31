@@ -1,14 +1,12 @@
-public class Team: InventoryManager {
-    public typealias TeamID = String
-
-    public let id: TeamID
+public class Team: InventoryManager, Codable {
+    public let id: Id<Team>
     public private(set) var entities: Set<Entity> = []
-    public var allies: Set<TeamID> = []
-    public var enemies: Set<TeamID> = []
+    public var allies: Set<Id<Team>> = []
+    public var enemies: Set<Id<Team>> = []
 
     public var inventory: [Item] = []
 
-    public init(id: String) {
+    public init(id: Id<Team> = .init()) {
         self.id = id
     }
 

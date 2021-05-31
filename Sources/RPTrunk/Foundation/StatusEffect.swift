@@ -52,14 +52,14 @@ public struct ActiveStatusEffect: Temporal, Codable {
 
     var level: Int? // power level of the buff, if it is stackable
 
-    public var entityId: String
+    public var entityId: Id<Entity>
     fileprivate let statusEffect: StatusEffect
 
     public var name: String { statusEffect.name }
     public var labels: [String] { statusEffect.labels }
 
     public init(
-        entityId: String,
+        entityId: Id<Entity>,
         statusEffect: StatusEffect
     ) {
         self.entityId = entityId

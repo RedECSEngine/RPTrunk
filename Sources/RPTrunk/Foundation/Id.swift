@@ -5,6 +5,12 @@ public struct Id<T: Codable>: RawRepresentable {
     public init?(rawValue: String) {
         self.rawValue = rawValue
     }
+    public init() {
+        self.rawValue = UUID().uuidString
+    }
+    public init(value: String) {
+        self.rawValue = value
+    }
 }
     
 extension Id: Hashable {

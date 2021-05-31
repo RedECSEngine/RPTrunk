@@ -18,9 +18,9 @@ final class EntityTests: XCTestCase {
         enemy = Entity(["hp": 30])
         rpSpace = RPSpace()
 
-        let entityTeam = Team(id: UUID().uuidString)
+        let entityTeam = Team()
         entityTeam.add(entity)
-        let enemyTeam = Team(id: UUID().uuidString)
+        let enemyTeam = Team()
         enemyTeam.add(enemy)
         rpSpace.setTeams([entityTeam, enemyTeam])
     }

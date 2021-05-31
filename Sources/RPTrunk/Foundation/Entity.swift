@@ -14,13 +14,13 @@ open class Entity: Temporal, InventoryManager, Codable {
         case statusEffects
     }
 
-    open var id: String = "" {
+    open var id: Id<Entity> = "" {
         didSet {
             updateIds()
         }
     }
 
-    open var teamId: String?
+    open var teamId: Id<Team>?
 
     open var currentTick: RPTimeIncrement = 0
     open var maximumTick: RPTimeIncrement = 0
@@ -65,8 +65,8 @@ open class Entity: Temporal, InventoryManager, Codable {
 
     public required init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
-        id = try values.decode(String.self, forKey: .id)
-        teamId = try values.decodeIfPresent(String.self, forKey: .teamId)
+        id = try values.decode(Id<Entity>.self, forKey: .id)
+        teamId = try values.decodeIfPresent(Id<Team>.self, forKey: .teamId)
         currentTick = try values.decode(RPTimeIncrement.self, forKey: .currentTick)
         maximumTick = try values.decode(RPTimeIncrement.self, forKey: .maximumTick)
         baseStats = try values.decode(Stats.self, forKey: .baseStats)
