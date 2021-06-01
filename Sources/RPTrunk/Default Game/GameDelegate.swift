@@ -13,7 +13,13 @@ public protocol RPGameDelegate {
     var statTypes: Set<String> { get }
 
     func createDefaultEntity() -> Entity
-    func resolveConflict(_ event: Event, target: Entity, conflict: Stats) -> ConflictResult
+    
+    func resolveConflict(
+        _ event: Event,
+        in rpSpace: RPSpace,
+        target: Id<Entity>,
+        conflict: Stats
+    ) -> ConflictResult
 }
 
 public struct DefaultGame: RPGameDelegate {
@@ -30,7 +36,17 @@ public struct DefaultGame: RPGameDelegate {
         Entity()
     }
 
-    public func resolveConflict(_: Event, target: Entity, conflict: Stats) -> ConflictResult {
+    public func resolveConflict(
+        _ event: Event,
+        in rpSpace: RPSpace,
+        target: Id<Entity>,
+        conflict: Stats
+    )  -> ConflictResult {
+        
+        guard let target = rpSpace.entities[target] else {
+            return ConflictResult(entityId: target, [:])
+        }
+        
         // hp result - part 1 - damage hits against hp, with defense as reduction
         var hpResult = 0 // + _b.affinities.healing
         hpResult -= (conflict["damage"] > 0) ? (conflict["damage"] - target["defense"]) : 0

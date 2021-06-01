@@ -8,8 +8,8 @@
 import Foundation
 
 public enum ParserResultType {
-    case evaluationFunction(f: (ParserResultType) -> ParserResultType)
-    case entityResult(entity: Entity)
+    case evaluationFunction(f: (ParserResultType, RPSpace) -> ParserResultType)
+    case entityResult(entity: Id<Entity>)
     case statsResult(stats: Stats)
     case valueResult(ParserValueType)
 //    case percentResult(value: Double)

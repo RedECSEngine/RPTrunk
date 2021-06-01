@@ -22,38 +22,39 @@ public struct Targeting: Codable {
         self.conditional = conditional
     }
 
-    public func getValidTargets(for entity: Entity, in rpSpace: RPSpace) -> Set<Entity> {
+    public func getValidTargets(for entity: Entity, in rpSpace: RPSpace) -> Set<Id<Entity>> {
         let validTargets = getValidTargetSet(for: entity, in: rpSpace)
-            .filter { (try? conditional.exec($0)) ?? false }
+            .compactMap { rpSpace.entities[$0] }
+            .filter { (try? conditional.exec($0, rpSpace: rpSpace)) ?? false }
 
         switch type {
         case .oneself, .singleEnemy, .singleFriendly:
-            return validTargets.first.map { [$0] } ?? []
+            return validTargets.first.map { [$0.id] } ?? []
         case .random, .randomEnemy, .randomFriendly:
             let startIndex = validTargets.startIndex
             let randomInt = Int(arc4random_uniform(UInt32(validTargets.count)))
             let randomIndex = validTargets.index(startIndex, offsetBy: randomInt)
             let entity = validTargets[randomIndex]
-            return Set([entity])
+            return Set([entity.id])
         default:
-            return Set(validTargets)
+            return Set(validTargets.map { $0.id })
         }
     }
 
-    fileprivate func getValidTargetSet(for entity: Entity, in rpSpace: RPSpace) -> Set<Entity> {
+    fileprivate func getValidTargetSet(for entity: Entity, in rpSpace: RPSpace) -> Set<Id<Entity>> {
         switch type {
         case .randomEnemy, .allEnemy, .singleEnemy:
-            return rpSpace.getEnemies(of: entity).intersection(entity.targets)
+            return rpSpace.getEnemies(of: entity.id).intersection(entity.targets)
         case .randomFriendly, .allFriendly, .singleFriendly:
-            return rpSpace.getFriends(of: entity).intersection(entity.targets)
+            return rpSpace.getFriends(of: entity.id).intersection(entity.targets)
         case .all, .random:
             return rpSpace.getEntities().intersection(entity.targets)
         case .oneself:
-            return [entity]
+            return [entity.id]
         case .allyTeam:
-            let allies = rpSpace.getAllies(of: entity)
+            let allies = rpSpace.getAllies(of: entity.id)
             if let nearbyAlly = allies.intersection(entity.targets).first,
-               let teamId = nearbyAlly.teamId,
+               let teamId = rpSpace.entities[nearbyAlly]?.teamId,
                let teamEntities = rpSpace.teams[teamId]?.entities
             {
                 return teamEntities

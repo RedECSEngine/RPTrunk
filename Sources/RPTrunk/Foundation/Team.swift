@@ -1,6 +1,6 @@
-public class Team: InventoryManager, Codable {
+public struct Team: InventoryManager, Codable {
     public let id: Id<Team>
-    public private(set) var entities: Set<Entity> = []
+    public private(set) var entities: Set<Id<Entity>> = []
     public var allies: Set<Id<Team>> = []
     public var enemies: Set<Id<Team>> = []
 
@@ -10,8 +10,8 @@ public class Team: InventoryManager, Codable {
         self.id = id
     }
 
-    public func add(_ entity: Entity) {
+    public mutating func add(_ entity: inout Entity) {
         entity.teamId = id
-        entities.insert(entity)
+        entities.insert(entity.id)
     }
 }

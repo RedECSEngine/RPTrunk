@@ -50,7 +50,7 @@ public struct ActiveAbility: Temporal, Codable {
         // TODO: consider requirements
         // TODO: consider item exchange cost
 
-        return (try? conditional.exec(e)) ?? false
+        return (try? conditional.exec(e, rpSpace: rpSpace)) ?? false
     }
 
     public func getPendingEvents(in rpSpace: RPSpace) -> [Event] {

@@ -8,12 +8,13 @@
 import Foundation
 import Parsing
 
-func getStat(_ type: String, usePercent: Bool) -> (ParserResultType) -> ParserResultType {
-    { input in
-        if case let .entityResult(e) = input {
-            let currentValue = e[type]
+func getStat(_ type: String, usePercent: Bool) -> (ParserResultType, RPSpace) -> ParserResultType {
+    { input, rpSpace in
+        if case let .entityResult(e) = input,
+           let rpEntity = rpSpace.entities[e] {
+            let currentValue = rpEntity[type]
             if usePercent {
-                let percent: Double = floor(Double(currentValue) / Double(e.stats[type]) * 100)
+                let percent: Double = floor(Double(currentValue) / Double(rpEntity.stats[type]) * 100)
                 return .valueResult(.percent(percent))
             }
             return .valueResult(.rpValue(currentValue))
