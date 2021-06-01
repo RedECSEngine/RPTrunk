@@ -15,7 +15,7 @@ public struct Item: Temporal, ComponentContainer, Codable {
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { ability?.cooldown ?? 0 }
 
-    public weak var entity: Entity?
+    public var entity: Id<Entity>?
     let ability: Ability?
     public var conditional: Conditional
 
@@ -45,19 +45,20 @@ public struct Item: Temporal, ComponentContainer, Codable {
         try container.encode(conditional, forKey: .conditional)
     }
 
-    public func canExecute() -> Bool {
+    public func canExecute(in rpSpace: RPSpace) -> Bool {
         guard isCoolingDown() == false else {
             return false
         }
 
-        guard let e = entity,
+        guard let entityId = entity,
+              let e = rpSpace.entities[entityId],
               let a = ability,
               e.allCurrentStats() > a.cost
         else {
             return false
         }
 
-        return (try? conditional.exec(e)) ?? false
+        return (try? conditional.exec(e, rpSpace: rpSpace)) ?? false
     }
 
     public func getPendingEvents(in rpSpace: RPSpace) -> [Event] {
@@ -69,7 +70,8 @@ public struct Item: Temporal, ComponentContainer, Codable {
 
     fileprivate func createEvents(in rpSpace: RPSpace) -> [Event] {
         guard let ability = self.ability,
-              let entity = self.entity
+              let entityId = self.entity,
+              let entity = rpSpace.entities[entityId]
         else {
             return []
         }
@@ -88,7 +90,7 @@ public struct Item: Temporal, ComponentContainer, Codable {
 
     public func copyForEntity(_ entity: Entity) -> Item {
         var newItemAbility = Item(ability: ability, conditional: conditional)
-        newItemAbility.entity = entity
+        newItemAbility.entity = entity.id
         return newItemAbility
     }
 }

@@ -18,10 +18,13 @@ final class EntityTests: XCTestCase {
         enemy = Entity(["hp": 30])
         rpSpace = RPSpace()
 
-        let entityTeam = Team()
-        entityTeam.add(entity)
-        let enemyTeam = Team()
-        enemyTeam.add(enemy)
+        var entityTeam = Team()
+        entityTeam.add(&entity)
+        var enemyTeam = Team()
+        enemyTeam.add(&enemy)
+        
+        rpSpace.addEntity(entity)
+        rpSpace.addEntity(enemy)
         rpSpace.setTeams([entityTeam, enemyTeam])
     }
 
@@ -37,15 +40,15 @@ final class EntityTests: XCTestCase {
 
     func test_passive_abilities_should_trigger_on_event_occurences() {
         let ability = Ability(name: "Test")
-        entity.addPassiveAbility(ability, conditional: .always)
+        rpSpace.entities[entity.id]?.addPassiveAbility(ability, conditional: .always)
 
         let enemyAbility = Ability(name: "enemyAbility")
         let fakeEvent = Event(initiator: enemy, ability: enemyAbility, rpSpace: rpSpace)
 
         _ = fakeEvent.execute(in: rpSpace)
-        let reactionEvents = entity.getPendingPassiveEvents(in: rpSpace)
-        XCTAssertEqual(reactionEvents.count, 1)
-        XCTAssertEqual(reactionEvents.first!.ability, ability)
+        let reactionEvents = rpSpace.entities[entity.id]?.getPendingPassiveEvents(in: rpSpace)
+        XCTAssertEqual(reactionEvents?.count, 1)
+        XCTAssertEqual(reactionEvents?.first?.ability, ability)
     }
 
     func test_status_effects_should_be_able_to_remove_status_effect_by_name() {

@@ -3,7 +3,7 @@
 ## Under development
 Nothing is final.
 
-## TODOS!
+## Dev notes!
 
 ### >>>>>>>> Targeting
 - "anyAlly" // ally to entity (or array of entities?)

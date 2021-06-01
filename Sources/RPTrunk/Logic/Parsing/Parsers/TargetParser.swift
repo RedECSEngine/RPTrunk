@@ -8,8 +8,8 @@
 import Foundation
 import Parsing
 
-func getTarget(_ input: ParserResultType) -> ParserResultType {
-    if case let .entityResult(e) = input, let target = e.getTarget() {
+func getTarget(_ input: ParserResultType, in rpSpace: RPSpace) -> ParserResultType {
+    if case let .entityResult(e) = input, let target = rpSpace.entities[e]?.getTarget() {
         return .entityResult(entity: target)
     }
     return .nothing

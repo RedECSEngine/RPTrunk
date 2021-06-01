@@ -16,7 +16,11 @@ final class ParserTests: XCTestCase {
 
         entity = Entity()
         enemy = Entity()
-        entity.targets = [enemy]
+        entity.targets = [enemy!.id]
+        
+        rpSpace = RPSpace()
+        rpSpace.addEntity(entity)
+        rpSpace.addEntity(enemy)
     }
 
     func testShouldReturnEntityTarget() {
@@ -27,10 +31,10 @@ final class ParserTests: XCTestCase {
             return
         }
 
-        let result2 = f(.entityResult(entity: entity))
+        let result2 = f(.entityResult(entity: entity.id), rpSpace)
 
         if case let .entityResult(e) = result2 {
-            XCTAssertEqual(e === enemy, true)
+            XCTAssertEqual(e == enemy.id, true)
         } else {
             XCTFail()
         }
@@ -44,7 +48,7 @@ final class ParserTests: XCTestCase {
             return
         }
 
-        let result2 = f(.entityResult(entity: enemy))
+        let result2 = f(.entityResult(entity: enemy.id), rpSpace)
         switch result2 {
         case .nothing:
             break
@@ -55,6 +59,7 @@ final class ParserTests: XCTestCase {
     
     func testGetStatReaderResult() {
         let enemy = Entity(["hp": 20])
+        rpSpace.addEntity(enemy)
         
         let result = statParser.parse("hp")
 
@@ -63,7 +68,7 @@ final class ParserTests: XCTestCase {
             return
         }
 
-        let result2 = f(.entityResult(entity: enemy))
+        let result2 = f(.entityResult(entity: enemy.id), rpSpace)
         switch result2 {
         case .valueResult(value: let value):
             XCTAssertEqual(value, .rpValue(20))
@@ -73,14 +78,17 @@ final class ParserTests: XCTestCase {
     }
 
     func testStatsAndLogicCanReadSelfAndTargetHP() {
-        let entity = Entity(["hp": 40])
+        var entity = Entity(["hp": 40])
         let enemy = Entity(["hp": 20])
-        entity.targets = [enemy]
+        entity.targets = [enemy.id]
         
-        let result = extractValue(entity, evaluate: "hp")
+        rpSpace.addEntity(entity)
+        rpSpace.addEntity(enemy)
+        
+        let result = extractValue(entity.id, evaluate: "hp", in: rpSpace)
         XCTAssertEqual(result, .rpValue(40))
 
-        let result2 = extractValue(entity, evaluate: "target.hp")
+        let result2 = extractValue(entity.id, evaluate: "target.hp", in: rpSpace)
         XCTAssertEqual(result2, .rpValue(20))
     }
     
@@ -113,39 +121,47 @@ final class ParserTests: XCTestCase {
     }
 
     func testStatsAndLogicComparison() throws {
-        let entity = Entity(["hp": 40])
+        var entity = Entity(["hp": 40])
         let enemy = Entity(["hp": 20])
-        entity.targets = [enemy]
+        entity.targets = [enemy.id]
+        
+        rpSpace.addEntity(entity)
+        rpSpace.addEntity(enemy)
 
         let entityPredicate = try interpretStringCondition("  hp    >    target.hp  ")
-        XCTAssertEqual(try entityPredicate(entity), true)
-        XCTAssertEqual(try entityPredicate(enemy), false)
+        XCTAssertEqual(try entityPredicate(entity.id, rpSpace), true)
+        XCTAssertEqual(try entityPredicate(enemy.id, rpSpace), false)
         
         let hpValuePredicate = try interpretStringCondition("hp == 40")
-        XCTAssertEqual(try hpValuePredicate(entity), true)
-        XCTAssertEqual(try hpValuePredicate(enemy), false)
+        XCTAssertEqual(try hpValuePredicate(entity.id, rpSpace), true)
+        XCTAssertEqual(try hpValuePredicate(enemy.id, rpSpace), false)
         
         let hpGreaterThanPredicate = try interpretStringCondition("hp > 30")
-        XCTAssertEqual(try hpGreaterThanPredicate(entity), true)
-        XCTAssertEqual(try hpGreaterThanPredicate(enemy), false)
+        XCTAssertEqual(try hpGreaterThanPredicate(entity.id, rpSpace), true)
+        XCTAssertEqual(try hpGreaterThanPredicate(enemy.id, rpSpace), false)
         
-        entity.setCurrentStats(["hp": 10])
-        XCTAssertEqual(try hpGreaterThanPredicate(entity), false)
+        rpSpace.modifyEntity(id: entity.id) { modEntity in
+            modEntity.setCurrentStats(["hp": 10])
+        }
+        XCTAssertEqual(try hpGreaterThanPredicate(entity.id, rpSpace), false)
         
         let hpPercentagePredicate = try interpretStringCondition("hp% > 10%")
-        XCTAssertEqual(try hpPercentagePredicate(entity), true)
+        XCTAssertEqual(try hpPercentagePredicate(entity.id, rpSpace), true)
         
         let malformedPredicate = try interpretStringCondition("hp > 10%")
-        XCTAssertThrowsError(try malformedPredicate(entity)) { error in
+        XCTAssertThrowsError(try malformedPredicate(entity.id, rpSpace)) { error in
             XCTAssertEqual(error is ConditionalInterpretationError, true)
         }
     }
     
 
     func testStatsAndLogicStatusEffectExistence() throws {
-        let entity = Entity(["hp": 40])
+        var entity = Entity(["hp": 40])
         let enemy = Entity(["hp": 20])
-        entity.targets = [enemy]
+        entity.targets = [enemy.id]
+        
+        rpSpace.addEntity(entity)
+        rpSpace.addEntity(enemy)
 
         let healingQuery = try interpretStringCondition("   Healing?   ")
         let healingQuery2 = try interpretStringCondition("   Healing?   ==   false  ")
@@ -159,11 +175,12 @@ final class ParserTests: XCTestCase {
             duration: 1,
             charges: 0
         )
-        entity.applyStatusEffect(statusEffect)
 
-        XCTAssertEqual(try healingQuery(entity), true)
-        XCTAssertEqual(try healingQuery2(entity), false)
-        XCTAssertEqual(try dyingQuery(entity), false)
-        XCTAssertEqual(try dyingQuery2(entity), true)
+        rpSpace.modifyEntity(id: entity.id) { $0.applyStatusEffect(statusEffect) }
+
+        XCTAssertEqual(try healingQuery(entity.id, rpSpace), true)
+        XCTAssertEqual(try healingQuery2(entity.id, rpSpace), false)
+        XCTAssertEqual(try dyingQuery(entity.id, rpSpace), false)
+        XCTAssertEqual(try dyingQuery2(entity.id, rpSpace), true)
     }
 }
