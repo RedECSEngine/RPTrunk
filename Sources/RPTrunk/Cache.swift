@@ -83,8 +83,8 @@ public enum RPCache {
             let stats: [String: RPValue] = (dict["stats"] as? [String: RPValue]) ?? [:]
 
             var entity = Entity.new()
-            entity.baseStats = entity.baseStats + Stats(stats)
-            entity.currentStats = entity.currentStats + Stats(stats)
+            entity.baseStats = Stats(stats)
+            entity.currentStats = Stats(stats)
 
             if let abilities = dict["abilities"] as? [[String: AnyObject]] {
                 abilities.forEach {
