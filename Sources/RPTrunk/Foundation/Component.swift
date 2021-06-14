@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Component: Codable {
+public struct Component: Codable, Equatable {
     fileprivate struct IntermediaryContainer: ComponentContainer {
         let components: [Component]
     }

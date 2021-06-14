@@ -18,7 +18,7 @@ final class ParserTests: XCTestCase {
         enemy = Entity()
         entity.targets = [enemy!.id]
         
-        rpSpace = RPSpace()
+        rpSpace = DefaultRPSpace()
         rpSpace.addEntity(entity)
         rpSpace.addEntity(enemy)
     }

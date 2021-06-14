@@ -47,7 +47,7 @@ public struct Event {
     // MARK: - Results calculation and application
 
     public func getResults(in rpSpace: RPSpace) -> [ConflictResult] {
-        guard let entity = rpSpace.entities[initiator] else {
+        guard let entity = rpSpace.entityById(initiator) else {
             return []
         }
         
@@ -69,36 +69,38 @@ public struct Event {
         return results + [costResult]
     }
 
-    func applyResults(_ results: [ConflictResult], in rpSpace: RPSpace) {
+    func applyResults<RP: RPSpace>(_ results: [ConflictResult], in rpSpace: inout RP) {
         results.forEach { result -> Void in
-            let newStats = (rpSpace.entities[result.entity]?.allCurrentStats() ?? [:]) + result.change
-            rpSpace.entities[result.entity]?.setCurrentStats(newStats)
+            let newStats = (rpSpace.entityById(result.entity)?.allCurrentStats() ?? [:]) + result.change
+            rpSpace.modifyEntity(id: result.entity, perform: {
+                $0.setCurrentStats(newStats)
+            })
         }
-        applyStatusEffectChanges(to: targets, in: rpSpace)
-        applyItemExchange(in: rpSpace)
+        applyStatusEffectChanges(to: targets, in: &rpSpace)
+        applyItemExchange(in: &rpSpace)
     }
 
-    private func applyStatusEffectChanges(to targets: Set<Id<Entity>>, in rpSpace: RPSpace) {
+    private func applyStatusEffectChanges<RP: RPSpace>(to targets: Set<Id<Entity>>, in rpSpace: inout RP) {
         ability.dischargedStatusEffects
             .forEach {
                 name in
-                targets.forEach {
-                    rpSpace.entities[$0]?.dischargeStatusEffect(name)
+                targets.forEach { target in
+                    rpSpace.modifyEntity(id: target) { $0.dischargeStatusEffect(name) }
                 }
             }
 
         ability.statusEffects
             .forEach {
                 se in
-                targets.forEach {
-                    rpSpace.entities[$0]?.applyStatusEffect(se)
+                targets.forEach { target in
+                    rpSpace.modifyEntity(id: target) { $0.applyStatusEffect(se) }
                 }
             }
     }
 
-    func applyItemExchange(in rpSpace: RPSpace) {
+    func applyItemExchange<RP: RPSpace>(in rpSpace: inout RP) {
         guard let exchange = ability.itemExchange else { return }
-        guard let entity = rpSpace.entities[initiator] else { return }
+        guard let entity = rpSpace.entityById(initiator) else { return }
 
         if exchange.requiresInitiatorOwnItem,
            entity.inventory.contains(where: { $0.name == exchange.item.name }) == false
@@ -113,9 +115,9 @@ public struct Event {
             var newItemState = entity.inventory[idx]
             newItemState.amount -= 1
             if newItemState.amount <= 0 {
-                rpSpace.entities[initiator]?.inventory.remove(at: idx)
+                rpSpace.modifyEntity(id: initiator) { $0.inventory.remove(at: idx) }
             } else {
-                rpSpace.entities[initiator]?.inventory[idx] = newItemState
+                rpSpace.modifyEntity(id: initiator) { $0.inventory[idx] = newItemState }
             }
         }
 
@@ -124,26 +126,27 @@ public struct Event {
             rpSpace.inventory.append(exchange.item)
         case .target:
             if let targetId = targets.first {
-                rpSpace.entities[targetId]?.inventory.append(exchange.item)
+                rpSpace.modifyEntity(id: targetId) { $0.inventory.append(exchange.item) }
             }
         case .targetTeam:
-            if let teamId = targets.first.flatMap({ rpSpace.entities[$0] })?.teamId {
-                rpSpace.teams[teamId]?.inventory.append(exchange.item)
-            } else if let targetId = targets.first.flatMap({ rpSpace.entities[$0] })?.id {
-                rpSpace.entities[targetId]?.inventory.append(exchange.item)
+            if let teamId = targets.first.flatMap(rpSpace.entityById)?.teamId {
+                rpSpace.modifyTeam(id: teamId) { $0.inventory.append(exchange.item) }
+            } else if let targetId = targets.first {
+                rpSpace.modifyEntity(id: targetId) { $0.inventory.append(exchange.item) }
             }
         }
     }
 
-    public func execute(in rpSpace: RPSpace) -> EventResult {
+    public func execute<RP: RPSpace>(in rpSpace: inout RP) -> EventResult {
         let results = getResults(in: rpSpace)
-        applyResults(results, in: rpSpace)
+        applyResults(results, in: &rpSpace)
         return EventResult(self, results)
     }
 
-    public func resetCooldowns(in rpSpace: RPSpace) {
-        rpSpace.entities[initiator]?.resetCooldown()
-        // reset cooldown if it is an executable
-        rpSpace.entities[initiator]?.resetAbility(byName: ability.name)
+    public func resetCooldowns<RP: RPSpace>(in rpSpace: inout RP) {
+        rpSpace.modifyEntity(id: initiator) {
+            $0.resetCooldown()
+            $0.resetAbility(byName: ability.name)
+        }
     }
 }

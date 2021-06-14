@@ -12,7 +12,7 @@ func getStatus(_ status: String) -> (ParserResultType, RPSpace) -> ParserResultT
     {
         input, rpSpace in
         if case let .entityResult(e) = input {
-            let found = rpSpace.entities[e]?.hasStatus(status) == true
+            let found = rpSpace.entityById(e)?.hasStatus(status) == true
             return .valueResult(.bool(found))
         }
         return .nothing

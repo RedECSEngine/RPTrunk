@@ -24,7 +24,7 @@ public struct Targeting: Codable {
 
     public func getValidTargets(for entity: Entity, in rpSpace: RPSpace) -> Set<Id<Entity>> {
         let validTargets = getValidTargetSet(for: entity, in: rpSpace)
-            .compactMap { rpSpace.entities[$0] }
+            .compactMap(rpSpace.entityById)
             .filter { (try? conditional.exec($0, rpSpace: rpSpace)) ?? false }
 
         switch type {
@@ -54,8 +54,8 @@ public struct Targeting: Codable {
         case .allyTeam:
             let allies = rpSpace.getAllies(of: entity.id)
             if let nearbyAlly = allies.intersection(entity.targets).first,
-               let teamId = rpSpace.entities[nearbyAlly]?.teamId,
-               let teamEntities = rpSpace.teams[teamId]?.entities
+               let teamId = rpSpace.entityById(nearbyAlly)?.teamId,
+               let teamEntities = rpSpace.teamById(teamId)?.entities
             {
                 return teamEntities
             }

@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Item: Temporal, ComponentContainer, Codable {
+public struct Item: Temporal, ComponentContainer, Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case name
         case amount
@@ -51,7 +51,7 @@ public struct Item: Temporal, ComponentContainer, Codable {
         }
 
         guard let entityId = entity,
-              let e = rpSpace.entities[entityId],
+              let e = rpSpace.entityById(entityId),
               let a = ability,
               e.allCurrentStats() > a.cost
         else {
@@ -71,7 +71,7 @@ public struct Item: Temporal, ComponentContainer, Codable {
     fileprivate func createEvents(in rpSpace: RPSpace) -> [Event] {
         guard let ability = self.ability,
               let entityId = self.entity,
-              let entity = rpSpace.entities[entityId]
+              let entity = rpSpace.entityById(entityId)
         else {
             return []
         }

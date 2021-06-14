@@ -1,16 +1,10 @@
 public typealias RPTimeIncrement = Double
 
 public struct Moment {
-    let parents: [Temporal]
-    let delta: RPTimeIncrement
+    public let delta: RPTimeIncrement
 
-    public init(delta: RPTimeIncrement, parents: [Temporal] = []) {
-        self.parents = parents
+    public init(delta: RPTimeIncrement) {
         self.delta = delta
-    }
-
-    public func addSibling(_ sibling: Temporal) -> Moment {
-        Moment(delta: delta, parents: parents + [sibling])
     }
 }
 

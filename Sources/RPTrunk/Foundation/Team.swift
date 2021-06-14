@@ -1,4 +1,4 @@
-public struct Team: InventoryManager, Codable {
+public struct Team: InventoryManager, Codable, Equatable {
     public let id: Id<Team>
     public private(set) var entities: Set<Id<Entity>> = []
     public var allies: Set<Id<Team>> = []

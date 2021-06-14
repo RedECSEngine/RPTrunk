@@ -11,7 +11,7 @@ import Parsing
 func getStat(_ type: String, usePercent: Bool) -> (ParserResultType, RPSpace) -> ParserResultType {
     { input, rpSpace in
         if case let .entityResult(e) = input,
-           let rpEntity = rpSpace.entities[e] {
+           let rpEntity = rpSpace.entityById(e) {
             let currentValue = rpEntity[type]
             if usePercent {
                 let percent: Double = floor(Double(currentValue) / Double(rpEntity.stats[type]) * 100)

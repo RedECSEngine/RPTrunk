@@ -75,7 +75,7 @@ public struct ActiveStatusEffect: Temporal, Codable {
         guard deltaTick > 1 else {
             return []
         }
-        if let entity = rpSpace.entities[entityId],
+        if let entity = rpSpace.entityById(entityId),
            let ability = statusEffect.ability
         {
             return [Event(category: .periodicEffect, initiator: entity, ability: ability, rpSpace: rpSpace)]

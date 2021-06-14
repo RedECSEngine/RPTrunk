@@ -43,7 +43,7 @@ public struct DefaultGame: RPGameDelegate {
         conflict: Stats
     )  -> ConflictResult {
         
-        guard let target = rpSpace.entities[target] else {
+        guard let target = rpSpace.entityById(target) else {
             return ConflictResult(entityId: target, [:])
         }
         

@@ -42,7 +42,7 @@ public struct ActiveAbility: Temporal, Codable {
             return false
         }
 
-        guard let e = rpSpace.entities[entityId] else {
+        guard let e = rpSpace.entityById(entityId) else {
             return false
         }
 
@@ -61,7 +61,7 @@ public struct ActiveAbility: Temporal, Codable {
     }
 
     fileprivate func createEvents(in rpSpace: RPSpace) -> [Event] {
-        if let e = rpSpace.entities[entityId] {
+        if let e = rpSpace.entityById(entityId) {
             return (0 ..< ability.repeats).map { _ in Event(initiator: e, ability: ability, rpSpace: rpSpace) }
         }
         return []

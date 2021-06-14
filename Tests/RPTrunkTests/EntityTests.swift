@@ -8,7 +8,7 @@ final class EntityTests: XCTestCase {
 
     var entity: Entity!
     var enemy: Entity!
-    var rpSpace: RPSpace!
+    var rpSpace: DefaultRPSpace!
 
     override func setUp() {
         let env = RPGameEnvironment(delegate: DefaultGame())
@@ -16,7 +16,7 @@ final class EntityTests: XCTestCase {
 
         entity = Entity(["hp": 30])
         enemy = Entity(["hp": 30])
-        rpSpace = RPSpace()
+        rpSpace = DefaultRPSpace()
 
         var entityTeam = Team()
         entityTeam.add(&entity)
@@ -45,7 +45,7 @@ final class EntityTests: XCTestCase {
         let enemyAbility = Ability(name: "enemyAbility")
         let fakeEvent = Event(initiator: enemy, ability: enemyAbility, rpSpace: rpSpace)
 
-        _ = fakeEvent.execute(in: rpSpace)
+        _ = fakeEvent.execute(in: &rpSpace)
         let reactionEvents = rpSpace.entities[entity.id]?.getPendingPassiveEvents(in: rpSpace)
         XCTAssertEqual(reactionEvents?.count, 1)
         XCTAssertEqual(reactionEvents?.first?.ability, ability)

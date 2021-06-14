@@ -143,14 +143,12 @@ public struct Entity: Temporal, InventoryManager, Codable {
             currentTick += moment.delta
         }
 
-        let newMoment = moment.addSibling(self)
-
         for key in statusEffects.keys {
-            statusEffects[key]?.tick(newMoment)
+            statusEffects[key]?.tick(moment)
         }
 
         for name in executableAbilities.keys {
-            executableAbilities[name]?.tick(newMoment)
+            executableAbilities[name]?.tick(moment)
         }
     }
 
