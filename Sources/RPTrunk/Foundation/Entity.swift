@@ -36,8 +36,8 @@ public struct Entity: Temporal, InventoryManager, Codable {
         currentStats.get(index) ?? stats[index]
     }
 
-    public static func new() -> Entity {
-        RPGameEnvironment.current.delegate.createDefaultEntity()
+    public static func new(cache: RPCache) -> Entity {
+        RPGameEnvironment.current.delegate.createDefaultEntity(cache: cache)
     }
 
     public init(_ data: [String: RPValue]) {

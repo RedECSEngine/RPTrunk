@@ -1,5 +1,5 @@
 
-public struct ConflictResult {
+public struct ConflictResult: Equatable {
     public let entity: Id<Entity>
     public let change: Stats
     public let meta: [String: RPValue]

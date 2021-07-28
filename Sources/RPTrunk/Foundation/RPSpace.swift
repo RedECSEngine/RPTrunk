@@ -1,8 +1,4 @@
-public protocol RPSpace: InventoryManager, Codable {
-    var inventory: [Item] { get set }
-    var currentTick: RPTimeIncrement { get set }
-    var maximumTick: RPTimeIncrement { get }
-
+public protocol RPSpace: Codable {
     func entityById(_ id: Id<Entity>) -> Entity?
     func teamById(_ id: Id<Team>) -> Team?
 
@@ -18,20 +14,65 @@ public protocol RPSpace: InventoryManager, Codable {
     func getAllPendingExecutableEvents() -> [Event]
 
     mutating func performEvents(_ events: [Event]) -> [EventResult]
-
     mutating func give(item: Item, to entity: Entity) -> Event
 
     func getEntities() -> Set<Id<Entity>>
+    func getTeams() -> Set<Id<Team>>
+    
     func getEnemies(of entityId: Id<Entity>) -> Set<Id<Entity>>
     func getFriends(of entityId: Id<Entity>) -> Set<Id<Entity>>
     func getAllies(of entityId: Id<Entity>) -> Set<Id<Entity>>
 }
 
-public struct DefaultRPSpace: RPSpace, Equatable {
-    public var inventory: [Item] = []
-    public var currentTick: RPTimeIncrement = 0
-    public var maximumTick: RPTimeIncrement = -1
+public extension RPSpace {
+    func getEnemies(of entityId: Id<Entity>) -> Set<Id<Entity>> {
+        guard let entity = entityById(entityId),
+              let teamId = entity.teamId,
+              let team = teamById(teamId)
+        else {
+            return []
+        }
 
+        return team.enemies.reduce(Set()) {
+            accumulated, enemyTeamId -> Set<Id<Entity>> in
+
+            guard let enemies = teamById(enemyTeamId)?.entities else {
+                return accumulated
+            }
+            return accumulated.union(enemies)
+        }
+    }
+    
+    func getFriends(of entityId: Id<Entity>) -> Set<Id<Entity>> {
+        guard let entity = entityById(entityId),
+              let teamId = entity.teamId,
+              let team = teamById(teamId)
+        else {
+            return []
+        }
+        return team.entities.union(getAllies(of: entityId))
+    }
+    
+    func getAllies(of entityId: Id<Entity>) -> Set<Id<Entity>> {
+        guard let entity = entityById(entityId),
+              let teamId = entity.teamId,
+              let team = teamById(teamId)
+        else {
+            return []
+        }
+        
+        return team.allies.reduce(Set()) {
+            accumulated, allyTeamId -> Set<Id<Entity>> in
+            
+            guard let enemies = teamById(allyTeamId)?.entities else {
+                return accumulated
+            }
+            return accumulated.union(enemies)
+        }
+    }
+}
+
+public struct DefaultRPSpace: RPSpace, Equatable {
     public var entities: [Id<Entity>: Entity] = [:]
     public var teams: [Id<Team>: Team] = [:]
 
@@ -78,10 +119,6 @@ public struct DefaultRPSpace: RPSpace, Equatable {
     }
 
     public func getPendingEvents() -> [Event] {
-        getPendingEvents(in: self)
-    }
-
-    public func getPendingEvents(in _: RPSpace) -> [Event] {
         getAllPendingPassiveEvents() + getAllPendingExecutableEvents()
     }
 
@@ -138,58 +175,10 @@ public struct DefaultRPSpace: RPSpace, Equatable {
     }
 
     public func getEntities() -> Set<Id<Entity>> {
-        teams.values
-            .reduce(Set()) {
-                accumulated, team -> Set<Id<Entity>> in
-                accumulated.union(team.entities)
-            }
+        Set(entities.keys)
     }
 
-    public func getEnemies(of entityId: Id<Entity>) -> Set<Id<Entity>> {
-        guard let entity = self.entities[entityId],
-              let teamId = entity.teamId,
-              let team = teams[teamId]
-        else {
-            return []
-        }
-
-        return team.enemies.reduce(Set()) {
-            accumulated, enemyTeamId -> Set<Id<Entity>> in
-
-            guard let enemies = teams[enemyTeamId]?.entities else {
-                return accumulated
-            }
-            return accumulated.union(enemies)
-        }
+    public func getTeams() -> Set<Id<Team>> {
+        Set(teams.keys)
     }
-    
-    public func getFriends(of entityId: Id<Entity>) -> Set<Id<Entity>> {
-        guard let entity = self.entities[entityId],
-              let teamId = entity.teamId,
-              let team = teams[teamId]
-        else {
-            return []
-        }
-        return team.entities.union(getAllies(of: entityId))
-    }
-    
-    public func getAllies(of entityId: Id<Entity>) -> Set<Id<Entity>> {
-        guard let entity = self.entities[entityId],
-              let teamId = entity.teamId,
-              let team = teams[teamId]
-        else {
-            return []
-        }
-        
-        return team.allies.reduce(Set()) {
-            accumulated, allyTeamId -> Set<Id<Entity>> in
-            
-            guard let enemies = teams[allyTeamId]?.entities else {
-                return accumulated
-            }
-            return accumulated.union(enemies)
-        }
-    }
-
-    public func resetCooldown() { /* noop */ }
 }

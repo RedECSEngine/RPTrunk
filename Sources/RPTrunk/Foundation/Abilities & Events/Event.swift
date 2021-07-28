@@ -1,6 +1,6 @@
 import Foundation
 
-public struct EventResult {
+public struct EventResult: Equatable {
     public let event: Event
     public let effects: [ConflictResult]
 
@@ -10,8 +10,8 @@ public struct EventResult {
     }
 }
 
-public struct Event {
-    public enum Category {
+public struct Event: Equatable {
+    public enum Category: Equatable {
         case standardConflict
         case periodicEffect
         case itemExchangeOnly
@@ -123,7 +123,8 @@ public struct Event {
 
         switch exchange.exchangeType {
         case .rpSpace:
-            rpSpace.inventory.append(exchange.item)
+            break
+//            rpSpace.inventory.append(exchange.item)
         case .target:
             if let targetId = targets.first {
                 rpSpace.modifyEntity(id: targetId) { $0.inventory.append(exchange.item) }

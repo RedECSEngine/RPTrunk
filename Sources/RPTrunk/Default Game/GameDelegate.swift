@@ -12,7 +12,7 @@ public protocol RPGameDelegate {
     // instance managers
     var statTypes: Set<String> { get }
 
-    func createDefaultEntity() -> Entity
+    func createDefaultEntity(cache: RPCache) -> Entity
     
     func resolveConflict(
         _ event: Event,
@@ -32,7 +32,7 @@ public struct DefaultGame: RPGameDelegate {
         "defense",
     ]
 
-    public func createDefaultEntity() -> Entity {
+    public func createDefaultEntity(cache: RPCache) -> Entity {
         Entity()
     }
 
