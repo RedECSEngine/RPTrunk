@@ -6,25 +6,29 @@ final class ParserTests: XCTestCase {
         ("testShouldReturnEntityTarget", testShouldReturnEntityTarget),
     ]
 
-    var entity: Entity!
-    var enemy: Entity!
-    var rpSpace: RPSpace!
+    var entity: RPEntity<TestRPSpace>!
+    var enemy: RPEntity<TestRPSpace>!
+    var rpSpace: TestRPSpace!
 
     override func setUp() {
-        let env = RPGameEnvironment(delegate: DefaultGame())
-        RPGameEnvironment.pushEnvironment(env)
 
-        entity = Entity()
-        enemy = Entity()
+        entity = RPEntity(["hp": 30])
+        enemy = RPEntity(["hp": 30])
         entity.targets = [enemy!.id]
+        rpSpace = TestRPSpace()
+
+        var entityTeam = RPTeam<TestRPSpace>()
+        entityTeam.add(&entity)
+        var enemyTeam = RPTeam<TestRPSpace>()
+        enemyTeam.add(&enemy)
         
-        rpSpace = DefaultRPSpace()
         rpSpace.addEntity(entity)
         rpSpace.addEntity(enemy)
+        rpSpace.setTeams([entityTeam, enemyTeam])
     }
 
     func testShouldReturnEntityTarget() {
-        let result = targetParser.parse("target")
+        let result: ParserResultType<TestRPSpace>? = buildEvaluatableParser().parse("target")
 
         guard case let .evaluationFunction(f) = result else {
             XCTFail()
@@ -41,7 +45,7 @@ final class ParserTests: XCTestCase {
     }
 
     func testGetNothingWhenTargetIsNil() {
-        let result = targetParser.parse("target")
+        let result: ParserResultType<TestRPSpace>? = buildEvaluatableParser().parse("target")
 
         guard case let .evaluationFunction(f) = result else {
             XCTFail()
@@ -58,10 +62,10 @@ final class ParserTests: XCTestCase {
     }
     
     func testGetStatReaderResult() {
-        let enemy = Entity(["hp": 20])
+        let enemy = RPEntity<TestRPSpace>(["hp": 20])
         rpSpace.addEntity(enemy)
         
-        let result = statParser.parse("hp")
+        let result: ParserResultType<TestRPSpace>? = buildEvaluatableParser().parse("hp")
 
         guard case let .evaluationFunction(f) = result else {
             XCTFail()
@@ -78,8 +82,8 @@ final class ParserTests: XCTestCase {
     }
 
     func testStatsAndLogicCanReadSelfAndTargetHP() {
-        var entity = Entity(["hp": 40])
-        let enemy = Entity(["hp": 20])
+        var entity = RPEntity<TestRPSpace>(["hp": 40])
+        let enemy = RPEntity<TestRPSpace>(["hp": 20])
         entity.targets = [enemy.id]
         
         rpSpace.addEntity(entity)
@@ -93,6 +97,7 @@ final class ParserTests: XCTestCase {
     }
     
     func testLogicOperatorParser() {
+        let logicalOperatorParser = buildLogicalOperatorParser()
         XCTAssertEqual(logicalOperatorParser.parse("  > "), .GreaterThan)
         XCTAssertEqual(logicalOperatorParser.parse("  < "), .LessThan)
         XCTAssertEqual(logicalOperatorParser.parse(" == "), .Equal)
@@ -100,7 +105,7 @@ final class ParserTests: XCTestCase {
     }
     
     func testLogicComparisonParser() {
-        guard let (lhs, op, rhs) = logicalComparisonParser.parse("target.hp == target.hp") else {
+        guard let (lhs, op, rhs): ([ParserResultType<TestRPSpace>], ConditionalOperator, [ParserResultType<TestRPSpace>]) = buildParser().parse("target.hp == target.hp") else {
             XCTFail()
             return
         }
@@ -121,34 +126,34 @@ final class ParserTests: XCTestCase {
     }
 
     func testStatsAndLogicComparison() throws {
-        var entity = Entity(["hp": 40])
-        let enemy = Entity(["hp": 20])
+        var entity = RPEntity<TestRPSpace>(["hp": 40])
+        let enemy = RPEntity<TestRPSpace>(["hp": 20])
         entity.targets = [enemy.id]
         
         rpSpace.addEntity(entity)
         rpSpace.addEntity(enemy)
 
-        let entityPredicate = try interpretStringCondition("  hp    >    target.hp  ")
+        let entityPredicate: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("  hp    >    target.hp  ")
         XCTAssertEqual(try entityPredicate(entity.id, rpSpace), true)
         XCTAssertEqual(try entityPredicate(enemy.id, rpSpace), false)
         
-        let hpValuePredicate = try interpretStringCondition("hp == 40")
+        let hpValuePredicate: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("hp == 40")
         XCTAssertEqual(try hpValuePredicate(entity.id, rpSpace), true)
         XCTAssertEqual(try hpValuePredicate(enemy.id, rpSpace), false)
         
-        let hpGreaterThanPredicate = try interpretStringCondition("hp > 30")
+        let hpGreaterThanPredicate: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("hp > 30")
         XCTAssertEqual(try hpGreaterThanPredicate(entity.id, rpSpace), true)
         XCTAssertEqual(try hpGreaterThanPredicate(enemy.id, rpSpace), false)
         
-        rpSpace.modifyEntity(id: entity.id) { modEntity in
-            modEntity.setCurrentStats(["hp": 10])
+        rpSpace.modifyEntity(id: entity.id) { modEntity, _ in
+            modEntity.currentStats.hp = 10
         }
         XCTAssertEqual(try hpGreaterThanPredicate(entity.id, rpSpace), false)
         
-        let hpPercentagePredicate = try interpretStringCondition("hp% > 10%")
+        let hpPercentagePredicate: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("hp% > 10%")
         XCTAssertEqual(try hpPercentagePredicate(entity.id, rpSpace), true)
         
-        let malformedPredicate = try interpretStringCondition("hp > 10%")
+        let malformedPredicate: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("hp > 10%")
         XCTAssertThrowsError(try malformedPredicate(entity.id, rpSpace)) { error in
             XCTAssertEqual(error is ConditionalInterpretationError, true)
         }
@@ -156,27 +161,27 @@ final class ParserTests: XCTestCase {
     
 
     func testStatsAndLogicStatusEffectExistence() throws {
-        var entity = Entity(["hp": 40])
-        let enemy = Entity(["hp": 20])
+        var entity = RPEntity<TestRPSpace>(["hp": 40])
+        let enemy = RPEntity<TestRPSpace>(["hp": 20])
         entity.targets = [enemy.id]
         
         rpSpace.addEntity(entity)
         rpSpace.addEntity(enemy)
 
-        let healingQuery = try interpretStringCondition("   Healing?   ")
-        let healingQuery2 = try interpretStringCondition("   Healing?   ==   false  ")
-        let dyingQuery = try interpretStringCondition("   Dieing?   ")
-        let dyingQuery2 = try interpretStringCondition("   Dieing?    ==   false  ")
+        let healingQuery: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("   Healing?   ")
+        let healingQuery2: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("   Healing?   ==   false  ")
+        let dyingQuery: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("   Dieing?   ")
+        let dyingQuery2: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("   Dieing?    ==   false  ")
 
-        let statusEffect = StatusEffect(
+        let statusEffect = StatusEffect<TestRPSpace>(
             name: "Healing",
-            labels: [],
+            tags: [],
             components: [],
             duration: 1,
             charges: 0
         )
 
-        rpSpace.modifyEntity(id: entity.id) { $0.applyStatusEffect(statusEffect) }
+        rpSpace.modifyEntity(id: entity.id) { e, _ in e.applyStatusEffect(statusEffect) }
 
         XCTAssertEqual(try healingQuery(entity.id, rpSpace), true)
         XCTAssertEqual(try healingQuery2(entity.id, rpSpace), false)

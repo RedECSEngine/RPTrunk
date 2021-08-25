@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Targeting: Codable {
+public struct Targeting<RP: RPSpace>: Codable {
     public enum SelectionType: String, Codable {
         case oneself
         case random
@@ -15,14 +15,18 @@ public struct Targeting: Codable {
     }
 
     public let type: SelectionType
-    public let conditional: Conditional
+    public let conditional: Conditional<RP>
 
-    public init(_ type: SelectionType, _ conditional: Conditional) {
+    public init(_ type: SelectionType, _ conditional: Conditional<RP>) {
         self.type = type
         self.conditional = conditional
     }
 
-    public func getValidTargets(for entity: Entity, in rpSpace: RPSpace) -> Set<Id<Entity>> {
+    public func getValidTargets(
+        for entity: RPEntityId,
+        in rpSpace: RP
+    ) -> Set<RPEntityId> {
+        guard let entity = rpSpace.entityById(entity) else { return [] }
         let validTargets = getValidTargetSet(for: entity, in: rpSpace)
             .compactMap(rpSpace.entityById)
             .filter { (try? conditional.exec($0, rpSpace: rpSpace)) ?? false }
@@ -41,14 +45,17 @@ public struct Targeting: Codable {
         }
     }
 
-    fileprivate func getValidTargetSet(for entity: Entity, in rpSpace: RPSpace) -> Set<Id<Entity>> {
+    fileprivate func getValidTargetSet(
+        for entity: RPEntity<RP>,
+        in rpSpace: RP
+    ) -> Set<RPEntityId> {
         switch type {
         case .randomEnemy, .allEnemy, .singleEnemy:
             return rpSpace.getEnemies(of: entity.id).intersection(entity.targets)
         case .randomFriendly, .allFriendly, .singleFriendly:
             return rpSpace.getFriends(of: entity.id).intersection(entity.targets)
         case .all, .random:
-            return rpSpace.getEntities().intersection(entity.targets)
+            return Set(rpSpace.allEntities()).intersection(entity.targets)
         case .oneself:
             return [entity.id]
         case .allyTeam:
@@ -71,7 +78,7 @@ public extension Targeting {
             fatalError("Unexpected format for string translation to target")
         }
 
-        let condition: Conditional = components.count > 1 ? Conditional(components[1]) : .always
+        let condition: Conditional<RP> = components.count > 1 ? Conditional(components[1]) : .always
 
         switch type {
         case "self":
@@ -102,12 +109,12 @@ public extension Targeting {
 
 extension Targeting: Equatable {}
 
-public func == (lhs: Targeting, rhs: Targeting) -> Bool {
+public func == <RP: RPSpace>(lhs: Targeting<RP>, rhs: Targeting<RP>) -> Bool {
     lhs.type == rhs.type && lhs.conditional == rhs.conditional
 }
 
 extension Targeting {
-    func toComponent() -> Component {
-        Component(targetType: self)
+    func toComponent() -> Component<RP> {
+        Component<RP>(targetType: self)
     }
 }

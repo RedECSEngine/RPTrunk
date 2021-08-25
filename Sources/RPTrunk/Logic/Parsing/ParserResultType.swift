@@ -7,10 +7,10 @@
 
 import Foundation
 
-public enum ParserResultType {
-    case evaluationFunction(f: (ParserResultType, RPSpace) -> ParserResultType)
-    case entityResult(entity: Id<Entity>)
-    case statsResult(stats: Stats)
+public enum ParserResultType<RP: RPSpace> {
+    case evaluationFunction(f: (ParserResultType, RP) -> ParserResultType)
+    case entityResult(entity: RPEntityId)
+    case statsResult(stats: RP.Stats)
     case valueResult(ParserValueType)
 //    case percentResult(value: Double)
 //    case boolResult(value: Bool)

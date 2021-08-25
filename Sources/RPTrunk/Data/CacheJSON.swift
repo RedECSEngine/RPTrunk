@@ -1,31 +1,32 @@
 import Foundation
 
-public struct RPCacheJSON: Codable {
+public struct RPCacheJSON<Stats: StatsType>: Codable {
     enum CodingKeys: String, CodingKey {
         case statusEffects = "Status Effects"
         case abilities = "Abilities"
         case entities = "Entities"
     }
     
-    public var abilities: [String: AbilityJSON]?
-    public var statusEffects: [String: StatusEffectJSON]?
-    public var entities: [String: EntityJSON]?
+    public var abilities: [String: AbilityJSON<Stats>]?
+    public var statusEffects: [String: StatusEffectJSON<Stats>]?
+    public var entities: [String: EntityJSON<Stats>]?
 }
 
 public protocol ComponentsContainerJSON {
-    var stats: [String: RPValue]? { get }
-    var cost: [String: RPValue]? { get }
-    var requirements: [String: RPValue]? { get }
+    associatedtype Stats: StatsType
+    var stats: Stats? { get }
+    var cost: Stats? { get }
+    var requirements: Stats? { get }
     var statusEffects: [String]? { get }
     var target: String? { get }
     var discharge: [String]? { get }
     var components: [String]? { get }
 }
 
-public struct StatusEffectJSON: Codable, ComponentsContainerJSON {
-    public var stats: [String: RPValue]?
-    public var cost: [String: RPValue]?
-    public var requirements: [String: RPValue]?
+public struct StatusEffectJSON<Stats: StatsType>: Codable, ComponentsContainerJSON {
+    public var stats: Stats?
+    public var cost: Stats?
+    public var requirements: Stats?
     public var statusEffects: [String]?
     public var target: String?
     public var discharge: [String]?
@@ -36,20 +37,20 @@ public struct StatusEffectJSON: Codable, ComponentsContainerJSON {
     public var impairsAction: Bool? = false
 }
 
-public struct EntityJSON: Codable {
+public struct EntityJSON<Stats: StatsType>: Codable {
     public struct AbilityJSON: Codable {
         var name: String
         var conditional: String
     }
     
-    var stats: [String: RPValue]? = [:]
+    var stats: Stats? = .zero
     var abilities: [AbilityJSON]?
 }
 
-public struct AbilityJSON: Codable, ComponentsContainerJSON {
-    public var stats: [String: RPValue]?
-    public var cost: [String: RPValue]?
-    public var requirements: [String: RPValue]?
+public struct AbilityJSON<Stats: StatsType>: Codable, ComponentsContainerJSON {
+    public var stats: Stats?
+    public var cost: Stats?
+    public var requirements: Stats?
     public var statusEffects: [String]?
     public var target: String?
     public var discharge: [String]?

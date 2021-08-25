@@ -1,26 +1,26 @@
 @testable import RPTrunk
 import XCTest
 
+
+
 final class EntityTests: XCTestCase {
     static var allTests = [
         ("test_should_be_able_to_have_any_stats_value_within_the_baseStats_range", test_should_be_able_to_have_any_stats_value_within_the_baseStats_range),
     ]
 
-    var entity: Entity!
-    var enemy: Entity!
-    var rpSpace: DefaultRPSpace!
+    var entity: RPEntity<TestRPSpace>!
+    var enemy: RPEntity<TestRPSpace>!
+    var rpSpace: TestRPSpace!
 
     override func setUp() {
-        let env = RPGameEnvironment(delegate: DefaultGame())
-        RPGameEnvironment.pushEnvironment(env)
 
-        entity = Entity(["hp": 30])
-        enemy = Entity(["hp": 30])
-        rpSpace = DefaultRPSpace()
+        entity = RPEntity(["hp": 30])
+        enemy = RPEntity(["hp": 30])
+        rpSpace = TestRPSpace()
 
-        var entityTeam = Team()
+        var entityTeam = RPTeam<TestRPSpace>()
         entityTeam.add(&entity)
-        var enemyTeam = Team()
+        var enemyTeam = RPTeam<TestRPSpace>()
         enemyTeam.add(&enemy)
         
         rpSpace.addEntity(entity)
@@ -29,21 +29,41 @@ final class EntityTests: XCTestCase {
     }
 
     func test_should_be_able_to_have_any_stats_value_within_the_baseStats_range() {
-        entity.setCurrentStats(["hp": 15])
-        XCTAssertEqual(entity["hp"], 15)
+        entity.setCurrentStats(.init(dict: [\.hp: 15, \.damage: 0]), in: rpSpace)
+        XCTAssertEqual(entity.hp, 15)
+        XCTAssertEqual(entity.damage, 0)
     }
 
     func test_should_not_be_able_to_exceed_base_stats() {
-        entity.setCurrentStats(["hp": 45])
-        XCTAssertEqual(entity["hp"], 30)
+        entity.setCurrentStats(.init(dict: [\.hp: 45, \.damage: 10]), in: rpSpace)
+        XCTAssertEqual(entity.hp, 30)
+        XCTAssertEqual(entity.damage, 0)
+    }
+    
+    func test_entity_stats_are_sum_of_components() {
+        let sword = RPItem<TestRPSpace>(components: [
+            Component(stats: .init(dict: [\.damage: 10]))
+        ])
+        let helmet = RPItem<TestRPSpace>(components: [
+            Component(stats: .init(dict: [\.damage: 5]))
+        ])
+        
+        rpSpace.items[sword.id] = sword
+        rpSpace.items[helmet.id] = helmet
+        entity.body.wornItems = [sword.id, helmet.id]
+        
+        XCTAssertEqual(entity.getTotalStats(in: rpSpace).damage, 15)
+        
+        entity.setCurrentStats(.init(dict: [\.damage: 100]), in: rpSpace)
+        XCTAssertEqual(entity.damage, 15)
     }
 
-    func test_passive_abilities_should_trigger_on_event_occurences() {
-        let ability = Ability(name: "Test")
+    func test_passive_abilities_should_trigger_on_event_occurrences() {
+        let ability = Ability<TestRPSpace>(name: "Test")
         rpSpace.entities[entity.id]?.addPassiveAbility(ability, conditional: .always)
 
-        let enemyAbility = Ability(name: "enemyAbility")
-        let fakeEvent = Event(initiator: enemy, ability: enemyAbility, rpSpace: rpSpace)
+        let enemyAbility = Ability<TestRPSpace>(name: "enemyAbility")
+        let fakeEvent = Event(initiator: enemy.id, ability: enemyAbility, rpSpace: rpSpace)
 
         _ = fakeEvent.execute(in: &rpSpace)
         let reactionEvents = rpSpace.entities[entity.id]?.getPendingPassiveEvents(in: rpSpace)
@@ -52,7 +72,7 @@ final class EntityTests: XCTestCase {
     }
 
     func test_status_effects_should_be_able_to_remove_status_effect_by_name() {
-        let se = StatusEffect(name: "Death", labels: ["KO"], components: [], duration: nil, charges: 1)
+        let se = StatusEffect<TestRPSpace>(name: "Death", tags: ["KO"], components: [], duration: nil, charges: 1)
         entity.applyStatusEffect(se)
 
         XCTAssertEqual(entity.hasStatus("Death"), true)
@@ -62,7 +82,7 @@ final class EntityTests: XCTestCase {
     }
 
     func test_status_effects_discharges_to_remove_a_status_effect_with_multiple_charges() {
-        let se = StatusEffect(name: "Charge", labels: ["boost"], components: [], duration: nil, charges: 2)
+        let se = StatusEffect<TestRPSpace>(name: "Charge", tags: ["boost"], components: [], duration: nil, charges: 2)
         entity.applyStatusEffect(se)
 
         XCTAssertEqual(entity.hasStatus("Charge"), true)

@@ -9,13 +9,14 @@ public struct Moment {
 }
 
 public protocol Temporal {
+    associatedtype RP: RPSpace
     var currentTick: RPTimeIncrement { get set }
     var maximumTick: RPTimeIncrement { get }
 
     mutating func tick(_ moment: Moment)
     mutating func resetCooldown()
 
-    func getPendingEvents(in rpSpace: RPSpace) -> [Event]
+    func getPendingEvents(in rpSpace: RP) -> [Event<RP>]
 }
 
 extension Temporal {

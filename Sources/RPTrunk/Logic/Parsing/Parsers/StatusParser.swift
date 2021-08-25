@@ -8,7 +8,9 @@
 import Foundation
 import Parsing
 
-func getStatus(_ status: String) -> (ParserResultType, RPSpace) -> ParserResultType {
+func getStatus
+<RP: RPSpace>
+(_ status: String) -> (ParserResultType<RP>, RP) -> ParserResultType<RP> {
     {
         input, rpSpace in
         if case let .entityResult(e) = input {
@@ -18,17 +20,3 @@ func getStatus(_ status: String) -> (ParserResultType, RPSpace) -> ParserResultT
         return .nothing
     }
 }
-
-let statusParser =
-    Skip(Prefix(while: { $0 == " " }))
-    .take(Prefix(while: { $0 != " " }))
-    .flatMap({ result -> AnyParser<Substring, ParserResultType> in
-        guard result.last == "?" else {
-            return Fail().eraseToAnyParser()
-        }
-        
-        let status = String(result.dropLast())
-        let function = getStatus(status)
-        
-        return Always(.evaluationFunction(f: function)).eraseToAnyParser()
-    })

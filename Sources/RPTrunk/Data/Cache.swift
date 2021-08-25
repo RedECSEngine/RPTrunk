@@ -1,37 +1,38 @@
 import Foundation
 
-open class RPCache {
+open class RPCache<RP: RPSpace> {
     public enum CacheError: Error {
         case notFound(String)
         case invalidFormat(String)
     }
 
-    public var abilities: [String: Ability] = [:]
-    public var statusEffects: [String: StatusEffect] = [:]
-    public var entities: [String: Entity] = [:]
+    public var abilities: [String: Ability<RP>] = [:]
+    public var statusEffects: [String: StatusEffect<RP>] = [:]
+    public var entities: [String: RPEntity<RP>] = [:]
     
     public init() {}
     
-    public func load(_ data: RPCacheJSON) throws {
+    public func load(_ data: RPCacheJSON<RP.Stats>) throws {
         try loadStatusEffects(data.statusEffects ?? [:])
         try loadAbilities(data.abilities ?? [:])
         try loadEntities(data.entities ?? [:])
     }
 
-    public func loadAbilities(_ abilities: [String: AbilityJSON]) throws {
+    public func loadAbilities(_ abilities: [String: AbilityJSON<RP.Stats>]) throws {
         try abilities.forEach { (name, data) in
             let components: [Component] = try buildComponent(data)
-            var ability = Ability(name: name, components: components, cooldown: data.cooldown)
+            var ability = Ability<RP>(name: name, components: components, cooldown: data.cooldown)
             ability.metadata = data.metadata
             self.abilities[name] = ability
         }
     }
 
-    public func loadStatusEffects(_ statusEffects: [String: StatusEffectJSON]) throws {
+    public func loadStatusEffects(_ statusEffects: [String: StatusEffectJSON<RP.Stats>]) throws {
         try statusEffects.forEach { (name, data) in
-            let components: [Component] = try buildComponent(data)
-            let se = StatusEffect(
-                name: name, labels: [],
+            let components: [Component<RP>] = try buildComponent(data)
+            let se = StatusEffect<RP>(
+                name: name,
+                tags: [],
                 components: components,
                 duration: data.duration,
                 charges: data.charges,
@@ -41,15 +42,15 @@ open class RPCache {
         }
     }
 
-    public func loadEntities(_ entities: [String: EntityJSON]) throws {
+    public func loadEntities(_ entities: [String: EntityJSON<RP.Stats>]) throws {
         entities.forEach {(name, data) in
-            let stats: [String: RPValue] = data.stats ?? [:]
-            var entity = Entity.new(cache: self)
-            entity.baseStats = Stats(stats)
-            entity.currentStats = Stats(stats)
+            let stats = data.stats ?? .zero
+            var entity = RPEntity<RP>.new(cache: self)
+            entity.baseStats = stats
+            entity.currentStats = stats
             data.abilities?.forEach {
                 ability in
-                let conditional = Conditional(ability.conditional)
+                let conditional = Conditional<RP>(ability.conditional)
                 if let ability = self.abilities[ability.name] {
                     entity.addExecutableAbility(ability, conditional: conditional)
                 }
@@ -58,27 +59,27 @@ open class RPCache {
         }
     }
 
-    public func buildComponent(_ component: ComponentsContainerJSON) throws -> [Component] {
-        var components: [Component] = []
+    public func buildComponent<C: ComponentsContainerJSON>(_ component: C) throws -> [Component<RP>] where C.Stats == RP.Stats  {
+        var components: [Component<RP>] = []
         
         if let stats = component.stats {
-            components.append(Component(stats: Stats(stats)))
+            components.append(Component(stats: stats))
         }
         if let cost = component.cost {
-            components.append(Component(cost: Stats(cost)))
+            components.append(Component(cost: cost))
         }
         if let requirements = component.requirements {
-            components.append(Component(requirements: Stats(requirements)))
+            components.append(Component(requirements: requirements))
         }
         if let statusEffects = component.statusEffects {
             components += try statusEffects.map { try getStatusEffect($0) }
         }
         if let target = component.target {
-            let type = Targeting.fromString(target)
-            components.append(Component(targetType: type))
+            let type = Targeting<RP>.fromString(target)
+            components.append(Component<RP>(targetType: type))
         }
         if let discharge = component.discharge {
-            components.append(Component(dischargedStatusEffects: discharge))
+            components.append(Component<RP>(dischargedStatusEffects: discharge))
         }
         if let c = component.components {
             components += try c.map { try getComponent($0) }
@@ -87,28 +88,28 @@ open class RPCache {
         return components
     }
 
-    public func buildConditional(_ data: [String: AnyObject]) -> Conditional {
+    public func buildConditional(_ data: [String: AnyObject]) -> Conditional<RP> {
         if let query = data["conditional"] as? String {
             return Conditional(query)
         }
         return .always
     }
 
-    public func getAbility(_ name: String) throws -> Ability {
+    public func getAbility(_ name: String) throws -> Ability<RP> {
         if let ability = abilities[name] {
             return ability
         }
         throw RPCache.CacheError.notFound(name)
     }
 
-    public func getStatusEffect(_ name: String) throws -> Component {
+    public func getStatusEffect(_ name: String) throws -> Component<RP> {
         if let se = statusEffects[name] {
-            return Component(statusEffects: [se])
+            return Component<RP>(statusEffects: [se])
         }
         throw RPCache.CacheError.notFound(name)
     }
 
-    public func getComponent(_ name: String) throws -> Component {
+    public func getComponent(_ name: String) throws -> Component<RP> {
         // TODO: expand this function to try other types of components before throwing an error
         guard let se = try? getStatusEffect(name) else {
             throw RPCache.CacheError.notFound(name)
@@ -116,7 +117,7 @@ open class RPCache {
         return se
     }
 
-    public func newEntity(_ name: String) throws -> Entity {
+    public func newEntity(_ name: String) throws -> RPEntity<RP> {
         guard let entity = entities[name] else {
             throw RPCache.CacheError.notFound(name)
         }

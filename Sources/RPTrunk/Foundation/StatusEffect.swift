@@ -1,29 +1,29 @@
 
-public struct StatusEffect: Codable {
+public struct StatusEffect<RP: RPSpace>: Codable {
     public let name: String
-    public let labels: [String]
+    public let tags: [String]
     // both duration and charge can be used or one or the other
     let duration: RPTimeIncrement?
     let charges: Int? // the number of charges left
     let impairsAction: Bool
-    let ability: Ability?
+    let ability: Ability<RP>?
 
     public init(
         name: String,
-        labels: [String],
-        components: [Component],
+        tags: [String],
+        components: [Component<RP>],
         duration: Double?,
         charges: Int?,
         impairsAction: Bool = false
     ) {
         self.name = name
-        self.labels = labels
+        self.tags = tags
         self.duration = duration
         self.charges = charges
         self.impairsAction = impairsAction
 
         if components.count > 0 {
-            let components: [Component] = components + [Targeting(.oneself, .always).toComponent()]
+            let components: [Component<RP>] = components + [Targeting<RP>(.oneself, .always).toComponent()]
             ability = Ability(name: name, components: components, cooldown: nil)
         } else {
             ability = nil
@@ -37,14 +37,16 @@ public struct StatusEffect: Codable {
 
 extension StatusEffect: Equatable {}
 
-public func == (lhs: StatusEffect, rhs: StatusEffect) -> Bool {
+public func ==<Stats: StatsType> (lhs: StatusEffect<Stats>, rhs: StatusEffect<Stats>) -> Bool {
     lhs.name == rhs.name
-        && lhs.labels == rhs.labels
+        && lhs.tags == rhs.tags
         && lhs.ability == rhs.ability
 }
-
-public struct ActiveStatusEffect: Temporal, Codable {
-    fileprivate var deltaTick: RPTimeIncrement = 0
+/**
+    A Status effect, currently active on an entity
+ */
+public struct ActiveStatusEffect<RP: RPSpace>: Temporal, Codable {
+    public var deltaTick: RPTimeIncrement = 0
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { statusEffect.duration ?? 0 }
 
@@ -52,15 +54,15 @@ public struct ActiveStatusEffect: Temporal, Codable {
 
     var level: Int? // power level of the buff, if it is stackable
 
-    public var entityId: Id<Entity>
-    fileprivate let statusEffect: StatusEffect
+    public var entityId: RPEntityId
+    fileprivate let statusEffect: StatusEffect<RP>
 
     public var name: String { statusEffect.name }
-    public var labels: [String] { statusEffect.labels }
+    public var tags: [String] { statusEffect.tags }
 
     public init(
-        entityId: Id<Entity>,
-        statusEffect: StatusEffect
+        entityId: RPEntityId,
+        statusEffect: StatusEffect<RP>
     ) {
         self.entityId = entityId
         self.statusEffect = statusEffect
@@ -71,14 +73,12 @@ public struct ActiveStatusEffect: Temporal, Codable {
         statusEffect.impairsAction
     }
 
-    public func getPendingEvents(in rpSpace: RPSpace) -> [Event] {
+    public func getPendingEvents(in rpSpace: RP) -> [Event<RP>] {
         guard deltaTick > 1 else {
             return []
         }
-        if let entity = rpSpace.entityById(entityId),
-           let ability = statusEffect.ability
-        {
-            return [Event(category: .periodicEffect, initiator: entity, ability: ability, rpSpace: rpSpace)]
+        if let ability = statusEffect.ability {
+            return [Event(category: .periodicEffect(name: name), initiator: entityId, ability: ability, rpSpace: rpSpace)]
         }
         return []
     }
@@ -108,10 +108,9 @@ public struct ActiveStatusEffect: Temporal, Codable {
     }
 
     public func isCoolingDown() -> Bool {
-        if statusEffect.duration != nil {
-            return currentTick < maximumTick
-        } else {
-            return currentCharge != 0
+        guard statusEffect.duration != nil else {
+            return false
         }
+        return currentTick < maximumTick
     }
 }

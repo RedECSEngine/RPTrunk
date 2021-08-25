@@ -8,35 +8,17 @@
 import Foundation
 import Parsing
 
-func getStat(_ type: String, usePercent: Bool) -> (ParserResultType, RPSpace) -> ParserResultType {
+func getStat<RP: RPSpace>(_ stat: String, usePercent: Bool) -> (ParserResultType<RP>, RP) -> ParserResultType<RP> {
     { input, rpSpace in
         if case let .entityResult(e) = input,
            let rpEntity = rpSpace.entityById(e) {
-            let currentValue = rpEntity[type]
+            let currentValue = rpEntity[stat]
             if usePercent {
-                let percent: Double = floor(Double(currentValue) / Double(rpEntity.stats[type]) * 100)
+                let percent: Double = floor(Double(currentValue) / Double(rpEntity.getTotalStats(in: rpSpace)[stat]) * 100)
                 return .valueResult(.percent(percent))
             }
             return .valueResult(.rpValue(currentValue))
         }
         return .nothing
     }
-}
-
-let statParser = Parsing.AnyParser<Substring, ParserResultType> { input in
-    var type = input
-    var usePercent = false
-
-    if input.last == "%" {
-        type.removeLast()
-        usePercent = true
-    }
-
-    guard RPGameEnvironment.statTypes.contains(String(type)) else {
-        return nil
-    }
-
-    let function = getStat(String(type), usePercent: usePercent)
-
-    return ParserResultType.evaluationFunction(f: function)
 }

@@ -7,24 +7,24 @@ final class StatsTests: XCTestCase {
     ]
 
     func testLogicalStatsComparison() {
-        let statsA = Stats(["hp": 0, "damage": 0])
-        let statsB = Stats(["hp": 0, "damage": 2])
+        let statsA = TestStats(dict: ["hp": 0, "damage": 0])
+        let statsB = TestStats(dict: ["hp": 0, "damage": 2])
         XCTAssertEqual(statsA < statsB, true)
 
-        let statsC = Stats(["hp": 0, "damage": 2])
-        let statsD = Stats()
+        let statsC = TestStats(dict: ["hp": 0, "damage": 2])
+        let statsD = TestStats()
         XCTAssertEqual(statsC < statsD, false)
 
-        let statsE = Stats()
-        let statsF = Stats(["hp": 0, "damage": 2])
+        let statsE = TestStats()
+        let statsF = TestStats(dict: ["hp": 0, "damage": 2])
         XCTAssertEqual(statsE < statsF, true)
 
-        let statsG = Stats()
-        let statsH = Stats(["hp": 1, "damage": 2])
+        let statsG = TestStats()
+        let statsH = TestStats(dict: ["hp": 1, "damage": 2])
         XCTAssertEqual(statsG < statsH, true)
 
-        let statsI = Stats(["hp": 30, "damage": 0, "agility": 0])
-        let statsJ = Stats(["hp": 0, "damage": 0, "agility": 5])
+        let statsI = TestStats(dict: ["hp": 30, "damage": 0, "agility": 0])
+        let statsJ = TestStats(dict: ["hp": 0, "damage": 0, "agility": 5])
         XCTAssertEqual(statsI >= statsJ, false)
     }
 }

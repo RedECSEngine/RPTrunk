@@ -1,16 +1,17 @@
+import Parsing
 
-public enum Conditional: Codable {
+public enum Conditional<RP: RPSpace>: Codable {
     private enum CodingKeys: String, CodingKey {
         case rawValue
     }
 
-    public typealias Predicate = (Id<Entity>, RPSpace) throws -> Bool
+    public typealias Predicate = (RPEntityId, RP) throws -> Bool
 
     case always
     case never
     case custom(String, Predicate)
 
-    public static func fromString(_ condition: String) -> Conditional {
+    public static func fromString(_ condition: String) -> Self {
         guard condition != "always" else {
             return .always
         }
@@ -47,7 +48,7 @@ public enum Conditional: Codable {
         try container.encode(toString(), forKey: .rawValue)
     }
 
-    public func exec(_ e: Entity, rpSpace: RPSpace) throws -> Bool {
+    public func exec(_ e: RPEntity<RP>, rpSpace: RP) throws -> Bool {
         switch self {
         case .always:
             return true
@@ -74,7 +75,10 @@ extension Conditional: CustomStringConvertible {
 
 extension Conditional: Equatable {}
 
-public func == (lhs: Conditional, rhs: Conditional) -> Bool {
+public func ==<RP: RPSpace> (
+    lhs: Conditional<RP>,
+    rhs: Conditional<RP>
+) -> Bool {
     lhs.description == rhs.description
 }
 
@@ -100,19 +104,18 @@ enum ConditionalInterpretationError: Error {
     case cantCompareValues
 }
 
-func buildConditionalFromString(_ conditionString: String) throws -> Conditional {
+func buildConditionalFromString<RP: RPSpace>(_ conditionString: String) throws -> Conditional<RP> {
     let statements = conditionString.components(separatedBy: " && ")
     if statements.count == 1 {
-        let predicate = try interpretStringCondition(statements[0])
-        return .custom(conditionString, predicate)
+        return .custom(conditionString, try interpretStringCondition(statements[0]))
     } else {
-        var predicates = [Conditional.Predicate]()
+        var predicates = [Conditional<RP>.Predicate]()
         try statements.forEach {
             statement in
             try predicates.append(interpretStringCondition(statement))
         }
 
-        let finalPredicate: Conditional.Predicate = {
+        let finalPredicate: Conditional<RP>.Predicate = {
             entity, rpSpace in
             // iterate over all predicates and confirm that none are 'false'
             try predicates.contains(where: { predicate -> Bool in
@@ -123,8 +126,8 @@ func buildConditionalFromString(_ conditionString: String) throws -> Conditional
     }
 }
 
-func interpretStringCondition(_ condition: String) throws -> Conditional.Predicate {
-    if let (lhs, op, rhs) = logicalComparisonParser.parse(condition) {
+func interpretStringCondition<RP: RPSpace>(_ condition: String) throws -> Conditional<RP>.Predicate {
+    if let (lhs, op, rhs): ([ParserResultType<RP>], ConditionalOperator, [ParserResultType<RP>]) = buildParser().parse(condition) {
         return { entity, rpSpace -> Bool in
             let lhsResult = extractValue(entity, evaluators: lhs, in: rpSpace)
             let rhsResult = extractValue(entity, evaluators: rhs, in: rpSpace)
@@ -136,7 +139,7 @@ func interpretStringCondition(_ condition: String) throws -> Conditional.Predica
             }
             return op.evaluate(l, r)
         }
-    } else if let statusInquiry = statusParser.parse(condition) {
+    } else if let statusInquiry: ParserResultType<RP> = buildStatusParser().parse(condition) {
         return { entity, rpSpace -> Bool in
             return extractValue(entity, evaluators: [statusInquiry], in: rpSpace) == .bool(true)
         }
@@ -145,15 +148,15 @@ func interpretStringCondition(_ condition: String) throws -> Conditional.Predica
     }
 }
 
-func extractValue(
-    _ entity: Id<Entity>,
-    evaluators: [ParserResultType],
-    in rpSpace: RPSpace
+func extractValue<RP: RPSpace>(
+    _ entity: RPEntityId,
+    evaluators: [ParserResultType<RP>],
+    in rpSpace: RP
 ) -> ParserValueType? {
-    let initial = ParserResultType.entityResult(entity: entity)
+    let initial = ParserResultType<RP>.entityResult(entity: entity)
     
     let final = evaluators.reduce(initial, {
-        prev, current -> ParserResultType in
+        prev, current -> ParserResultType<RP> in
 
         if case let .evaluationFunction(f) = current {
             return f(prev, rpSpace)
@@ -170,13 +173,13 @@ func extractValue(
     }
 }
 
-public func extractValue(
-    _ entity: Id<Entity>,
+public func extractValue<RP: RPSpace>(
+    _ entity: RPEntityId,
     evaluate evaluationString: String,
-    in rpSpace: RPSpace
+    in rpSpace: RP
 ) -> ParserValueType? {
-    guard let evaluationResult = dotNotationParser
-            .parse(evaluationString) else {
+    let dotNotationParser: AnyParser<Substring, [ParserResultType<RP>]>  = buildDotNotationParser()
+    guard let evaluationResult = dotNotationParser.parse(evaluationString) else {
         return nil
     }
     return extractValue(entity, evaluators: evaluationResult, in: rpSpace)

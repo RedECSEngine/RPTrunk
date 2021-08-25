@@ -8,15 +8,12 @@
 import Foundation
 import Parsing
 
-func getTarget(_ input: ParserResultType, in rpSpace: RPSpace) -> ParserResultType {
+func getTarget<RP: RPSpace>(
+    _ input: ParserResultType<RP>,
+    in rpSpace: RP
+) -> ParserResultType<RP> {
     if case let .entityResult(e) = input, let target = rpSpace.entityById(e)?.getTarget() {
         return .entityResult(entity: target)
     }
     return .nothing
 }
-
-let targetParser = Parsing
-    .StartsWith<Substring>("target")
-    .map { _ in
-        ParserResultType.evaluationFunction(f: getTarget)
-    }

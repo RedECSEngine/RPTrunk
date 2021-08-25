@@ -11,19 +11,18 @@ public struct ItemExchange: Codable, Equatable {
     public enum ExchangeType: String, Codable, Equatable {
         case target
         case targetTeam
-        case rpSpace
     }
 
     public let exchangeType: ExchangeType
     public let requiresInitiatorOwnItem: Bool
     public let removesItemFromInitiator: Bool
-    public let item: Item
+    public let item: RPItemId
     
     public init(
         exchangeType: ItemExchange.ExchangeType,
         requiresInitiatorOwnItem: Bool,
         removesItemFromInitiator: Bool,
-        item: Item
+        item: RPItemId
     ) {
         self.exchangeType = exchangeType
         self.requiresInitiatorOwnItem = requiresInitiatorOwnItem

@@ -1,29 +1,31 @@
 import Foundation
 
 public protocol ComponentContainer {
-    var components: [Component] { get }
+    associatedtype RP: RPSpace
+    typealias Stats = RP.Stats
+    var components: [Component<RP>] { get }
 }
 
 public extension ComponentContainer {
     var stats: Stats {
         components
             .compactMap { $0.getStats() }
-            .reduce(Stats(), +)
+            .reduce(.zero, +)
     }
 
     var cost: Stats {
         components
             .compactMap { $0.getCost() }
-            .reduce(Stats(), +)
+            .reduce(.zero, +)
     }
 
     var requirements: Stats {
         components
             .compactMap { $0.getRequirements() }
-            .reduce(Stats(), +)
+            .reduce(.zero, +)
     }
 
-    var targeting: Targeting {
+    var targeting: Targeting<RP> {
         for component in components {
             if let t = component.getTargeting() {
                 return t
@@ -32,7 +34,7 @@ public extension ComponentContainer {
         return Targeting(.singleEnemy, .always)
     }
 
-    var statusEffects: [StatusEffect] {
+    var statusEffects: [StatusEffect<RP>] {
         components
             .flatMap { $0.getStatusEffects() }
     }
@@ -50,13 +52,13 @@ public extension ComponentContainer {
         }
         return nil
     }
-}
-
-func == (a: ComponentContainer, b: ComponentContainer) -> Bool {
-    a.stats == b.stats
-        && a.cost == b.cost
-        && a.requirements == b.requirements
-        && a.targeting == b.targeting
-        && a.statusEffects == b.statusEffects
-        && a.dischargedStatusEffects == b.dischargedStatusEffects
+    
+    func isEqualTo(_ b: Self) -> Bool {
+        stats == b.stats
+            && cost == b.cost
+            && requirements == b.requirements
+            && targeting == b.targeting
+            && statusEffects == b.statusEffects
+            && dischargedStatusEffects == b.dischargedStatusEffects
+    }
 }
