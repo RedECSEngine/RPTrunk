@@ -5,8 +5,6 @@
 //  Created by Kyle Newsome on 2021-05-31.
 //
 
-import Foundation
-
 public enum ParserResultType<RP: RPSpace> {
     case evaluationFunction(f: (ParserResultType, RP) -> ParserResultType)
     case entityResult(entity: RPEntityId)

@@ -1,5 +1,3 @@
-import Foundation
-
 @dynamicMemberLookup
 public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
 

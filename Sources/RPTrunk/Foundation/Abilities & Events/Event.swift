@@ -1,6 +1,4 @@
-import Foundation
-
-public struct EventResult<RP: RPSpace>: Equatable {
+public struct EventResult<RP: RPSpace>: Equatable, Codable {
     public let event: Event<RP>
     public let effects: [ConflictResult<RP>]
 

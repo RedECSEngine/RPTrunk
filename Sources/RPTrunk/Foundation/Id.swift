@@ -1,5 +1,3 @@
-import Foundation
-
 public struct Id<T: Codable>: RawRepresentable {
     public let rawValue: String
     public init?(rawValue: String) {

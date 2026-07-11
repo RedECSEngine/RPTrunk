@@ -5,8 +5,6 @@
 //  Created by Kyle Newsome on 2021-08-15.
 //
 
-import Foundation
-
 public protocol RPSpaceDictionary: RPSpace {
     var entities: [RPEntityId: RPEntity<Self>] { get set }
     var teams: [RPTeamId: RPTeam<Self>] { get set }

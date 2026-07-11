@@ -1,4 +1,3 @@
-import Foundation
 @testable import RPTrunk
 
 public struct TestStats: StatsType {

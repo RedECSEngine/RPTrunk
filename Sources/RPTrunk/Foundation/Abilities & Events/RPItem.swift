@@ -1,5 +1,3 @@
-import Foundation
-
 public struct RPItem<RP: RPSpace>: Temporal, ComponentContainer, Codable, Equatable {
     public var id: RPItemId = UUID().uuidString
     public var name: String

@@ -1,5 +1,3 @@
-import Foundation
-
 public struct Targeting<RP: RPSpace>: Codable {
     public enum SelectionType: String, Codable {
         case oneself
@@ -36,7 +34,7 @@ public struct Targeting<RP: RPSpace>: Codable {
             return validTargets.first.map { [$0.id] } ?? []
         case .random, .randomEnemy, .randomFriendly:
             let startIndex = validTargets.startIndex
-            let randomInt = Int(arc4random_uniform(UInt32(validTargets.count)))
+            let randomInt = Int.random(in: 0..<validTargets.count)
             let randomIndex = validTargets.index(startIndex, offsetBy: randomInt)
             let entity = validTargets[randomIndex]
             return Set([entity.id])

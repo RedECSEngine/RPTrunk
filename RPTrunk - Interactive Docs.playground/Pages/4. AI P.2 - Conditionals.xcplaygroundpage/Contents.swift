@@ -1,6 +1,5 @@
 
 //: [Previous](@previous)
-import Foundation
 import RPTrunk
 import RPTrunkDemo
 import XCPlayground

@@ -1,5 +1,3 @@
-import Foundation
-
 public protocol ComponentContainer {
     associatedtype RP: RPSpace
     typealias Stats = RP.Stats

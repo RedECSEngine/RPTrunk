@@ -1,4 +1,3 @@
-import Foundation
 /*
      Situations to handle
 

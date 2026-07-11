@@ -1,4 +1,3 @@
-import Foundation
 import RPTrunk
 
 public struct TestRPSpace: RPSpaceDictionary, Equatable {

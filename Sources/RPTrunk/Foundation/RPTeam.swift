@@ -1,5 +1,3 @@
-import Foundation
-
 public struct RPTeam<RP: RPSpace>: InventoryManager, Codable, Equatable {
     public var id: RPTeamId = UUID().uuidString
     public private(set) var entities: Set<RPEntityId> = []

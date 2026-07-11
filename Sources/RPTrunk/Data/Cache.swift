@@ -1,5 +1,3 @@
-import Foundation
-
 open class RPCache<RP: RPSpace> {
     public enum CacheError: Error {
         case notFound(String)

@@ -1,5 +1,3 @@
-import Foundation
-
 public struct Component<RP: RPSpace>: Codable, Equatable {
     fileprivate struct IntermediaryContainer: ComponentContainer {
         let components: [Component]

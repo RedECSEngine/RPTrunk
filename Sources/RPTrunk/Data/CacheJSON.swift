@@ -1,6 +1,4 @@
-import Foundation
-
-public struct RPCacheJSON<Stats: StatsType>: Codable {
+public struct RPCacheJSON<Stats: StatsType>: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case statusEffects = "Status Effects"
         case abilities = "Abilities"
@@ -23,7 +21,7 @@ public protocol ComponentsContainerJSON {
     var components: [String]? { get }
 }
 
-public struct StatusEffectJSON<Stats: StatsType>: Codable, ComponentsContainerJSON {
+public struct StatusEffectJSON<Stats: StatsType>: Codable, Equatable, ComponentsContainerJSON {
     public var stats: Stats?
     public var cost: Stats?
     public var requirements: Stats?
@@ -37,8 +35,8 @@ public struct StatusEffectJSON<Stats: StatsType>: Codable, ComponentsContainerJS
     public var impairsAction: Bool? = false
 }
 
-public struct EntityJSON<Stats: StatsType>: Codable {
-    public struct AbilityJSON: Codable {
+public struct EntityJSON<Stats: StatsType>: Codable, Equatable {
+    public struct AbilityJSON: Codable, Equatable {
         var name: String
         var conditional: String
     }
@@ -47,7 +45,7 @@ public struct EntityJSON<Stats: StatsType>: Codable {
     var abilities: [AbilityJSON]?
 }
 
-public struct AbilityJSON<Stats: StatsType>: Codable, ComponentsContainerJSON {
+public struct AbilityJSON<Stats: StatsType>: Codable, Equatable, ComponentsContainerJSON {
     public var stats: Stats?
     public var cost: Stats?
     public var requirements: Stats?
