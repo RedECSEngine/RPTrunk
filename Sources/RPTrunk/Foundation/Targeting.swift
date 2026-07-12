@@ -71,12 +71,12 @@ public struct Targeting<RP: RPSpace>: Codable {
 
 public extension Targeting {
     static func fromString(_ query: String) -> Targeting {
-        let components = query.components(separatedBy: ":")
-        guard let type = components.first else {
+        let components = query.split(separator: ":", omittingEmptySubsequences: false)
+        guard let type = components.first.map(String.init) else {
             fatalError("Unexpected format for string translation to target")
         }
 
-        let condition: Conditional<RP> = components.count > 1 ? Conditional(components[1]) : .always
+        let condition: Conditional<RP> = components.count > 1 ? Conditional(String(components[1])) : .always
 
         switch type {
         case "self":

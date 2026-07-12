@@ -5,7 +5,6 @@
 //  Created by Kyle Newsome on 2021-05-31.
 //
 
-import Parsing
 
 func getStat<RP: RPSpace>(_ stat: String, usePercent: Bool) -> (ParserResultType<RP>, RP) -> ParserResultType<RP> {
     { input, rpSpace in

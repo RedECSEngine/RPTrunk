@@ -1,4 +1,3 @@
-import Parsing
 
 public enum Conditional<RP: RPSpace>: Codable {
     private enum CodingKeys: String, CodingKey {
@@ -105,82 +104,6 @@ enum ConditionalInterpretationError: Error {
 }
 
 func buildConditionalFromString<RP: RPSpace>(_ conditionString: String) throws -> Conditional<RP> {
-    let statements = conditionString.components(separatedBy: " && ")
-    if statements.count == 1 {
-        return .custom(conditionString, try interpretStringCondition(statements[0]))
-    } else {
-        var predicates = [Conditional<RP>.Predicate]()
-        try statements.forEach {
-            statement in
-            try predicates.append(interpretStringCondition(statement))
-        }
-
-        let finalPredicate: Conditional<RP>.Predicate = {
-            entity, rpSpace in
-            // iterate over all predicates and confirm that none are 'false'
-            try predicates.contains(where: { predicate -> Bool in
-                try !predicate(entity, rpSpace)
-            }) == false
-        }
-        return .custom(conditionString, finalPredicate)
-    }
-}
-
-func interpretStringCondition<RP: RPSpace>(_ condition: String) throws -> Conditional<RP>.Predicate {
-    if let (lhs, op, rhs): ([ParserResultType<RP>], ConditionalOperator, [ParserResultType<RP>]) = buildParser().parse(condition) {
-        return { entity, rpSpace -> Bool in
-            let lhsResult = extractValue(entity, evaluators: lhs, in: rpSpace)
-            let rhsResult = extractValue(entity, evaluators: rhs, in: rpSpace)
-            guard let l = lhsResult, let r = rhsResult else {
-                return false
-            }
-            guard l.canCompare(to: r) else {
-                throw ConditionalInterpretationError.cantCompareValues
-            }
-            return op.evaluate(l, r)
-        }
-    } else if let statusInquiry: ParserResultType<RP> = buildStatusParser().parse(condition) {
-        return { entity, rpSpace -> Bool in
-            return extractValue(entity, evaluators: [statusInquiry], in: rpSpace) == .bool(true)
-        }
-    } else {
-        throw ConditionalInterpretationError.invalidSyntax(reason: "Could not parse")
-    }
-}
-
-func extractValue<RP: RPSpace>(
-    _ entity: RPEntityId,
-    evaluators: [ParserResultType<RP>],
-    in rpSpace: RP
-) -> ParserValueType? {
-    let initial = ParserResultType<RP>.entityResult(entity: entity)
-    
-    let final = evaluators.reduce(initial, {
-        prev, current -> ParserResultType<RP> in
-
-        if case let .evaluationFunction(f) = current {
-            return f(prev, rpSpace)
-        }
-
-        return current
-    })
-    
-    switch final {
-    case let .valueResult(v):
-        return v
-    default:
-        return nil
-    }
-}
-
-public func extractValue<RP: RPSpace>(
-    _ entity: RPEntityId,
-    evaluate evaluationString: String,
-    in rpSpace: RP
-) -> ParserValueType? {
-    let dotNotationParser: AnyParser<Substring, [ParserResultType<RP>]>  = buildDotNotationParser()
-    guard let evaluationResult = dotNotationParser.parse(evaluationString) else {
-        return nil
-    }
-    return extractValue(entity, evaluators: evaluationResult, in: rpSpace)
+    // `&&` conjunctions are handled by the grammar itself.
+    .custom(conditionString, try interpretStringCondition(conditionString))
 }
