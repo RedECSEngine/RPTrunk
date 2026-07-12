@@ -151,7 +151,11 @@ public struct Event<RP: RPSpace>: Equatable, Codable {
     public func execute(in rpSpace: inout RP) -> EventResult<RP> {
         let results = getResults(in: rpSpace)
         applyResults(results, in: &rpSpace)
-        return EventResult<RP>(self, results)
+        let eventResult = EventResult<RP>(self, results)
+        rpSpace.applyThreatChanges(
+            RP.resolveThreatChanges(for: eventResult, in: rpSpace)
+        )
+        return eventResult
     }
 
     public func resetInitiatorCooldowns(in rpSpace: inout RP) {

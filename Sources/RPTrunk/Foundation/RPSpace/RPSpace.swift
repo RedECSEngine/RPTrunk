@@ -20,13 +20,23 @@ public protocol RPSpace: Codable {
 
     static func createDefaultEntity(cache: RPCache<Self>) -> Entity
     
+    /// How any interaction between to entities in resolves.
+    ///  Events contain all the data necessary to calculate an end result
     static func resolveConflict(
         _ event: Event<Self>,
         in rpSpace: Self,
         target: RPEntityId,
         conflict: Stats
     ) -> ConflictResult<Self>
-    
+
+    /// How events translate into threat between entities. Declared as a
+    /// requirement so conformances can customize it; the default
+    /// implementation produces no threat, leaving the system dormant.
+    static func resolveThreatChanges(
+        for eventResult: EventResult<Self>,
+        in rpSpace: Self
+    ) -> [ThreatChange]
+
     func entityById(_ id: RPEntityId) -> Entity?
     func teamById(_ id: RPTeamId) -> Team?
     func itemById(_ id: RPItemId) -> Item?

@@ -30,8 +30,15 @@ public struct Targeting<RP: RPSpace>: Codable {
             .filter { (try? conditional.exec($0, rpSpace: rpSpace)) ?? false }
 
         switch type {
-        case .oneself, .singleEnemy, .singleFriendly:
-            return validTargets.first.map { [$0.id] } ?? []
+        case .singleEnemy:
+            let chosen = validTargets.min { a, b in
+                let threatA = entity.threat[a.id] ?? 0
+                let threatB = entity.threat[b.id] ?? 0
+                return threatA != threatB ? threatA > threatB : a.id < b.id
+            }
+            return chosen.map { [$0.id] } ?? []
+        case .oneself, .singleFriendly:
+            return validTargets.min { $0.id < $1.id }.map { [$0.id] } ?? []
         case .random, .randomEnemy, .randomFriendly:
             let startIndex = validTargets.startIndex
             let randomInt = Int.random(in: 0..<validTargets.count)

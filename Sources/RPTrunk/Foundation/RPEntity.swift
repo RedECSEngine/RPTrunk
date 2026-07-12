@@ -25,6 +25,12 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
 
     public var targets: Set<RPEntityId> = []
 
+    public internal(set) var threat: [RPEntityId: RPValue] = [:]
+
+    /// Threat removed per unit of tick time. Zero (the default) disables
+    /// decay entirely.
+    public var threatDecayPerTick: Double = 0
+
     public subscript(index: String) -> RPValue {
         currentStats[index]
     }
@@ -85,7 +91,49 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
     }
 
     public func getTarget() -> RPEntityId? {
-        targets.first
+        var highestThreat = RPValue.min
+        var candidates: [RPEntityId] = []
+        for id in targets {
+            let value = threat[id] ?? 0
+            if value > highestThreat {
+                highestThreat = value
+                candidates = [id]
+            } else if value == highestThreat {
+                candidates.append(id)
+            }
+        }
+        return candidates.min()
+    }
+
+    // MARK: - Threat
+
+    /// Threat entries from highest to lowest, ties broken by id.
+    public var threatList: [(entityId: RPEntityId, threat: RPValue)] {
+        threat
+            .sorted { lhs, rhs in
+                lhs.value != rhs.value ? lhs.value > rhs.value : lhs.key < rhs.key
+            }
+            .map { (entityId: $0.key, threat: $0.value) }
+    }
+
+    public func holdsThreat(toward id: RPEntityId) -> Bool {
+        threat[id] != nil
+    }
+
+    public mutating func addThreat(toward id: RPEntityId, amount: RPValue) {
+        setThreat(toward: id, amount: (threat[id] ?? 0) + amount)
+    }
+
+    public mutating func setThreat(toward id: RPEntityId, amount: RPValue) {
+        if amount > 0 {
+            threat[id] = amount
+        } else {
+            threat.removeValue(forKey: id)
+        }
+    }
+
+    public mutating func clearThreat(toward id: RPEntityId) {
+        threat.removeValue(forKey: id)
     }
 
     public mutating func addExecutableAbility(_ ability: Ability<RP>, conditional: Conditional<RP>) {
@@ -141,6 +189,15 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
 
         for name in executableAbilities.keys {
             executableAbilities[name]?.tick(moment)
+        }
+
+        if threatDecayPerTick > 0, !threat.isEmpty {
+            let decay = RPValue((threatDecayPerTick * moment.delta).rounded())
+            if decay > 0 {
+                for id in threat.keys {
+                    setThreat(toward: id, amount: (threat[id] ?? 0) - decay)
+                }
+            }
         }
     }
 
