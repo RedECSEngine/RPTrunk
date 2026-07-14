@@ -128,6 +128,7 @@ extension RPSpace {
     public func getPendingEvents() -> [Event<Self>] {
         allPendingGameMasterEvents() +
         getAllPendingPassiveEvents() +
+        getAllPendingStatusEffectEvents() +
         getAllPendingExecutableEvents()
     }
 
@@ -137,6 +138,18 @@ extension RPSpace {
             .flatMap(\.entities)
             .compactMap(entityById)
             .flatMap { $0.getPendingPassiveEvents(in: self) }
+    }
+
+    /// Periodic events emitted by active status effects (heal/damage over time,
+    /// e.g. Regen and Bleed). Without this, status effects tick internally but
+    /// their per-tick events are never collected, so only the ability's initial
+    /// application is felt.
+    public func getAllPendingStatusEffectEvents() -> [Event<Self>] {
+        allTeams()
+            .compactMap(teamById)
+            .flatMap(\.entities)
+            .compactMap(entityById)
+            .flatMap { $0.getPendingStatusEffectEvents(in: self) }
     }
 
     public func getAllPendingExecutableEvents() -> [Event<Self>] {
