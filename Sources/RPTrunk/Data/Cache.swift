@@ -34,7 +34,8 @@ open class RPCache<RP: RPSpace> {
                 components: components,
                 duration: data.duration,
                 charges: data.charges,
-                impairsAction: data.impairsAction ?? false
+                impairsAction: data.impairsAction ?? false,
+                period: data.period ?? StatusEffect<RP>.defaultPeriod
             )
             self.statusEffects[name] = se
         }

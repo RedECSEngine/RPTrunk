@@ -33,6 +33,8 @@ public struct StatusEffectJSON<Stats: StatsType>: Codable, Equatable, Components
     public var duration: RPTimeIncrement?
     public var charges: Int?
     public var impairsAction: Bool? = false
+    /// Time (ms) between periodic pulses; omitted uses `StatusEffect.defaultPeriod`.
+    public var period: RPTimeIncrement?
 }
 
 public struct EntityJSON<Stats: StatsType>: Codable, Equatable {

@@ -1,11 +1,16 @@
 
 public struct StatusEffect<RP: RPSpace>: Codable {
+    /// Default time between pulses (ms) when a status effect doesn't specify one.
+    public static var defaultPeriod: RPTimeIncrement { 1000 }
+
     public let name: String
     public let tags: [String]
     // both duration and charge can be used or one or the other
     let duration: RPTimeIncrement?
     let charges: Int? // the number of charges left
     let impairsAction: Bool
+    /// Time (ms) between periodic pulses of this effect (heal/damage over time).
+    let period: RPTimeIncrement
     let ability: Ability<RP>?
 
     public init(
@@ -14,13 +19,15 @@ public struct StatusEffect<RP: RPSpace>: Codable {
         components: [Component<RP>],
         duration: Double?,
         charges: Int?,
-        impairsAction: Bool = false
+        impairsAction: Bool = false,
+        period: RPTimeIncrement = StatusEffect.defaultPeriod
     ) {
         self.name = name
         self.tags = tags
         self.duration = duration
         self.charges = charges
         self.impairsAction = impairsAction
+        self.period = period
 
         if components.count > 0 {
             let components: [Component<RP>] = components + [Targeting<RP>(.oneself, .always).toComponent()]
@@ -74,7 +81,8 @@ public struct ActiveStatusEffect<RP: RPSpace>: Temporal, Codable {
     }
 
     public func getPendingEvents(in rpSpace: RP) -> [Event<RP>] {
-        guard deltaTick > 1 else {
+        // Pulse once the accumulated time reaches the effect's configured period.
+        guard deltaTick >= statusEffect.period else {
             return []
         }
         if let ability = statusEffect.ability {
