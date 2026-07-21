@@ -5,6 +5,8 @@ open class RPCache<RP: RPSpace> {
         case notFound(String)
         case invalidFormat(String)
     }
+    
+    typealias AbilityData = AbilityJSON<RP>
 
     public var abilities: [String: Ability<RP>] = [:]
     public var statusEffects: [String: StatusEffect<RP>] = [:]
@@ -13,14 +15,14 @@ open class RPCache<RP: RPSpace> {
 
     public init() {}
 
-    public func load(_ data: RPCacheJSON<RP.Stats>) throws {
+    public func load(_ data: RPCacheJSON<RP>) throws {
         try loadStatusEffects(data.statusEffects ?? [:])
         try loadAbilities(data.abilities ?? [:])
         try loadEntities(data.entities ?? [:])
         try loadItems(data.items ?? [:])
     }
 
-    public func loadAbilities(_ abilities: [String: AbilityJSON<RP.Stats>]) throws {
+    public func loadAbilities(_ abilities: [String: AbilityJSON<RP>]) throws {
         try abilities.forEach { (name, data) in
             let components: [Component] = try buildComponent(data)
             var ability = Ability<RP>(name: name, components: components, cooldown: data.cooldown)
@@ -29,7 +31,7 @@ open class RPCache<RP: RPSpace> {
         }
     }
 
-    public func loadStatusEffects(_ statusEffects: [String: StatusEffectJSON<RP.Stats>]) throws {
+    public func loadStatusEffects(_ statusEffects: [String: StatusEffectJSON<RP>]) throws {
         try statusEffects.forEach { (name, data) in
             let components: [Component<RP>] = try buildComponent(data)
             let se = StatusEffect<RP>(
@@ -45,7 +47,7 @@ open class RPCache<RP: RPSpace> {
         }
     }
 
-    public func loadEntities(_ entities: [String: EntityJSON<RP.Stats>]) throws {
+    public func loadEntities(_ entities: [String: EntityJSON<RP>]) throws {
         entities.forEach {(name, data) in
             let stats = data.stats ?? .zero
             var entity = RPEntity<RP>.new(cache: self)
@@ -63,21 +65,22 @@ open class RPCache<RP: RPSpace> {
         }
     }
 
-    public func loadItems(_ items: [String: ItemJSON<RP.Stats>]) throws {
-        try items.forEach { (name, data) in
+    public func loadItems(_ items: [String: ItemJSON<RP>]) throws {
+        try items.forEach { (cacheId, data) in
             let components: [Component<RP>] = try buildComponent(data)
             let ability = try data.ability.map { try getAbility($0) }
             let conditional = Conditional<RP>(data.conditional ?? "always")
             var item = RPItem<RP>(components: components, ability: ability, conditional: conditional)
-            item.name = name
+            item.cacheId = cacheId
+            item.name = cacheId
             item.metadata = data.metadata
-            self.items[name] = item
+            self.items[cacheId] = item
         }
     }
 
-    public func newItem(_ name: String) throws -> RPItem<RP> {
-        guard var item = items[name] else {
-            throw RPCache.CacheError.notFound(name)
+    public func newItem(_ cacheId: RPItemCacheId) throws -> RPItem<RP> {
+        guard var item = items[cacheId] else {
+            throw RPCache.CacheError.notFound(cacheId)
         }
         item.id = UUID().uuidString
         return item

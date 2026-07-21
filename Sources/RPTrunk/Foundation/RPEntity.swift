@@ -22,6 +22,7 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
     public var currentStats: Stats = .zero
     public var body = Body<RP>()
     public var inventory: [RPItemId] = []
+    public var metadata: RP.EntityMetadata?
 
     public internal(set) var executableAbilities: [String: ActiveAbility<RP>] = [:]
     public internal(set) var passiveAbilities: [String: ActiveAbility<RP>] = [:]

@@ -1,5 +1,6 @@
 public struct RPItem<RP: RPSpace>: Temporal, ComponentContainer, Codable, Equatable {
     public var id: RPItemId = UUID().uuidString
+    public var cacheId: RPItemCacheId?
     public var name: String
     public var amount: Int = 1
 
@@ -10,7 +11,7 @@ public struct RPItem<RP: RPSpace>: Temporal, ComponentContainer, Codable, Equata
     public var components: [Component<RP>]
     public var ability: Ability<RP>?
     public var conditional: Conditional<RP>
-    public var metadata: [String: String]?
+    public var metadata: RP.ItemMetadata?
 
     public init(
         components: [Component<RP>] = [],

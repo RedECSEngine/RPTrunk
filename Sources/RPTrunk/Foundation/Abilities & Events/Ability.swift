@@ -4,7 +4,7 @@ public struct Ability<RP: RPSpace>: ComponentContainer, Codable {
     public var components: [Component<RP>]
     public var cooldown: RPTimeIncrement
     public var repeats: Int = 1
-    public var metadata: [String: String]?
+    public var metadata: RP.AbilityMetadata?
 
     public init(
         name: String,

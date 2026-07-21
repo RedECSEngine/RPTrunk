@@ -1,12 +1,22 @@
 public typealias RPEntityId = String
 public typealias RPTeamId = String
 public typealias RPItemId = String
+public typealias RPItemCacheId = String
 public typealias RPEventId = String
 
+public protocol RPMetadata: Codable & Equatable {}
+public struct EmptyMetadataDictionary: RPMetadata, Sendable {
+    public init() {}
+}
+
 public protocol RPSpace: Codable {
-    
+
     associatedtype Stats: StatsType
-    
+
+    associatedtype EntityMetadata: RPMetadata = EmptyMetadataDictionary
+    associatedtype ItemMetadata: RPMetadata = EmptyMetadataDictionary
+    associatedtype AbilityMetadata: RPMetadata = EmptyMetadataDictionary
+
     typealias Entity = RPEntity<Self>
     associatedtype EntitySequence: Sequence where EntitySequence.Element == RPEntityId
 
