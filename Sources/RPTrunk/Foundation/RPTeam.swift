@@ -4,7 +4,7 @@ public struct RPTeam<RP: RPSpace>: InventoryManager, Codable, Equatable {
     public var allies: Set<RPTeamId> = []
     public var enemies: Set<RPTeamId> = []
 
-    public var inventory: [RPItemId] = []
+    public var inventory: [RPActiveItem<RP>] = []
     
     public init() { }
 

@@ -6,7 +6,7 @@
      - exchange item between entities (trade, steal, drop)
      - use item, to initiate an ability
  */
-public struct ItemExchange: Codable, Equatable {
+public struct RPItemExchange: Codable, Equatable {
     public enum Kind: Codable, Equatable {
         case transfer(RPItemId)
         case transferAll

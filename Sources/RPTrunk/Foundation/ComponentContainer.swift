@@ -23,16 +23,16 @@ public extension ComponentContainer {
             .reduce(.zero, +)
     }
 
-    var targeting: Targeting<RP> {
+    var targeting: RPTargeting<RP> {
         for component in components {
             if let t = component.getTargeting() {
                 return t
             }
         }
-        return Targeting(.singleEnemy, .always)
+        return RPTargeting(.singleEnemy, .always)
     }
 
-    var statusEffects: [StatusEffect<RP>] {
+    var statusEffects: [RPStatusEffect<RP>] {
         components
             .flatMap { $0.getStatusEffects() }
     }
@@ -42,7 +42,7 @@ public extension ComponentContainer {
             .flatMap { $0.getDischargedStatusEffects() }
     }
 
-    var itemExchange: ItemExchange? {
+    var itemExchange: RPItemExchange? {
         for component in components {
             if let exchange = component.getItemExchange() {
                 return exchange

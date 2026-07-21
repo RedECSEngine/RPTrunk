@@ -8,36 +8,27 @@
 public protocol RPSpaceDictionary: RPSpace {
     var entities: [RPEntityId: RPEntity<Self>] { get set }
     var teams: [RPTeamId: RPTeam<Self>] { get set }
-    var items: [RPItemId: RPActiveItem<Self>] { get set }
-    var pendingGameMasterEvents: [Event<Self>] { get set }
+    var pendingGameMasterEvents: [RPEvent<Self>] { get set }
 }
 
 extension RPSpaceDictionary {
     public func allEntities() -> Dictionary<RPEntityId, RPEntity<Self>>.Keys {
         entities.keys
     }
-    
+
     public func allTeams() -> Dictionary<RPTeamId, RPTeam<Self>>.Keys  {
         teams.keys
     }
-    
-    public func allItems() -> Dictionary<RPItemId, RPActiveItem<Self>>.Keys  {
-        items.keys
-    }
-    
-    public func allPendingGameMasterEvents() -> [Event<Self>] {
+
+    public func allPendingGameMasterEvents() -> [RPEvent<Self>] {
         pendingGameMasterEvents
     }
-    
+
     public func entityById(_ id: RPEntityId) -> RPEntity<Self>? {
         entities[id]
     }
     public func teamById(_ id: RPTeamId) -> RPTeam<Self>? {
         teams[id]
-    }
-    
-    public func itemById(_ id: RPItemId) -> RPActiveItem<Self>? {
-        items[id]
     }
 
     public mutating func addEntity(_ entity: RPEntity<Self>) {
@@ -45,39 +36,24 @@ extension RPSpaceDictionary {
         entities[entity.id] = entity
     }
 
-    public mutating func addItem(_ item: RPActiveItem<Self>) {
-        assert(items[item.id] == nil, "attempting to add item that already exists in this space")
-        items[item.id] = item
-    }
-
-    public mutating func removeItem(id: RPItemId) {
-        items[id] = nil
-    }
-
-    public mutating func queueGameMasterEvent(_ event: Event<Self>) {
+    public mutating func queueGameMasterEvent(_ event: RPEvent<Self>) {
         pendingGameMasterEvents.append(event)
     }
-    
+
     public mutating func removeGameMasterEvent(id: RPEventId) {
         pendingGameMasterEvents.removeAll(where: { $0.id == id })
     }
-    
+
     public mutating func modifyEntity(id: RPEntityId, perform: (inout RPEntity<Self>, Self) -> Void) {
         guard var entity = entities[id] else { return }
         perform(&entity, self)
         entities[id] = entity
     }
-    
+
     public mutating func modifyTeam(id: RPTeamId, perform: (inout RPTeam<Self>, Self) -> Void) {
         guard var team = teams[id] else { return }
         perform(&team, self)
         teams[id] = team
-    }
-    
-    public mutating func modifyItem(id: RPItemId, perform: (inout RPActiveItem<Self>, Self) -> Void) {
-        guard var item = items[id] else { return }
-        perform(&item, self)
-        items[id] = item
     }
 
     public mutating func setTeams(_ newTeams: [RPTeam<Self>]) {

@@ -22,12 +22,12 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
     public var baseStats: Stats = .zero
     public var currentStats: Stats = .zero
     public var body = Body<RP>()
-    public var inventory: [RPItemId] = []
+    public var inventory: [RPActiveItem<RP>] = []
     public var metadata: RP.EntityMetadata?
 
-    public internal(set) var executableAbilities: [String: ActiveAbility<RP>] = [:]
-    public internal(set) var passiveAbilities: [String: ActiveAbility<RP>] = [:]
-    public internal(set) var statusEffects: [String: ActiveStatusEffect<RP>] = [:]
+    public internal(set) var executableAbilities: [String: RPActiveAbility<RP>] = [:]
+    public internal(set) var passiveAbilities: [String: RPActiveAbility<RP>] = [:]
+    public internal(set) var statusEffects: [String: RPActiveStatusEffect<RP>] = [:]
 
     public var targets: Set<RPEntityId> = []
 
@@ -60,11 +60,9 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
     
     public func getTotalStats(in rpSpace: RP) -> Stats {
         var totalStats = self.baseStats
-        body.wornItems
-            .compactMap { rpSpace.itemById($0) }
-            .forEach { item in
-                totalStats = totalStats + item.stats
-            }
+        body.wornItems.forEach { item in
+            totalStats = totalStats + item.stats
+        }
         return totalStats
     }
 
@@ -77,7 +75,7 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
         currentStats = Stats(dict: newCurrentStats)
     }
 
-    public func usableAbilities(in rpSpace: RP) -> [ActiveAbility<RP>] {
+    public func usableAbilities(in rpSpace: RP) -> [RPActiveAbility<RP>] {
         guard !isCoolingDown() else {
             return []
         }
@@ -142,22 +140,22 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
         threat.removeValue(forKey: id)
     }
 
-    public mutating func addExecutableAbility(_ ability: Ability<RP>, conditional: Conditional<RP>) {
-        let activeAbility = ActiveAbility<RP>(entityId: id, ability: ability, conditional: conditional)
+    public mutating func addExecutableAbility(_ ability: RPAbility<RP>, conditional: Conditional<RP>) {
+        let activeAbility = RPActiveAbility<RP>(entityId: id, ability: ability, conditional: conditional)
         executableAbilities[ability.code] = activeAbility
     }
 
-    public mutating func addPassiveAbility(_ ability: Ability<RP>, conditional: Conditional<RP>) {
-        let activeAbility = ActiveAbility<RP>(entityId: id, ability: ability, conditional: conditional)
+    public mutating func addPassiveAbility(_ ability: RPAbility<RP>, conditional: Conditional<RP>) {
+        let activeAbility = RPActiveAbility<RP>(entityId: id, ability: ability, conditional: conditional)
         passiveAbilities[ability.code] = activeAbility
     }
 
-    public mutating func applyStatusEffect(_ statusEffect: StatusEffect<RP>) {
+    public mutating func applyStatusEffect(_ statusEffect: RPStatusEffect<RP>) {
         if statusEffects[statusEffect.code] != nil {
             // TODO: Handle stackability of status effects rather than just resetting
             statusEffects[statusEffect.code]?.resetCooldown()
         } else {
-            statusEffects[statusEffect.code] = ActiveStatusEffect<RP>(entityId: id, statusEffect: statusEffect)
+            statusEffects[statusEffect.code] = RPActiveStatusEffect<RP>(entityId: id, statusEffect: statusEffect)
         }
     }
 
@@ -184,7 +182,7 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
         executableAbilities[name]?.resetCooldown()
     }
 
-    public mutating func tick(_ moment: Moment) {
+    public mutating func tick(_ moment: RPMoment) {
         if currentTick < maximumTick {
             currentTick += moment.delta
         }
@@ -207,15 +205,15 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
         }
     }
 
-    public func getPendingEvents(in rpSpace: RP) -> [Event<RP>] {
+    public func getPendingEvents(in rpSpace: RP) -> [RPEvent<RP>] {
         getPendingPassiveEvents(in: rpSpace) + getPendingExecutableEvents(in: rpSpace)
     }
 
-    func getPendingStatusEffectEvents(in rpSpace: RP) -> [Event<RP>] {
+    func getPendingStatusEffectEvents(in rpSpace: RP) -> [RPEvent<RP>] {
         statusEffects.values.flatMap { $0.getPendingEvents(in: rpSpace) }
     }
 
-    public func getPendingExecutableEvents(in rpSpace: RP) -> [Event<RP>] {
+    public func getPendingExecutableEvents(in rpSpace: RP) -> [RPEvent<RP>] {
         guard !isCoolingDown(), canPerformEvents() else {
             return []
         }
@@ -234,8 +232,8 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
         return abilityEvents
     }
 
-    public func getPendingPassiveEvents(in rpSpace: RP) -> [Event<RP>] {
-        var abilityEvents = [Event<RP>]()
+    public func getPendingPassiveEvents(in rpSpace: RP) -> [RPEvent<RP>] {
+        var abilityEvents = [RPEvent<RP>]()
 
         for activeAbility in passiveAbilities.values where activeAbility.canExecute(in: rpSpace) {
             abilityEvents += activeAbility.getPendingEvents(in: rpSpace)

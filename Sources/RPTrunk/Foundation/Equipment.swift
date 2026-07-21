@@ -1,10 +1,10 @@
 
 public protocol InventoryManager {
     associatedtype RP: RPSpace
-    var inventory: [RPItemId] { get set }
+    var inventory: [RPActiveItem<RP>] { get set }
 }
 
-public struct Body<RP: RPSpace>: Codable {
-    public var wornItems: [RPItemId] = []
+public struct Body<RP: RPSpace>: Codable, Equatable {
+    public var wornItems: [RPActiveItem<RP>] = []
     public init() {}
 }

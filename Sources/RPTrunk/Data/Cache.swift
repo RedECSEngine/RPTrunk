@@ -8,8 +8,8 @@ open class RPCache<RP: RPSpace> {
     
     typealias AbilityData = AbilityJSON<RP>
 
-    public var abilities: [RPReferenceCode: Ability<RP>] = [:]
-    public var statusEffects: [RPReferenceCode: StatusEffect<RP>] = [:]
+    public var abilities: [RPReferenceCode: RPAbility<RP>] = [:]
+    public var statusEffects: [RPReferenceCode: RPStatusEffect<RP>] = [:]
     public var entities: [RPReferenceCode: RPEntity<RP>] = [:]
     public var items: [RPReferenceCode: RPItem<RP>] = [:]
 
@@ -25,7 +25,7 @@ open class RPCache<RP: RPSpace> {
     public func loadAbilities(_ abilities: [RPReferenceCode: AbilityJSON<RP>]) throws {
         try abilities.forEach { (code, data) in
             let components: [Component] = try buildComponent(data)
-            var ability = Ability<RP>(code: code, displayName: data.displayName, components: components, cooldown: data.cooldown)
+            var ability = RPAbility<RP>(code: code, displayName: data.displayName, components: components, cooldown: data.cooldown)
             ability.metadata = data.metadata
             self.abilities[code] = ability
         }
@@ -34,7 +34,7 @@ open class RPCache<RP: RPSpace> {
     public func loadStatusEffects(_ statusEffects: [RPReferenceCode: StatusEffectJSON<RP>]) throws {
         try statusEffects.forEach { (code, data) in
             let components: [Component<RP>] = try buildComponent(data)
-            let se = StatusEffect<RP>(
+            let se = RPStatusEffect<RP>(
                 code: code,
                 displayName: data.displayName,
                 tags: [],
@@ -42,7 +42,7 @@ open class RPCache<RP: RPSpace> {
                 duration: data.duration,
                 charges: data.charges,
                 impairsAction: data.impairsAction ?? false,
-                period: data.period ?? StatusEffect<RP>.defaultPeriod
+                period: data.period ?? RPStatusEffect<RP>.defaultPeriod
             )
             self.statusEffects[code] = se
         }
@@ -112,7 +112,7 @@ open class RPCache<RP: RPSpace> {
             components += try statusEffects.map { try getStatusEffect($0) }
         }
         if let target = component.target {
-            let type = Targeting<RP>.fromString(target)
+            let type = RPTargeting<RP>.fromString(target)
             components.append(Component<RP>(targetType: type))
         }
         if let discharge = component.discharge {
@@ -132,7 +132,7 @@ open class RPCache<RP: RPSpace> {
         return .always
     }
 
-    public func getAbility(_ name: String) throws -> Ability<RP> {
+    public func getAbility(_ name: String) throws -> RPAbility<RP> {
         if let ability = abilities[name] {
             return ability
         }

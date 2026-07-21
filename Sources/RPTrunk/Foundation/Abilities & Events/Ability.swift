@@ -1,5 +1,5 @@
 
-public struct Ability<RP: RPSpace>: ComponentContainer, Codable {
+public struct RPAbility<RP: RPSpace>: ComponentContainer, Codable {
     public var code: RPReferenceCode
     public var displayName: String
     public var components: [Component<RP>]
@@ -20,24 +20,24 @@ public struct Ability<RP: RPSpace>: ComponentContainer, Codable {
     }
 }
 
-extension Ability: Equatable {}
-public func == <RP: RPSpace>(lhs: Ability<RP>, rhs: Ability<RP>) -> Bool {
+extension RPAbility: Equatable {}
+public func == <RP: RPSpace>(lhs: RPAbility<RP>, rhs: RPAbility<RP>) -> Bool {
     lhs.code == rhs.code && lhs.isEqualTo(rhs)
 }
 
 /**
     An ability, currently active on an entity
  */
-public struct ActiveAbility<RP: RPSpace>: Temporal, Codable {
+public struct RPActiveAbility<RP: RPSpace>: Temporal, Codable {
     public typealias Stats = RP.Stats
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { ability.cooldown }
 
     public var entityId: RPEntityId
-    public let ability: Ability<RP>
+    public let ability: RPAbility<RP>
     public let conditional: Conditional<RP>
 
-    public init(entityId: RPEntityId, ability: Ability<RP>, conditional: Conditional<RP>) {
+    public init(entityId: RPEntityId, ability: RPAbility<RP>, conditional: Conditional<RP>) {
         self.entityId = entityId
         self.ability = ability
         self.conditional = conditional
@@ -59,18 +59,18 @@ public struct ActiveAbility<RP: RPSpace>: Temporal, Codable {
         return (try? conditional.exec(e, rpSpace: rpSpace)) ?? false
     }
 
-    public func getPendingEvents(in rpSpace: RP) -> [Event<RP>] {
+    public func getPendingEvents(in rpSpace: RP) -> [RPEvent<RP>] {
         guard isCoolingDown() == false else {
             return []
         }
         return createEvents(in: rpSpace)
     }
 
-    fileprivate func createEvents(in rpSpace: RP) -> [Event<RP>] {
-        (0 ..< ability.repeats).map { _ in Event<RP>(initiator: entityId, ability: ability, rpSpace: rpSpace) }
+    fileprivate func createEvents(in rpSpace: RP) -> [RPEvent<RP>] {
+        (0 ..< ability.repeats).map { _ in RPEvent<RP>(initiator: entityId, ability: ability, rpSpace: rpSpace) }
     }
 
-    public mutating func tick(_ moment: Moment) {
+    public mutating func tick(_ moment: RPMoment) {
         if isCoolingDown() {
             currentTick += moment.delta
         }
@@ -81,7 +81,7 @@ public struct ActiveAbility<RP: RPSpace>: Temporal, Codable {
     }
 
     //TODO: revisit this function, was made pre-value type conversion
-    public func copyForEntity(_ entity: RPEntity<RP>) -> ActiveAbility {
-        ActiveAbility(entityId: entity.id, ability: ability, conditional: conditional)
+    public func copyForEntity(_ entity: RPEntity<RP>) -> RPActiveAbility {
+        RPActiveAbility(entityId: entity.id, ability: ability, conditional: conditional)
     }
 }

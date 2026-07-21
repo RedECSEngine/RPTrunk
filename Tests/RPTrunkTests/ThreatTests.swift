@@ -67,7 +67,7 @@ final class ThreatTests: XCTestCase {
         space.addEntity(allyB)
         space.setTeams([team])
 
-        let targeting = Targeting<TestRPSpace>(.singleFriendly, .always)
+        let targeting = RPTargeting<TestRPSpace>(.singleFriendly, .always)
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-a"])
     }
 
@@ -95,17 +95,17 @@ final class ThreatTests: XCTestCase {
         entity.threatDecayPerTick = 2
         entity.addThreat(toward: "a", amount: 5)
 
-        entity.tick(Moment(delta: 1)) // -2 -> 3
+        entity.tick(RPMoment(delta: 1)) // -2 -> 3
         XCTAssertEqual(entity.threat["a"], 3)
 
-        entity.tick(Moment(delta: 2)) // -4 -> clamped out
+        entity.tick(RPMoment(delta: 2)) // -4 -> clamped out
         XCTAssertFalse(entity.holdsThreat(toward: "a"))
     }
 
     func testDecayDisabledByDefault() {
         var entity = RPEntity<TestRPSpace>(["hp": 10])
         entity.addThreat(toward: "a", amount: 5)
-        entity.tick(Moment(delta: 100))
+        entity.tick(RPMoment(delta: 100))
         XCTAssertEqual(entity.threat["a"], 5)
     }
 
@@ -137,7 +137,7 @@ final class ThreatTests: XCTestCase {
         XCTAssertEqual(rpSpace.entityById("attacker")?.threat.isEmpty, true)
     }
 
-    // MARK: - Event pipeline integration
+    // MARK: - RPEvent pipeline integration
 
     func makeCombatSpace() -> (TestRPSpace, attacker: RPEntityId, target: RPEntityId) {
         var attacker = RPEntity<TestRPSpace>(["hp": 30, "damage": 4])
@@ -159,15 +159,15 @@ final class ThreatTests: XCTestCase {
         return (space, attacker.id, target.id)
     }
 
-    func makeAttack() -> Ability<TestRPSpace> {
+    func makeAttack() -> RPAbility<TestRPSpace> {
         var stats = TestStats()
         stats.damage = 4
-        return Ability(code: "Attack", components: [Component(stats: stats)])
+        return RPAbility(code: "Attack", components: [Component(stats: stats)])
     }
 
     func testEventsProduceNoThreatByDefault() {
         var (space, attackerId, targetId) = makeCombatSpace()
-        let event = Event(initiator: attackerId, ability: makeAttack(), rpSpace: space)
+        let event = RPEvent(initiator: attackerId, ability: makeAttack(), rpSpace: space)
 
         _ = space.performEvents([event])
 
@@ -188,7 +188,7 @@ final class ThreatTests: XCTestCase {
             }
         }
 
-        let event = Event(initiator: attackerId, ability: makeAttack(), rpSpace: space)
+        let event = RPEvent(initiator: attackerId, ability: makeAttack(), rpSpace: space)
         _ = space.performEvents([event])
 
         let victim = space.entityById(targetId)

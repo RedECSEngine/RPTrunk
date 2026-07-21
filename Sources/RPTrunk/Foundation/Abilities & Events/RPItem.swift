@@ -3,7 +3,7 @@ public struct RPItem<RP: RPSpace>: ComponentContainer, Codable, Equatable {
     public var displayName: String
     public var maximumStack: Int?
     public var components: [Component<RP>]
-    public var ability: Ability<RP>?
+    public var ability: RPAbility<RP>?
     public var conditional: Conditional<RP>
     public var metadata: RP.ItemMetadata?
 
@@ -12,7 +12,7 @@ public struct RPItem<RP: RPSpace>: ComponentContainer, Codable, Equatable {
         displayName: String? = nil,
         maximumStack: Int? = nil,
         components: [Component<RP>] = [],
-        ability: Ability<RP>? = nil,
+        ability: RPAbility<RP>? = nil,
         conditional: Conditional<RP> = .always
     ) {
         self.code = code
@@ -28,7 +28,6 @@ public struct RPActiveItem<RP: RPSpace>: Temporal, Codable, Equatable {
     public var id: RPItemId = UUID().uuidString
     public var item: RPItem<RP>
     public var amount: Int
-    public var entity: RPEntityId?
 
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { item.ability?.cooldown ?? 0 }
@@ -39,12 +38,10 @@ public struct RPActiveItem<RP: RPSpace>: Temporal, Codable, Equatable {
 
     public init(
         item: RPItem<RP>,
-        amount: Int = 1,
-        entity: RPEntityId? = nil
+        amount: Int = 1
     ) {
         self.item = item
         self.amount = amount
-        self.entity = entity
     }
 
     public func hasCapacity(for additionalAmount: Int) -> Bool {
@@ -56,13 +53,12 @@ public struct RPActiveItem<RP: RPSpace>: Temporal, Codable, Equatable {
         item.maximumStack.map { max(0, $0 - amount) }
     }
 
-    public func canExecute(in rpSpace: RP) -> Bool {
+    public func canExecute(by entityId: RPEntityId, in rpSpace: RP) -> Bool {
         guard isCoolingDown() == false else {
             return false
         }
 
-        guard let entityId = entity,
-              let e = rpSpace.entityById(entityId),
+        guard let e = rpSpace.entityById(entityId),
               let a = item.ability,
               a.cost < e.currentStats
         else {
@@ -72,25 +68,20 @@ public struct RPActiveItem<RP: RPSpace>: Temporal, Codable, Equatable {
         return (try? item.conditional.exec(e, rpSpace: rpSpace)) ?? false
     }
 
-    public func getPendingEvents(in rpSpace: RP) -> [Event<RP>] {
-        guard isCoolingDown() == false else {
-            return []
-        }
-        return createEvents(in: rpSpace)
+    public func getPendingEvents(in rpSpace: RP) -> [RPEvent<RP>] {
+        []
     }
 
-    fileprivate func createEvents(in rpSpace: RP) -> [Event<RP>] {
-        guard let ability = item.ability,
-              let entityId = entity
-        else {
+    public func getPendingEvents(by entityId: RPEntityId, in rpSpace: RP) -> [RPEvent<RP>] {
+        guard isCoolingDown() == false, let ability = item.ability else {
             return []
         }
         return (0 ..< ability.repeats).map { _ in
-            Event(initiator: entityId, ability: ability, rpSpace: rpSpace)
+            RPEvent(initiator: entityId, ability: ability, rpSpace: rpSpace)
         }
     }
 
-    public mutating func tick(_ moment: Moment) {
+    public mutating func tick(_ moment: RPMoment) {
         if isCoolingDown() {
             currentTick += moment.delta
         }

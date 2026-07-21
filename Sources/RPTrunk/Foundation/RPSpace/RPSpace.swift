@@ -24,8 +24,7 @@ public protocol RPSpace: Codable {
     associatedtype TeamSequence: Sequence where TeamSequence.Element == RPTeamId
 
     typealias ActiveItem = RPActiveItem<Self>
-    associatedtype ItemSequence: Sequence where ItemSequence.Element == RPItemId
-    
+
     static var statTypes: Set<String> { get }
 
     static func createDefaultEntity(cache: RPCache<Self>) -> Entity
@@ -33,7 +32,7 @@ public protocol RPSpace: Codable {
     /// How any interaction between to entities in resolves.
     ///  Events contain all the data necessary to calculate an end result
     static func resolveConflict(
-        _ event: Event<Self>,
+        _ event: RPEvent<Self>,
         in rpSpace: Self,
         target: RPEntityId,
         conflict: Stats
@@ -43,29 +42,24 @@ public protocol RPSpace: Codable {
     /// requirement so conformances can customize it; the default
     /// implementation produces no threat, leaving the system dormant.
     static func resolveThreatChanges(
-        for eventResult: EventResult<Self>,
+        for eventResult: RPEventResult<Self>,
         in rpSpace: Self
     ) -> [ThreatChange]
 
     func entityById(_ id: RPEntityId) -> Entity?
     func teamById(_ id: RPTeamId) -> Team?
-    func itemById(_ id: RPItemId) -> ActiveItem?
 
     func allEntities() -> EntitySequence
     func allTeams() -> TeamSequence
-    func allItems() -> ItemSequence
-    func allPendingGameMasterEvents() -> [Event<Self>]
+    func allPendingGameMasterEvents() -> [RPEvent<Self>]
 
     mutating func addEntity(_ entity: Entity)
     mutating func setTeams(_ newTeams: [Team])
-    mutating func addItem(_ item: ActiveItem)
-    mutating func removeItem(id: RPItemId)
-    mutating func queueGameMasterEvent(_ event: Event<Self>)
+    mutating func queueGameMasterEvent(_ event: RPEvent<Self>)
     mutating func removeGameMasterEvent(id: RPEventId)
 
     mutating func modifyEntity(id: RPEntityId, perform: (inout Entity, Self) -> Void)
     mutating func modifyTeam(id: RPTeamId, perform: (inout Team, Self) -> Void)
-    mutating func modifyItem(id: RPItemId, perform: (inout ActiveItem, Self) -> Void)
 
 }
 
@@ -125,7 +119,7 @@ public extension RPSpace {
 }
 
 extension RPSpace {
-    public mutating func tick(_ moment: Moment) {
+    public mutating func tick(_ moment: RPMoment) {
         allTeams()
             .compactMap(teamById)
             .flatMap(\.entities)
@@ -136,14 +130,14 @@ extension RPSpace {
             }
     }
     
-    public func getPendingEvents() -> [Event<Self>] {
+    public func getPendingEvents() -> [RPEvent<Self>] {
         allPendingGameMasterEvents() +
         getAllPendingPassiveEvents() +
         getAllPendingStatusEffectEvents() +
         getAllPendingExecutableEvents()
     }
 
-    public func getAllPendingPassiveEvents() -> [Event<Self>] {
+    public func getAllPendingPassiveEvents() -> [RPEvent<Self>] {
         allTeams()
             .compactMap(teamById)
             .flatMap(\.entities)
@@ -155,7 +149,7 @@ extension RPSpace {
     /// e.g. Regen and Bleed). Without this, status effects tick internally but
     /// their per-tick events are never collected, so only the ability's initial
     /// application is felt.
-    public func getAllPendingStatusEffectEvents() -> [Event<Self>] {
+    public func getAllPendingStatusEffectEvents() -> [RPEvent<Self>] {
         allTeams()
             .compactMap(teamById)
             .flatMap(\.entities)
@@ -163,7 +157,7 @@ extension RPSpace {
             .flatMap { $0.getPendingStatusEffectEvents(in: self) }
     }
 
-    public func getAllPendingExecutableEvents() -> [Event<Self>] {
+    public func getAllPendingExecutableEvents() -> [RPEvent<Self>] {
         allTeams()
             .compactMap(teamById)
             .flatMap(\.entities)
@@ -171,22 +165,22 @@ extension RPSpace {
             .flatMap { $0.getPendingExecutableEvents(in: self) }
     }
 
-    public mutating func performEvents(_ events: [Event<Self>]) -> [EventResult<Self>] {
+    public mutating func performEvents(_ events: [RPEvent<Self>]) -> [RPEventResult<Self>] {
         events.forEach { event in
             self.removeGameMasterEvent(id: event.id)
         }
 
         let mainEventResults = events
-            .flatMap { event -> [Event<Self>] in
+            .flatMap { event -> [RPEvent<Self>] in
                 event.resetInitiatorCooldowns(in: &self)
                 return [event]
             }
             .map { $0.execute(in: &self) }
         
         let reactionEventResults = mainEventResults.flatMap {
-            eventResult -> [Event<Self>] in
+            eventResult -> [RPEvent<Self>] in
             eventResult.effects.flatMap {
-                conflictResult -> [Event<Self>] in
+                conflictResult -> [RPEvent<Self>] in
                 entityById(conflictResult.entity)?.getPendingPassiveEvents(in: self) ?? []
             }
         }
@@ -197,7 +191,7 @@ extension RPSpace {
 
 }
 
-public struct ItemTransfer: Codable, Equatable {
+public struct RPItemTransfer: Codable, Equatable {
     public let itemId: RPItemId
     public let code: RPReferenceCode
     public let amount: Int
@@ -219,43 +213,29 @@ extension RPSpace {
         _ incoming: ActiveItem,
         to recipientId: RPEntityId,
         from sourceId: RPEntityId? = nil
-    ) -> [ItemTransfer] {
+    ) -> [RPItemTransfer] {
         guard incoming.amount > 0, entityById(recipientId) != nil else {
-            if itemById(incoming.id) != nil { removeItem(id: incoming.id) }
             return []
         }
-        var remaining = incoming.amount
-        var destinationId: RPItemId?
-        for stackId in entityById(recipientId)?.inventory ?? [] where stackId != incoming.id {
-            guard remaining > 0 else { break }
-            guard let stack = itemById(stackId), stack.code == incoming.code else { continue }
-            let capacity = stack.remainingCapacity ?? remaining
-            guard capacity > 0 else { continue }
-            let moved = Swift.min(remaining, capacity)
-            modifyItem(id: stackId) { s, _ in s.amount += moved }
-            remaining -= moved
-            if destinationId == nil { destinationId = stackId }
-        }
-        let existsInStore = itemById(incoming.id) != nil
-        if remaining > 0 {
-            if existsInStore {
-                modifyItem(id: incoming.id) { s, _ in
-                    s.amount = remaining
-                    s.entity = recipientId
-                }
-            } else {
+        modifyEntity(id: recipientId) { e, _ in
+            var remaining = incoming.amount
+            for index in e.inventory.indices {
+                guard remaining > 0 else { break }
+                guard e.inventory[index].code == incoming.code else { continue }
+                let capacity = e.inventory[index].remainingCapacity ?? remaining
+                guard capacity > 0 else { continue }
+                let moved = Swift.min(remaining, capacity)
+                e.inventory[index].amount += moved
+                remaining -= moved
+            }
+            if remaining > 0 {
                 var newStack = incoming
                 newStack.amount = remaining
-                newStack.entity = recipientId
-                addItem(newStack)
+                e.inventory.append(newStack)
             }
-            modifyEntity(id: recipientId) { e, _ in e.inventory.append(incoming.id) }
-            if destinationId == nil { destinationId = incoming.id }
-        } else if existsInStore {
-            removeItem(id: incoming.id)
         }
-        return [ItemTransfer(
-            itemId: destinationId ?? incoming.id,
+        return [RPItemTransfer(
+            itemId: incoming.id,
             code: incoming.code,
             amount: incoming.amount,
             from: sourceId,
@@ -264,32 +244,36 @@ extension RPSpace {
     }
 
     @discardableResult
-    public mutating func transferItem(id: RPItemId, to recipientId: RPEntityId) -> [ItemTransfer] {
-        guard let active = itemById(id), active.entity != recipientId else { return [] }
-        let sourceId = active.entity
-        if let sourceId = sourceId {
-            modifyEntity(id: sourceId) { e, _ in
-                e.inventory.removeAll { $0 == id }
-                e.body.wornItems.removeAll { $0 == id }
-            }
+    public mutating func transferItem(id: RPItemId, from sourceId: RPEntityId, to recipientId: RPEntityId) -> [RPItemTransfer] {
+        guard sourceId != recipientId, let source = entityById(sourceId) else { return [] }
+        guard let outgoing = (source.inventory + source.body.wornItems).first(where: { $0.id == id }) else {
+            return []
         }
-        return receiveItem(active, to: recipientId, from: sourceId)
+        modifyEntity(id: sourceId) { e, _ in
+            e.inventory.removeAll { $0.id == id }
+            e.body.wornItems.removeAll { $0.id == id }
+        }
+        return receiveItem(outgoing, to: recipientId, from: sourceId)
     }
 
     @discardableResult
-    public mutating func transferAllItems(from sourceId: RPEntityId, to recipientId: RPEntityId) -> [ItemTransfer] {
-        guard let source = entityById(sourceId) else { return [] }
-        let itemIds = source.inventory + source.body.wornItems.filter { !source.inventory.contains($0) }
-        return itemIds.flatMap { transferItem(id: $0, to: recipientId) }
+    public mutating func transferAllItems(from sourceId: RPEntityId, to recipientId: RPEntityId) -> [RPItemTransfer] {
+        guard sourceId != recipientId, let source = entityById(sourceId) else { return [] }
+        let outgoing = source.inventory + source.body.wornItems
+        modifyEntity(id: sourceId) { e, _ in
+            e.inventory = []
+            e.body.wornItems = []
+        }
+        return outgoing.flatMap { receiveItem($0, to: recipientId, from: sourceId) }
     }
 
-    public func collectAllEvent(from sourceId: RPEntityId, to recipientId: RPEntityId) -> Event<Self> {
-        Event(
+    public func collectAllEvent(from sourceId: RPEntityId, to recipientId: RPEntityId) -> RPEvent<Self> {
+        RPEvent(
             category: .itemExchangeOnly,
             initiator: sourceId,
-            ability: Ability<Self>(
+            ability: RPAbility<Self>(
                 code: "collect",
-                components: [Component(itemExchange: ItemExchange(kind: .transferAll))]
+                components: [Component(itemExchange: RPItemExchange(kind: .transferAll))]
             ),
             targets: [recipientId],
             rpSpace: self
