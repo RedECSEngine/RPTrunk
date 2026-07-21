@@ -66,21 +66,21 @@ open class RPCache<RP: RPSpace> {
     }
 
     public func loadItems(_ items: [String: ItemJSON<RP>]) throws {
-        try items.forEach { (cacheId, data) in
+        try items.forEach { (code, data) in
             let components: [Component<RP>] = try buildComponent(data)
             let ability = try data.ability.map { try getAbility($0) }
             let conditional = Conditional<RP>(data.conditional ?? "always")
             var item = RPItem<RP>(components: components, ability: ability, conditional: conditional)
-            item.cacheId = cacheId
-            item.name = cacheId
+            item.code = code
+            item.name = code
             item.metadata = data.metadata
-            self.items[cacheId] = item
+            self.items[code] = item
         }
     }
 
-    public func newItem(_ cacheId: RPItemCacheId) throws -> RPItem<RP> {
-        guard var item = items[cacheId] else {
-            throw RPCache.CacheError.notFound(cacheId)
+    public func newItem(_ code: RPItemCode) throws -> RPItem<RP> {
+        guard var item = items[code] else {
+            throw RPCache.CacheError.notFound(code)
         }
         item.id = UUID().uuidString
         return item

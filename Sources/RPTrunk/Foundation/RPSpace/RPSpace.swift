@@ -1,7 +1,7 @@
 public typealias RPEntityId = String
 public typealias RPTeamId = String
 public typealias RPItemId = String
-public typealias RPItemCacheId = String
+public typealias RPItemCode = String
 public typealias RPEventId = String
 
 public protocol RPMetadata: Codable & Equatable {}

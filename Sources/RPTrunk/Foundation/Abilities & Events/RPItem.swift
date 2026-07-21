@@ -1,6 +1,6 @@
 public struct RPItem<RP: RPSpace>: Temporal, ComponentContainer, Codable, Equatable {
     public var id: RPItemId = UUID().uuidString
-    public var cacheId: RPItemCacheId?
+    public var code: RPItemCode?
     public var name: String
     public var amount: Int = 1
 
