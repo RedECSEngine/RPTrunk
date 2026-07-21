@@ -72,20 +72,28 @@ open class RPCache<RP: RPSpace> {
             let components: [Component<RP>] = try buildComponent(data)
             let ability = try data.ability.map { try getAbility($0) }
             let conditional = Conditional<RP>(data.conditional ?? "always")
-            var item = RPItem<RP>(components: components, ability: ability, conditional: conditional)
-            item.code = code
-            item.displayName = data.displayName ?? code
+            var item = RPItem<RP>(
+                code: code,
+                displayName: data.displayName,
+                maximumStack: data.maximumStack,
+                components: components,
+                ability: ability,
+                conditional: conditional
+            )
             item.metadata = data.metadata
             self.items[code] = item
         }
     }
 
-    public func newItem(_ code: RPReferenceCode) throws -> RPItem<RP> {
-        guard var item = items[code] else {
+    public func getItem(_ code: RPReferenceCode) throws -> RPItem<RP> {
+        guard let item = items[code] else {
             throw RPCache.CacheError.notFound(code)
         }
-        item.id = UUID().uuidString
         return item
+    }
+
+    public func newActiveItem(_ code: RPReferenceCode, amount: Int = 1) throws -> RPActiveItem<RP> {
+        RPActiveItem(item: try getItem(code), amount: amount)
     }
 
     public func buildComponent<C: ComponentsContainerJSON>(_ component: C) throws -> [Component<RP>] where C.Stats == RP.Stats  {

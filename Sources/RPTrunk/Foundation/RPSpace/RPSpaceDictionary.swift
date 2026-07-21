@@ -8,7 +8,7 @@
 public protocol RPSpaceDictionary: RPSpace {
     var entities: [RPEntityId: RPEntity<Self>] { get set }
     var teams: [RPTeamId: RPTeam<Self>] { get set }
-    var items: [RPItemId: RPItem<Self>] { get set }
+    var items: [RPItemId: RPActiveItem<Self>] { get set }
     var pendingGameMasterEvents: [Event<Self>] { get set }
 }
 
@@ -21,7 +21,7 @@ extension RPSpaceDictionary {
         teams.keys
     }
     
-    public func allItems() -> Dictionary<RPItemId, RPItem<Self>>.Keys  {
+    public func allItems() -> Dictionary<RPItemId, RPActiveItem<Self>>.Keys  {
         items.keys
     }
     
@@ -36,22 +36,26 @@ extension RPSpaceDictionary {
         teams[id]
     }
     
-    public func itemById(_ id: RPItemId) -> RPItem<Self>? {
+    public func itemById(_ id: RPItemId) -> RPActiveItem<Self>? {
         items[id]
     }
-    
+
     public mutating func addEntity(_ entity: RPEntity<Self>) {
         assert(entities[entity.id] == nil, "attempting to add entity that already exists in this space")
         entities[entity.id] = entity
     }
-    
-    public mutating func addItem(_ item: RPItem<Self>) {
+
+    public mutating func addItem(_ item: RPActiveItem<Self>) {
         assert(items[item.id] == nil, "attempting to add item that already exists in this space")
         items[item.id] = item
     }
-    
-    public mutating func queueGameMasterEvent(ability: Ability<Self>, targets: Set<RPEntityId>) {
-        pendingGameMasterEvents.append(.init(ability: ability, targets: targets))
+
+    public mutating func removeItem(id: RPItemId) {
+        items[id] = nil
+    }
+
+    public mutating func queueGameMasterEvent(_ event: Event<Self>) {
+        pendingGameMasterEvents.append(event)
     }
     
     public mutating func removeGameMasterEvent(id: RPEventId) {
@@ -70,7 +74,7 @@ extension RPSpaceDictionary {
         teams[id] = team
     }
     
-    public mutating func modifyItem(id: RPItemId, perform: (inout RPItem<Self>, Self) -> Void) {
+    public mutating func modifyItem(id: RPItemId, perform: (inout RPActiveItem<Self>, Self) -> Void) {
         guard var item = items[id] else { return }
         perform(&item, self)
         items[id] = item

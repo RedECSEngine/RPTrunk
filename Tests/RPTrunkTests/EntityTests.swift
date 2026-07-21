@@ -41,12 +41,12 @@ final class EntityTests: XCTestCase {
     }
     
     func test_entity_stats_are_sum_of_components() {
-        let sword = RPItem<TestRPSpace>(components: [
+        let sword = RPActiveItem<TestRPSpace>(item: RPItem(code: "sword", components: [
             Component(stats: .init(dict: [\.damage: 10]))
-        ])
-        let helmet = RPItem<TestRPSpace>(components: [
+        ]))
+        let helmet = RPActiveItem<TestRPSpace>(item: RPItem(code: "helmet", components: [
             Component(stats: .init(dict: [\.damage: 5]))
-        ])
+        ]))
         
         rpSpace.items[sword.id] = sword
         rpSpace.items[helmet.id] = helmet

@@ -6,7 +6,7 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
     
     public var entities: [RPEntityId: RPEntity<Self>] = [:]
     public var teams: [RPTeamId: RPTeam<Self>] = [:]
-    public var items: [RPItemId: RPItem<Self>] = [:]
+    public var items: [RPItemId: RPActiveItem<Self>] = [:]
     public var pendingGameMasterEvents: [Event<TestRPSpace>] = []
 
     public init() {}

@@ -7,25 +7,14 @@
      - use item, to initiate an ability
  */
 public struct ItemExchange: Codable, Equatable {
-    public enum ExchangeType: String, Codable, Equatable {
-        case target
-        case targetTeam
+    public enum Kind: Codable, Equatable {
+        case transfer(RPItemId)
+        case transferAll
     }
 
-    public let exchangeType: ExchangeType
-    public let requiresInitiatorOwnItem: Bool
-    public let removesItemFromInitiator: Bool
-    public let item: RPItemId
-    
-    public init(
-        exchangeType: ItemExchange.ExchangeType,
-        requiresInitiatorOwnItem: Bool,
-        removesItemFromInitiator: Bool,
-        item: RPItemId
-    ) {
-        self.exchangeType = exchangeType
-        self.requiresInitiatorOwnItem = requiresInitiatorOwnItem
-        self.removesItemFromInitiator = removesItemFromInitiator
-        self.item = item
+    public let kind: Kind
+
+    public init(kind: Kind) {
+        self.kind = kind
     }
 }

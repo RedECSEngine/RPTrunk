@@ -81,6 +81,7 @@ public struct ItemJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJSON
     public var ability: String?
     public var conditional: String?
     public var cooldown: RPTimeIncrement?
+    public var maximumStack: Int?
 
     public var metadata: RP.ItemMetadata?
 }
