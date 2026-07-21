@@ -3,11 +3,13 @@ public struct RPCacheJSON<Stats: StatsType>: Codable, Equatable {
         case statusEffects = "Status Effects"
         case abilities = "Abilities"
         case entities = "Entities"
+        case items = "Items"
     }
-    
+
     public var abilities: [String: AbilityJSON<Stats>]?
     public var statusEffects: [String: StatusEffectJSON<Stats>]?
     public var entities: [String: EntityJSON<Stats>]?
+    public var items: [String: ItemJSON<Stats>]?
 }
 
 public protocol ComponentsContainerJSON {
@@ -58,6 +60,22 @@ public struct AbilityJSON<Stats: StatsType>: Codable, Equatable, ComponentsConta
     public var components: [String]?
 
     public let cooldown: RPTimeIncrement?
+
+    public var metadata: [String: String]?
+}
+
+public struct ItemJSON<Stats: StatsType>: Codable, Equatable, ComponentsContainerJSON {
+    public var stats: Stats?
+    public var cost: Stats?
+    public var requirements: Stats?
+    public var statusEffects: [String]?
+    public var target: String?
+    public var discharge: [String]?
+    public var components: [String]?
+
+    public var ability: String?
+    public var conditional: String?
+    public var cooldown: RPTimeIncrement?
 
     public var metadata: [String: String]?
 }

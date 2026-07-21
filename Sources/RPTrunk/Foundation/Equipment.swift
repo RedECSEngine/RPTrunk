@@ -5,5 +5,6 @@ public protocol InventoryManager {
 }
 
 public struct Body<RP: RPSpace>: Codable {
-    var wornItems: [RPItemId] = []
+    public var wornItems: [RPItemId] = []
+    public init() {}
 }

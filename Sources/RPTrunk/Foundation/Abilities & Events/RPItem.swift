@@ -10,6 +10,7 @@ public struct RPItem<RP: RPSpace>: Temporal, ComponentContainer, Codable, Equata
     public var components: [Component<RP>]
     public var ability: Ability<RP>?
     public var conditional: Conditional<RP>
+    public var metadata: [String: String]?
 
     public init(
         components: [Component<RP>] = [],
