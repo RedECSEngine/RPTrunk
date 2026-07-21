@@ -1,3 +1,5 @@
+import Foundation // TODO: Use foundation essentials
+
 open class RPCache<RP: RPSpace> {
     public enum CacheError: Error {
         case notFound(String)
@@ -46,6 +48,7 @@ open class RPCache<RP: RPSpace> {
             let stats = data.stats ?? .zero
             var entity = RPEntity<RP>.new(cache: self)
             entity.baseStats = stats
+            entity.displayName = data.displayName ?? "?!?!"
             entity.currentStats = stats
             data.abilities?.forEach {
                 ability in
@@ -117,9 +120,10 @@ open class RPCache<RP: RPSpace> {
     }
 
     public func newEntity(_ name: String) throws -> RPEntity<RP> {
-        guard let entity = entities[name] else {
+        guard var entity = entities[name] else {
             throw RPCache.CacheError.notFound(name)
         }
-        return entity.copy()
+        entity.id = UUID().uuidString
+        return entity
     }
 }

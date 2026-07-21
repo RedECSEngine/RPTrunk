@@ -1,3 +1,5 @@
+import Foundation // TODO: Use foundation essentials
+
 @dynamicMemberLookup
 public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
 
@@ -8,6 +10,8 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
             updateIds()
         }
     }
+    
+    public var displayName: String = "???"
 
     public var teamId: RPTeamId?
 
@@ -263,26 +267,6 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
 
     public func hasStatus(_ name: String) -> Bool {
         statusEffects[name] != nil
-    }
-}
-
-public extension RPEntity {
-    //TODO: revisit this function, was made pre-value type convversion
-    func copy() -> RPEntity {
-        var entity = RPEntity()
-        entity.currentTick = currentTick
-        entity.maximumTick = maximumTick
-        entity.baseStats = baseStats
-        entity.currentStats = currentStats
-        entity.body = body
-        entity.executableAbilities = executableAbilities
-            .map { $0.value.copyForEntity(entity) }
-            .toDictionary { $0.ability.name }
-        entity.passiveAbilities = passiveAbilities
-            .map { $0.value.copyForEntity(entity) }
-            .toDictionary { $0.ability.name }
-        entity.statusEffects = statusEffects
-        return entity
     }
 }
 

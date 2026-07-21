@@ -26,12 +26,13 @@ public struct Event<RP: RPSpace>: Equatable, Codable {
         category: Category = .standardConflict,
         initiator: RPEntityId,
         ability: Ability<RP>,
+        targets: Set<RPEntityId>? = nil,
         rpSpace: RP
     ) {
         self.category = category
         self.initiator = initiator
         self.ability = ability
-        self.targets = ability.targeting.getValidTargets(for: initiator, in: rpSpace)
+        self.targets = targets ?? ability.targeting.getValidTargets(for: initiator, in: rpSpace)
     }
     
     public init(

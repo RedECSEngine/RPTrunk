@@ -43,6 +43,7 @@ public struct EntityJSON<Stats: StatsType>: Codable, Equatable {
         var conditional: String
     }
     
+    var displayName: String?
     var stats: Stats? = .zero
     var abilities: [AbilityJSON]?
 }
