@@ -162,7 +162,7 @@ final class ThreatTests: XCTestCase {
     func makeAttack() -> Ability<TestRPSpace> {
         var stats = TestStats()
         stats.damage = 4
-        return Ability(name: "Attack", components: [Component(stats: stats)])
+        return Ability(code: "Attack", components: [Component(stats: stats)])
     }
 
     func testEventsProduceNoThreatByDefault() {

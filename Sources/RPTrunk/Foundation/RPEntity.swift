@@ -11,6 +11,7 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
         }
     }
     
+    public var code: RPReferenceCode?
     public var displayName: String = "???"
 
     public var teamId: RPTeamId?
@@ -143,27 +144,27 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
 
     public mutating func addExecutableAbility(_ ability: Ability<RP>, conditional: Conditional<RP>) {
         let activeAbility = ActiveAbility<RP>(entityId: id, ability: ability, conditional: conditional)
-        executableAbilities[ability.name] = activeAbility
+        executableAbilities[ability.code] = activeAbility
     }
 
     public mutating func addPassiveAbility(_ ability: Ability<RP>, conditional: Conditional<RP>) {
         let activeAbility = ActiveAbility<RP>(entityId: id, ability: ability, conditional: conditional)
-        passiveAbilities[ability.name] = activeAbility
+        passiveAbilities[ability.code] = activeAbility
     }
 
     public mutating func applyStatusEffect(_ statusEffect: StatusEffect<RP>) {
-        if statusEffects[statusEffect.name] != nil {
+        if statusEffects[statusEffect.code] != nil {
             // TODO: Handle stackability of status effects rather than just resetting
-            statusEffects[statusEffect.name]?.resetCooldown()
+            statusEffects[statusEffect.code]?.resetCooldown()
         } else {
-            statusEffects[statusEffect.name] = ActiveStatusEffect<RP>(entityId: id, statusEffect: statusEffect)
+            statusEffects[statusEffect.code] = ActiveStatusEffect<RP>(entityId: id, statusEffect: statusEffect)
         }
     }
 
     public mutating func dischargeStatusEffect(_ label: String) {
         let relevantEffectNames = statusEffects.values
             .filter { $0.tags.contains(label) }
-            .map(\.name)
+            .map(\.code)
 
         relevantEffectNames
             .forEach { self.statusEffects[$0]?.expendCharge() }

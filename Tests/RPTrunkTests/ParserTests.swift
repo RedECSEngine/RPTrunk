@@ -230,7 +230,7 @@ final class ParserTests: XCTestCase {
         let dyingQuery2: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("   Dieing?    ==   false  ")
 
         let statusEffect = StatusEffect<TestRPSpace>(
-            name: "Healing",
+            code: "Healing",
             tags: [],
             components: [],
             duration: 1,

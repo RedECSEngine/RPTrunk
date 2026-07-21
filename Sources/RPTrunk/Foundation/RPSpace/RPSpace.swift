@@ -1,8 +1,8 @@
 public typealias RPEntityId = String
 public typealias RPTeamId = String
 public typealias RPItemId = String
-public typealias RPItemCode = String
 public typealias RPEventId = String
+public typealias RPReferenceCode = String
 
 public protocol RPMetadata: Codable & Equatable {}
 public struct EmptyMetadataDictionary: RPMetadata, Sendable {
@@ -211,7 +211,7 @@ extension RPSpace {
         let targeting = Component<Self>(targetType: Targeting(.oneself, .always))
 
         let collect = Ability<Self>(
-            name: "",
+            code: "",
             components: [
                 exchange,
                 targeting,

@@ -1,17 +1,20 @@
 
 public struct Ability<RP: RPSpace>: ComponentContainer, Codable {
-    public var name: String
+    public var code: RPReferenceCode
+    public var displayName: String
     public var components: [Component<RP>]
     public var cooldown: RPTimeIncrement
     public var repeats: Int = 1
     public var metadata: RP.AbilityMetadata?
 
     public init(
-        name: String,
+        code: RPReferenceCode,
+        displayName: String? = nil,
         components: [Component<RP>] = [],
         cooldown: RPTimeIncrement? = nil
     ) {
-        self.name = name
+        self.code = code
+        self.displayName = displayName ?? code
         self.components = components
         self.cooldown = cooldown ?? 0
     }
@@ -19,7 +22,7 @@ public struct Ability<RP: RPSpace>: ComponentContainer, Codable {
 
 extension Ability: Equatable {}
 public func == <RP: RPSpace>(lhs: Ability<RP>, rhs: Ability<RP>) -> Bool {
-    lhs.name == rhs.name && lhs.isEqualTo(rhs)
+    lhs.code == rhs.code && lhs.isEqualTo(rhs)
 }
 
 /**

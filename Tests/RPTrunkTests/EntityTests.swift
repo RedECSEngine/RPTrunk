@@ -59,10 +59,10 @@ final class EntityTests: XCTestCase {
     }
 
     func test_passive_abilities_should_trigger_on_event_occurrences() {
-        let ability = Ability<TestRPSpace>(name: "Test")
+        let ability = Ability<TestRPSpace>(code: "Test")
         rpSpace.entities[entity.id]?.addPassiveAbility(ability, conditional: .always)
 
-        let enemyAbility = Ability<TestRPSpace>(name: "enemyAbility")
+        let enemyAbility = Ability<TestRPSpace>(code: "enemyAbility")
         let fakeEvent = Event(initiator: enemy.id, ability: enemyAbility, rpSpace: rpSpace)
 
         _ = fakeEvent.execute(in: &rpSpace)
@@ -72,7 +72,7 @@ final class EntityTests: XCTestCase {
     }
 
     func test_status_effects_should_be_able_to_remove_status_effect_by_name() {
-        let se = StatusEffect<TestRPSpace>(name: "Death", tags: ["KO"], components: [], duration: nil, charges: 1)
+        let se = StatusEffect<TestRPSpace>(code: "Death", tags: ["KO"], components: [], duration: nil, charges: 1)
         entity.applyStatusEffect(se)
 
         XCTAssertEqual(entity.hasStatus("Death"), true)
@@ -82,7 +82,7 @@ final class EntityTests: XCTestCase {
     }
 
     func test_status_effects_discharges_to_remove_a_status_effect_with_multiple_charges() {
-        let se = StatusEffect<TestRPSpace>(name: "Charge", tags: ["boost"], components: [], duration: nil, charges: 2)
+        let se = StatusEffect<TestRPSpace>(code: "Charge", tags: ["boost"], components: [], duration: nil, charges: 2)
         entity.applyStatusEffect(se)
 
         XCTAssertEqual(entity.hasStatus("Charge"), true)

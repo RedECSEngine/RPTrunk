@@ -18,7 +18,7 @@ final class StatusEffectsTests: XCTestCase {
 
     func testPeriodicStatusEffectEventsAndDecay() {
         let se = StatusEffect<TestRPSpace>(
-            name: "Test",
+            code: "Test",
             tags: [],
             components: [
                 Component(stats: .init(dict: [\.hp: 1]))

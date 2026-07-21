@@ -24,6 +24,7 @@ public protocol ComponentsContainerJSON {
 }
 
 public struct StatusEffectJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJSON {
+    public var displayName: String?
     public var stats: RP.Stats?
     public var cost: RP.Stats?
     public var requirements: RP.Stats?
@@ -41,7 +42,7 @@ public struct StatusEffectJSON<RP: RPSpace>: Codable, Equatable, ComponentsConta
 
 public struct EntityJSON<RP: RPSpace>: Codable, Equatable {
     public struct AbilityJSON: Codable, Equatable {
-        var name: String
+        var code: String
         var conditional: String
     }
     
@@ -53,6 +54,7 @@ public struct EntityJSON<RP: RPSpace>: Codable, Equatable {
 }
 
 public struct AbilityJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJSON {
+    public var displayName: String?
     public var stats: RP.Stats?
     public var cost: RP.Stats?
     public var requirements: RP.Stats?
@@ -67,6 +69,7 @@ public struct AbilityJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJ
 }
 
 public struct ItemJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJSON {
+    public var displayName: String?
     public var stats: RP.Stats?
     public var cost: RP.Stats?
     public var requirements: RP.Stats?

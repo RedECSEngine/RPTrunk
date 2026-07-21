@@ -163,7 +163,7 @@ public struct Event<RP: RPSpace>: Equatable, Codable {
         guard let initiator = initiator else { return }
         rpSpace.modifyEntity(id: initiator) { e, _ in
             e.resetCooldown()
-            e.resetAbility(byName: ability.name)
+            e.resetAbility(byName: ability.code)
         }
     }
 }

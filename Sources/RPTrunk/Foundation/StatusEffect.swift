@@ -3,7 +3,8 @@ public struct StatusEffect<RP: RPSpace>: Codable {
     /// Default time between pulses (ms) when a status effect doesn't specify one.
     public static var defaultPeriod: RPTimeIncrement { 1000 }
 
-    public let name: String
+    public let code: RPReferenceCode
+    public let displayName: String
     public let tags: [String]
     // both duration and charge can be used or one or the other
     let duration: RPTimeIncrement?
@@ -14,7 +15,8 @@ public struct StatusEffect<RP: RPSpace>: Codable {
     let ability: Ability<RP>?
 
     public init(
-        name: String,
+        code: RPReferenceCode,
+        displayName: String? = nil,
         tags: [String],
         components: [Component<RP>],
         duration: Double?,
@@ -22,7 +24,8 @@ public struct StatusEffect<RP: RPSpace>: Codable {
         impairsAction: Bool = false,
         period: RPTimeIncrement = StatusEffect.defaultPeriod
     ) {
-        self.name = name
+        self.code = code
+        self.displayName = displayName ?? code
         self.tags = tags
         self.duration = duration
         self.charges = charges
@@ -31,7 +34,7 @@ public struct StatusEffect<RP: RPSpace>: Codable {
 
         if components.count > 0 {
             let components: [Component<RP>] = components + [Targeting<RP>(.oneself, .always).toComponent()]
-            ability = Ability(name: name, components: components, cooldown: nil)
+            ability = Ability(code: code, displayName: displayName, components: components, cooldown: nil)
         } else {
             ability = nil
         }
@@ -45,7 +48,7 @@ public struct StatusEffect<RP: RPSpace>: Codable {
 extension StatusEffect: Equatable {}
 
 public func ==<Stats: StatsType> (lhs: StatusEffect<Stats>, rhs: StatusEffect<Stats>) -> Bool {
-    lhs.name == rhs.name
+    lhs.code == rhs.code
         && lhs.tags == rhs.tags
         && lhs.ability == rhs.ability
 }
@@ -64,7 +67,8 @@ public struct ActiveStatusEffect<RP: RPSpace>: Temporal, Codable {
     public var entityId: RPEntityId
     fileprivate let statusEffect: StatusEffect<RP>
 
-    public var name: String { statusEffect.name }
+    public var code: RPReferenceCode { statusEffect.code }
+    public var displayName: String { statusEffect.displayName }
     public var tags: [String] { statusEffect.tags }
 
     public init(
@@ -86,7 +90,7 @@ public struct ActiveStatusEffect<RP: RPSpace>: Temporal, Codable {
             return []
         }
         if let ability = statusEffect.ability {
-            return [Event(category: .periodicEffect(name: name), initiator: entityId, ability: ability, rpSpace: rpSpace)]
+            return [Event(category: .periodicEffect(name: code), initiator: entityId, ability: ability, rpSpace: rpSpace)]
         }
         return []
     }

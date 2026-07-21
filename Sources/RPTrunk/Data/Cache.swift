@@ -8,10 +8,10 @@ open class RPCache<RP: RPSpace> {
     
     typealias AbilityData = AbilityJSON<RP>
 
-    public var abilities: [String: Ability<RP>] = [:]
-    public var statusEffects: [String: StatusEffect<RP>] = [:]
-    public var entities: [String: RPEntity<RP>] = [:]
-    public var items: [String: RPItem<RP>] = [:]
+    public var abilities: [RPReferenceCode: Ability<RP>] = [:]
+    public var statusEffects: [RPReferenceCode: StatusEffect<RP>] = [:]
+    public var entities: [RPReferenceCode: RPEntity<RP>] = [:]
+    public var items: [RPReferenceCode: RPItem<RP>] = [:]
 
     public init() {}
 
@@ -22,20 +22,21 @@ open class RPCache<RP: RPSpace> {
         try loadItems(data.items ?? [:])
     }
 
-    public func loadAbilities(_ abilities: [String: AbilityJSON<RP>]) throws {
-        try abilities.forEach { (name, data) in
+    public func loadAbilities(_ abilities: [RPReferenceCode: AbilityJSON<RP>]) throws {
+        try abilities.forEach { (code, data) in
             let components: [Component] = try buildComponent(data)
-            var ability = Ability<RP>(name: name, components: components, cooldown: data.cooldown)
+            var ability = Ability<RP>(code: code, displayName: data.displayName, components: components, cooldown: data.cooldown)
             ability.metadata = data.metadata
-            self.abilities[name] = ability
+            self.abilities[code] = ability
         }
     }
 
-    public func loadStatusEffects(_ statusEffects: [String: StatusEffectJSON<RP>]) throws {
-        try statusEffects.forEach { (name, data) in
+    public func loadStatusEffects(_ statusEffects: [RPReferenceCode: StatusEffectJSON<RP>]) throws {
+        try statusEffects.forEach { (code, data) in
             let components: [Component<RP>] = try buildComponent(data)
             let se = StatusEffect<RP>(
-                name: name,
+                code: code,
+                displayName: data.displayName,
                 tags: [],
                 components: components,
                 duration: data.duration,
@@ -43,42 +44,43 @@ open class RPCache<RP: RPSpace> {
                 impairsAction: data.impairsAction ?? false,
                 period: data.period ?? StatusEffect<RP>.defaultPeriod
             )
-            self.statusEffects[name] = se
+            self.statusEffects[code] = se
         }
     }
 
-    public func loadEntities(_ entities: [String: EntityJSON<RP>]) throws {
-        entities.forEach {(name, data) in
+    public func loadEntities(_ entities: [RPReferenceCode: EntityJSON<RP>]) throws {
+        entities.forEach {(code, data) in
             let stats = data.stats ?? .zero
             var entity = RPEntity<RP>.new(cache: self)
+            entity.code = code
             entity.baseStats = stats
-            entity.displayName = data.displayName ?? "?!?!"
+            entity.displayName = data.displayName ?? code
             entity.currentStats = stats
             data.abilities?.forEach {
                 ability in
                 let conditional = Conditional<RP>(ability.conditional)
-                if let ability = self.abilities[ability.name] {
+                if let ability = self.abilities[ability.code] {
                     entity.addExecutableAbility(ability, conditional: conditional)
                 }
             }
-            self.entities[name] = entity
+            self.entities[code] = entity
         }
     }
 
-    public func loadItems(_ items: [String: ItemJSON<RP>]) throws {
+    public func loadItems(_ items: [RPReferenceCode: ItemJSON<RP>]) throws {
         try items.forEach { (code, data) in
             let components: [Component<RP>] = try buildComponent(data)
             let ability = try data.ability.map { try getAbility($0) }
             let conditional = Conditional<RP>(data.conditional ?? "always")
             var item = RPItem<RP>(components: components, ability: ability, conditional: conditional)
             item.code = code
-            item.name = code
+            item.displayName = data.displayName ?? code
             item.metadata = data.metadata
             self.items[code] = item
         }
     }
 
-    public func newItem(_ code: RPItemCode) throws -> RPItem<RP> {
+    public func newItem(_ code: RPReferenceCode) throws -> RPItem<RP> {
         guard var item = items[code] else {
             throw RPCache.CacheError.notFound(code)
         }

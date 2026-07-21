@@ -1,7 +1,7 @@
 public struct RPItem<RP: RPSpace>: Temporal, ComponentContainer, Codable, Equatable {
     public var id: RPItemId = UUID().uuidString
-    public var code: RPItemCode?
-    public var name: String
+    public var code: RPReferenceCode?
+    public var displayName: String
     public var amount: Int = 1
 
     public var currentTick: RPTimeIncrement = 0
@@ -18,7 +18,7 @@ public struct RPItem<RP: RPSpace>: Temporal, ComponentContainer, Codable, Equata
         ability: Ability<RP>? = nil,
         conditional: Conditional<RP> = .always
     ) {
-        name = "Untitled Item"
+        displayName = "Untitled Item"
         self.components = components
         self.ability = ability
         self.conditional = conditional
