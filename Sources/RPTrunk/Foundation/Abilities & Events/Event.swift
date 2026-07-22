@@ -1,14 +1,16 @@
-public struct EventResult<RP: RPSpace>: Equatable, Codable {
-    public let event: Event<RP>
+public struct RPEventResult<RP: RPSpace>: Equatable, Codable {
+    public let event: RPEvent<RP>
     public let effects: [ConflictResult<RP>]
+    public let itemTransfers: [RPItemTransfer]
 
-    init(_ event: Event<RP>, _ effects: [ConflictResult<RP>]) {
+    init(_ event: RPEvent<RP>, _ effects: [ConflictResult<RP>], _ itemTransfers: [RPItemTransfer] = []) {
         self.event = event
         self.effects = effects
+        self.itemTransfers = itemTransfers
     }
 }
 
-public struct Event<RP: RPSpace>: Equatable, Codable {
+public struct RPEvent<RP: RPSpace>: Equatable, Codable {
     public typealias Stats = RP.Stats
     public enum Category: Equatable, Codable {
         case standardConflict
@@ -18,14 +20,14 @@ public struct Event<RP: RPSpace>: Equatable, Codable {
 
     public var id = UUID().uuidString
     public let category: Category
-    public let ability: Ability<RP>
+    public let ability: RPAbility<RP>
     public let targets: Set<RPEntityId>
     public let initiator: RPEntityId?
 
     public init(
         category: Category = .standardConflict,
         initiator: RPEntityId,
-        ability: Ability<RP>,
+        ability: RPAbility<RP>,
         targets: Set<RPEntityId>? = nil,
         rpSpace: RP
     ) {
@@ -37,7 +39,7 @@ public struct Event<RP: RPSpace>: Equatable, Codable {
     
     public init(
         category: Category = .standardConflict,
-        ability: Ability<RP>,
+        ability: RPAbility<RP>,
         targets: Set<RPEntityId>
     ) {
         self.category = category
@@ -81,7 +83,7 @@ public struct Event<RP: RPSpace>: Equatable, Codable {
         return results
     }
 
-    func applyResults(_ results: [ConflictResult<RP>], in rpSpace: inout RP) {
+    func applyResults(_ results: [ConflictResult<RP>], in rpSpace: inout RP) -> [RPItemTransfer] {
         results.forEach { result -> Void in
             let newStats = (rpSpace.entityById(result.entity)?.currentStats ?? .zero) + result.change
             rpSpace.modifyEntity(id: result.entity, perform: {
@@ -89,13 +91,14 @@ public struct Event<RP: RPSpace>: Equatable, Codable {
             })
         }
         applyStatusEffectChanges(to: targets, in: &rpSpace)
-        applyItemExchange(in: &rpSpace)
-        
+        let itemTransfers = applyItemExchange(in: &rpSpace)
+
         if case let .periodicEffect(name) = category, let initiator = initiator {
             rpSpace.modifyEntity(id: initiator) { entity, space in
                 entity.statusEffects[name]?.incrementTick()
             }
         }
+        return itemTransfers
     }
 
     private func applyStatusEffectChanges(to targets: Set<RPEntityId>, in rpSpace: inout RP) {
@@ -116,43 +119,24 @@ public struct Event<RP: RPSpace>: Equatable, Codable {
             }
     }
 
-    func applyItemExchange(in rpSpace: inout RP) {
-        guard let exchange = ability.itemExchange else { return }
-        
-        if let initiator = initiator, let entity = rpSpace.entityById(initiator) {
-            if exchange.requiresInitiatorOwnItem {
-                if entity.inventory.contains(where: { $0 == exchange.item }) == false {
-                    // should not exchange since initiator does not currently own the item
-                    return
-                }
-                if var newItemState = rpSpace.itemById(exchange.item) {
-                    newItemState.amount -= 1
-                    if newItemState.amount <= 0 {
-                        rpSpace.modifyEntity(id: initiator) { e, _ in e.inventory.removeAll(where: { $0 == exchange.item }) }
-                    }
-                    rpSpace.modifyItem(id: exchange.item, perform: { i, _ in i = newItemState })
-                }
-            }
-        }
-    
-        switch exchange.exchangeType {
-        case .target:
-            if let targetId = targets.first {
-                rpSpace.modifyEntity(id: targetId) { e, _ in e.inventory.append(exchange.item) }
-            }
-        case .targetTeam:
-            if let teamId = targets.first.flatMap(rpSpace.entityById)?.teamId {
-                rpSpace.modifyTeam(id: teamId) { t, _ in t.inventory.append(exchange.item) }
-            } else if let targetId = targets.first {
-                rpSpace.modifyEntity(id: targetId) { e, _ in e.inventory.append(exchange.item) }
-            }
+    func applyItemExchange(in rpSpace: inout RP) -> [RPItemTransfer] {
+        guard let exchange = ability.itemExchange,
+              let initiator = initiator,
+              let recipient = targets.first
+        else { return [] }
+
+        switch exchange.kind {
+        case .transfer(let itemId):
+            return rpSpace.transferItem(id: itemId, from: initiator, to: recipient)
+        case .transferAll:
+            return rpSpace.transferAllItems(from: initiator, to: recipient)
         }
     }
 
-    public func execute(in rpSpace: inout RP) -> EventResult<RP> {
+    public func execute(in rpSpace: inout RP) -> RPEventResult<RP> {
         let results = getResults(in: rpSpace)
-        applyResults(results, in: &rpSpace)
-        let eventResult = EventResult<RP>(self, results)
+        let itemTransfers = applyResults(results, in: &rpSpace)
+        let eventResult = RPEventResult<RP>(self, results, itemTransfers)
         rpSpace.applyThreatChanges(
             RP.resolveThreatChanges(for: eventResult, in: rpSpace)
         )
@@ -163,7 +147,7 @@ public struct Event<RP: RPSpace>: Equatable, Codable {
         guard let initiator = initiator else { return }
         rpSpace.modifyEntity(id: initiator) { e, _ in
             e.resetCooldown()
-            e.resetAbility(byName: ability.name)
+            e.resetAbility(byName: ability.code)
         }
     }
 }

@@ -1,13 +1,15 @@
-public struct RPCacheJSON<Stats: StatsType>: Codable, Equatable {
+public struct RPCacheJSON<RP: RPSpace>: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case statusEffects = "Status Effects"
         case abilities = "Abilities"
         case entities = "Entities"
+        case items = "Items"
     }
-    
-    public var abilities: [String: AbilityJSON<Stats>]?
-    public var statusEffects: [String: StatusEffectJSON<Stats>]?
-    public var entities: [String: EntityJSON<Stats>]?
+
+    public var abilities: [String: AbilityJSON<RP>]?
+    public var statusEffects: [String: StatusEffectJSON<RP>]?
+    public var entities: [String: EntityJSON<RP>]?
+    public var items: [String: ItemJSON<RP>]?
 }
 
 public protocol ComponentsContainerJSON {
@@ -21,10 +23,11 @@ public protocol ComponentsContainerJSON {
     var components: [String]? { get }
 }
 
-public struct StatusEffectJSON<Stats: StatsType>: Codable, Equatable, ComponentsContainerJSON {
-    public var stats: Stats?
-    public var cost: Stats?
-    public var requirements: Stats?
+public struct StatusEffectJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJSON {
+    public var displayName: String?
+    public var stats: RP.Stats?
+    public var cost: RP.Stats?
+    public var requirements: RP.Stats?
     public var statusEffects: [String]?
     public var target: String?
     public var discharge: [String]?
@@ -33,25 +36,28 @@ public struct StatusEffectJSON<Stats: StatsType>: Codable, Equatable, Components
     public var duration: RPTimeIncrement?
     public var charges: Int?
     public var impairsAction: Bool? = false
-    /// Time (ms) between periodic pulses; omitted uses `StatusEffect.defaultPeriod`.
+    /// Time (ms) between periodic pulses; omitted uses `RPStatusEffect.defaultPeriod`.
     public var period: RPTimeIncrement?
 }
 
-public struct EntityJSON<Stats: StatsType>: Codable, Equatable {
+public struct EntityJSON<RP: RPSpace>: Codable, Equatable {
     public struct AbilityJSON: Codable, Equatable {
-        var name: String
+        var code: String
         var conditional: String
     }
     
-    var displayName: String?
-    var stats: Stats? = .zero
-    var abilities: [AbilityJSON]?
+    public var displayName: String?
+    public var stats: RP.Stats? = .zero
+    public var abilities: [AbilityJSON]?
+    
+    public var metadata: RP.EntityMetadata?
 }
 
-public struct AbilityJSON<Stats: StatsType>: Codable, Equatable, ComponentsContainerJSON {
-    public var stats: Stats?
-    public var cost: Stats?
-    public var requirements: Stats?
+public struct AbilityJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJSON {
+    public var displayName: String?
+    public var stats: RP.Stats?
+    public var cost: RP.Stats?
+    public var requirements: RP.Stats?
     public var statusEffects: [String]?
     public var target: String?
     public var discharge: [String]?
@@ -59,5 +65,23 @@ public struct AbilityJSON<Stats: StatsType>: Codable, Equatable, ComponentsConta
 
     public let cooldown: RPTimeIncrement?
 
-    public var metadata: [String: String]?
+    public var metadata: RP.AbilityMetadata?
+}
+
+public struct ItemJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJSON {
+    public var displayName: String?
+    public var stats: RP.Stats?
+    public var cost: RP.Stats?
+    public var requirements: RP.Stats?
+    public var statusEffects: [String]?
+    public var target: String?
+    public var discharge: [String]?
+    public var components: [String]?
+
+    public var ability: String?
+    public var conditional: String?
+    public var cooldown: RPTimeIncrement?
+    public var maximumStack: Int?
+
+    public var metadata: RP.ItemMetadata?
 }

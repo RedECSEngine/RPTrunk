@@ -1,4 +1,4 @@
-public struct Targeting<RP: RPSpace>: Codable {
+public struct RPTargeting<RP: RPSpace>: Codable {
     public enum SelectionType: String, Codable {
         case oneself
         case random
@@ -76,8 +76,8 @@ public struct Targeting<RP: RPSpace>: Codable {
     }
 }
 
-public extension Targeting {
-    static func fromString(_ query: String) -> Targeting {
+public extension RPTargeting {
+    static func fromString(_ query: String) -> RPTargeting {
         let components = query.split(separator: ":", omittingEmptySubsequences: false)
         guard let type = components.first.map(String.init) else {
             fatalError("Unexpected format for string translation to target")
@@ -87,38 +87,38 @@ public extension Targeting {
 
         switch type {
         case "self":
-            return Targeting(.oneself, condition)
+            return RPTargeting(.oneself, condition)
         case "enemy":
-            return Targeting(.singleEnemy, condition)
+            return RPTargeting(.singleEnemy, condition)
         case "all":
-            return Targeting(.all, condition)
+            return RPTargeting(.all, condition)
         case "random":
-            return Targeting(.random, condition)
+            return RPTargeting(.random, condition)
         case "allFriendlies":
-            return Targeting(.allFriendly, condition)
+            return RPTargeting(.allFriendly, condition)
         case "allEnemies":
-            return Targeting(.allEnemy, condition)
+            return RPTargeting(.allEnemy, condition)
         case "ally", "singleFriendly":
-            return Targeting(.singleFriendly, condition)
+            return RPTargeting(.singleFriendly, condition)
         case "randomFriendly":
-            return Targeting(.randomFriendly, condition)
+            return RPTargeting(.randomFriendly, condition)
         case "randomEnemy":
-            return Targeting(.randomEnemy, condition)
+            return RPTargeting(.randomEnemy, condition)
         case "allyTeam":
-            return Targeting(.allyTeam, condition)
+            return RPTargeting(.allyTeam, condition)
         default:
-            return Targeting(.all, condition) // type would be the condition in this case
+            return RPTargeting(.all, condition) // type would be the condition in this case
         }
     }
 }
 
-extension Targeting: Equatable {}
+extension RPTargeting: Equatable {}
 
-public func == <RP: RPSpace>(lhs: Targeting<RP>, rhs: Targeting<RP>) -> Bool {
+public func == <RP: RPSpace>(lhs: RPTargeting<RP>, rhs: RPTargeting<RP>) -> Bool {
     lhs.type == rhs.type && lhs.conditional == rhs.conditional
 }
 
-extension Targeting {
+extension RPTargeting {
     func toComponent() -> Component<RP> {
         Component<RP>(targetType: self)
     }

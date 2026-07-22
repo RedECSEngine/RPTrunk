@@ -41,16 +41,14 @@ final class EntityTests: XCTestCase {
     }
     
     func test_entity_stats_are_sum_of_components() {
-        let sword = RPItem<TestRPSpace>(components: [
+        let sword = RPActiveItem<TestRPSpace>(item: RPItem(code: "sword", components: [
             Component(stats: .init(dict: [\.damage: 10]))
-        ])
-        let helmet = RPItem<TestRPSpace>(components: [
+        ]))
+        let helmet = RPActiveItem<TestRPSpace>(item: RPItem(code: "helmet", components: [
             Component(stats: .init(dict: [\.damage: 5]))
-        ])
+        ]))
         
-        rpSpace.items[sword.id] = sword
-        rpSpace.items[helmet.id] = helmet
-        entity.body.wornItems = [sword.id, helmet.id]
+        entity.body.wornItems = [sword, helmet]
         
         XCTAssertEqual(entity.getTotalStats(in: rpSpace).damage, 15)
         
@@ -59,11 +57,11 @@ final class EntityTests: XCTestCase {
     }
 
     func test_passive_abilities_should_trigger_on_event_occurrences() {
-        let ability = Ability<TestRPSpace>(name: "Test")
+        let ability = RPAbility<TestRPSpace>(code: "Test")
         rpSpace.entities[entity.id]?.addPassiveAbility(ability, conditional: .always)
 
-        let enemyAbility = Ability<TestRPSpace>(name: "enemyAbility")
-        let fakeEvent = Event(initiator: enemy.id, ability: enemyAbility, rpSpace: rpSpace)
+        let enemyAbility = RPAbility<TestRPSpace>(code: "enemyAbility")
+        let fakeEvent = RPEvent(initiator: enemy.id, ability: enemyAbility, rpSpace: rpSpace)
 
         _ = fakeEvent.execute(in: &rpSpace)
         let reactionEvents = rpSpace.entities[entity.id]?.getPendingPassiveEvents(in: rpSpace)
@@ -72,7 +70,7 @@ final class EntityTests: XCTestCase {
     }
 
     func test_status_effects_should_be_able_to_remove_status_effect_by_name() {
-        let se = StatusEffect<TestRPSpace>(name: "Death", tags: ["KO"], components: [], duration: nil, charges: 1)
+        let se = RPStatusEffect<TestRPSpace>(code: "Death", tags: ["KO"], components: [], duration: nil, charges: 1)
         entity.applyStatusEffect(se)
 
         XCTAssertEqual(entity.hasStatus("Death"), true)
@@ -82,7 +80,7 @@ final class EntityTests: XCTestCase {
     }
 
     func test_status_effects_discharges_to_remove_a_status_effect_with_multiple_charges() {
-        let se = StatusEffect<TestRPSpace>(name: "Charge", tags: ["boost"], components: [], duration: nil, charges: 2)
+        let se = RPStatusEffect<TestRPSpace>(code: "Charge", tags: ["boost"], components: [], duration: nil, charges: 2)
         entity.applyStatusEffect(se)
 
         XCTAssertEqual(entity.hasStatus("Charge"), true)

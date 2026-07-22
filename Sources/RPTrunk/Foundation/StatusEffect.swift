@@ -1,9 +1,10 @@
 
-public struct StatusEffect<RP: RPSpace>: Codable {
+public struct RPStatusEffect<RP: RPSpace>: Codable {
     /// Default time between pulses (ms) when a status effect doesn't specify one.
     public static var defaultPeriod: RPTimeIncrement { 1000 }
 
-    public let name: String
+    public let code: RPReferenceCode
+    public let displayName: String
     public let tags: [String]
     // both duration and charge can be used or one or the other
     let duration: RPTimeIncrement?
@@ -11,18 +12,20 @@ public struct StatusEffect<RP: RPSpace>: Codable {
     let impairsAction: Bool
     /// Time (ms) between periodic pulses of this effect (heal/damage over time).
     let period: RPTimeIncrement
-    let ability: Ability<RP>?
+    let ability: RPAbility<RP>?
 
     public init(
-        name: String,
+        code: RPReferenceCode,
+        displayName: String? = nil,
         tags: [String],
         components: [Component<RP>],
         duration: Double?,
         charges: Int?,
         impairsAction: Bool = false,
-        period: RPTimeIncrement = StatusEffect.defaultPeriod
+        period: RPTimeIncrement = RPStatusEffect.defaultPeriod
     ) {
-        self.name = name
+        self.code = code
+        self.displayName = displayName ?? code
         self.tags = tags
         self.duration = duration
         self.charges = charges
@@ -30,29 +33,29 @@ public struct StatusEffect<RP: RPSpace>: Codable {
         self.period = period
 
         if components.count > 0 {
-            let components: [Component<RP>] = components + [Targeting<RP>(.oneself, .always).toComponent()]
-            ability = Ability(name: name, components: components, cooldown: nil)
+            let components: [Component<RP>] = components + [RPTargeting<RP>(.oneself, .always).toComponent()]
+            ability = RPAbility(code: code, displayName: displayName, components: components, cooldown: nil)
         } else {
             ability = nil
         }
     }
 
-    public func getStatusEffects() -> [StatusEffect] {
+    public func getStatusEffects() -> [RPStatusEffect] {
         [self]
     }
 }
 
-extension StatusEffect: Equatable {}
+extension RPStatusEffect: Equatable {}
 
-public func ==<Stats: StatsType> (lhs: StatusEffect<Stats>, rhs: StatusEffect<Stats>) -> Bool {
-    lhs.name == rhs.name
+public func ==<Stats: StatsType> (lhs: RPStatusEffect<Stats>, rhs: RPStatusEffect<Stats>) -> Bool {
+    lhs.code == rhs.code
         && lhs.tags == rhs.tags
         && lhs.ability == rhs.ability
 }
 /**
     A Status effect, currently active on an entity
  */
-public struct ActiveStatusEffect<RP: RPSpace>: Temporal, Codable {
+public struct RPActiveStatusEffect<RP: RPSpace>: Temporal, Codable {
     public var deltaTick: RPTimeIncrement = 0
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { statusEffect.duration ?? 0 }
@@ -62,14 +65,15 @@ public struct ActiveStatusEffect<RP: RPSpace>: Temporal, Codable {
     var level: Int? // power level of the buff, if it is stackable
 
     public var entityId: RPEntityId
-    fileprivate let statusEffect: StatusEffect<RP>
+    fileprivate let statusEffect: RPStatusEffect<RP>
 
-    public var name: String { statusEffect.name }
+    public var code: RPReferenceCode { statusEffect.code }
+    public var displayName: String { statusEffect.displayName }
     public var tags: [String] { statusEffect.tags }
 
     public init(
         entityId: RPEntityId,
-        statusEffect: StatusEffect<RP>
+        statusEffect: RPStatusEffect<RP>
     ) {
         self.entityId = entityId
         self.statusEffect = statusEffect
@@ -80,18 +84,18 @@ public struct ActiveStatusEffect<RP: RPSpace>: Temporal, Codable {
         statusEffect.impairsAction
     }
 
-    public func getPendingEvents(in rpSpace: RP) -> [Event<RP>] {
+    public func getPendingEvents(in rpSpace: RP) -> [RPEvent<RP>] {
         // Pulse once the accumulated time reaches the effect's configured period.
         guard deltaTick >= statusEffect.period else {
             return []
         }
         if let ability = statusEffect.ability {
-            return [Event(category: .periodicEffect(name: name), initiator: entityId, ability: ability, rpSpace: rpSpace)]
+            return [RPEvent(category: .periodicEffect(name: code), initiator: entityId, ability: ability, rpSpace: rpSpace)]
         }
         return []
     }
 
-    public mutating func tick(_ moment: Moment) {
+    public mutating func tick(_ moment: RPMoment) {
         guard isCoolingDown() else {
             return
         }

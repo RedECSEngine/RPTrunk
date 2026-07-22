@@ -6,25 +6,24 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
     
     public var entities: [RPEntityId: RPEntity<Self>] = [:]
     public var teams: [RPTeamId: RPTeam<Self>] = [:]
-    public var items: [RPItemId: RPItem<Self>] = [:]
-    public var pendingGameMasterEvents: [Event<TestRPSpace>] = []
+    public var pendingGameMasterEvents: [RPEvent<TestRPSpace>] = []
 
     public init() {}
 
     /// Test hook: lets individual tests define how events produce threat.
-    nonisolated(unsafe) static var threatRule: ((EventResult<TestRPSpace>) -> [ThreatChange])?
+    nonisolated(unsafe) static var threatRule: ((RPEventResult<TestRPSpace>) -> [ThreatChange])?
 
     public static func resolveThreatChanges(
-        for eventResult: EventResult<TestRPSpace>,
+        for eventResult: RPEventResult<TestRPSpace>,
         in rpSpace: TestRPSpace
     ) -> [ThreatChange] {
         threatRule?(eventResult) ?? []
     }
     
-    public static func resolveConflict(_ event: Event<Self>, in rpSpace: Self, target: RPEntityId, conflict: Stats) -> ConflictResult<Self> {
+    public static func resolveConflict(_ event: RPEvent<Self>, in rpSpace: Self, target: RPEntityId, conflict: Stats) -> ConflictResult<Self> {
         ConflictResult(.init(), .zero)
         //    public func resolveConflict(
-        //        _ event: Event,
+        //        _ event: RPEvent,
         //        in rpSpace: RPSpace,
         //        target: RPEntityId,
         //        conflict: Stats

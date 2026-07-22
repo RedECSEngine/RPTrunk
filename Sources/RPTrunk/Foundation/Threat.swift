@@ -19,7 +19,7 @@ public struct ThreatChange: Equatable, Codable {
 public extension RPSpace {
     /// This default produces no threat, leaving the feature dormant until this function is implemented
     static func resolveThreatChanges(
-        for eventResult: EventResult<Self>,
+        for eventResult: RPEventResult<Self>,
         in rpSpace: Self
     ) -> [ThreatChange] {
         []

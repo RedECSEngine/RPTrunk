@@ -8,10 +8,10 @@ public struct Component<RP: RPSpace>: Codable, Equatable {
     public var stats: Stats?
     public var cost: Stats?
     public var requirements: Stats?
-    public var targeting: Targeting<RP>?
-    public var statusEffects: [StatusEffect<RP>]?
+    public var targeting: RPTargeting<RP>?
+    public var statusEffects: [RPStatusEffect<RP>]?
     public var dischargedStatusEffects: [String]?
-    public var itemExchange: ItemExchange?
+    public var itemExchange: RPItemExchange?
 
     public init(stats: Stats) {
         self.stats = stats
@@ -25,11 +25,11 @@ public struct Component<RP: RPSpace>: Codable, Equatable {
         self.requirements = requirements
     }
 
-    public init(targetType: Targeting<RP>) {
+    public init(targetType: RPTargeting<RP>) {
         targeting = targetType
     }
 
-    public init(statusEffects: [StatusEffect<RP>]) {
+    public init(statusEffects: [RPStatusEffect<RP>]) {
         self.statusEffects = statusEffects
     }
 
@@ -37,7 +37,7 @@ public struct Component<RP: RPSpace>: Codable, Equatable {
         self.dischargedStatusEffects = dischargedStatusEffects
     }
 
-    public init(itemExchange: ItemExchange) {
+    public init(itemExchange: RPItemExchange) {
         self.itemExchange = itemExchange
     }
 
@@ -56,8 +56,8 @@ public struct Component<RP: RPSpace>: Codable, Equatable {
     public func getStats() -> Stats? { stats }
     public func getCost() -> Stats? { cost }
     public func getRequirements() -> Stats? { requirements }
-    public func getTargeting() -> Targeting<RP>? { targeting }
-    public func getStatusEffects() -> [StatusEffect<RP>] { statusEffects ?? [] }
+    public func getTargeting() -> RPTargeting<RP>? { targeting }
+    public func getStatusEffects() -> [RPStatusEffect<RP>] { statusEffects ?? [] }
     public func getDischargedStatusEffects() -> [String] { dischargedStatusEffects ?? [] }
-    public func getItemExchange() -> ItemExchange? { itemExchange }
+    public func getItemExchange() -> RPItemExchange? { itemExchange }
 }

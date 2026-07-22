@@ -17,8 +17,8 @@ final class StatusEffectsTests: XCTestCase {
     }
 
     func testPeriodicStatusEffectEventsAndDecay() {
-        let se = StatusEffect<TestRPSpace>(
-            name: "Test",
+        let se = RPStatusEffect<TestRPSpace>(
+            code: "Test",
             tags: [],
             components: [
                 Component(stats: .init(dict: [\.hp: 1]))
@@ -26,7 +26,7 @@ final class StatusEffectsTests: XCTestCase {
             duration: 2,
             charges: nil
         )
-        var activeSE = ActiveStatusEffect(entityId: "abcd", statusEffect: se)
+        var activeSE = RPActiveStatusEffect(entityId: "abcd", statusEffect: se)
 
         XCTAssertEqual(activeSE.isCoolingDown(), true)
         XCTAssertEqual(activeSE.getPendingEvents(in: rpSpace).count, 0)
