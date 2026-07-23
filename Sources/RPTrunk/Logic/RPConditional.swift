@@ -1,5 +1,5 @@
 
-public enum Conditional<RP: RPSpace>: Codable {
+public enum RPConditional<RP: RPSpace>: Codable {
     private enum CodingKeys: String, CodingKey {
         case rawValue
     }
@@ -24,7 +24,7 @@ public enum Conditional<RP: RPSpace>: Codable {
     }
 
     public init(_ condition: String) {
-        self = Conditional.fromString(condition)
+        self = RPConditional.fromString(condition)
     }
 
     public init(from decoder: Decoder) throws {
@@ -59,7 +59,7 @@ public enum Conditional<RP: RPSpace>: Codable {
     }
 }
 
-extension Conditional: CustomStringConvertible {
+extension RPConditional: CustomStringConvertible {
     public var description: String {
         switch self {
         case .always:
@@ -72,16 +72,16 @@ extension Conditional: CustomStringConvertible {
     }
 }
 
-extension Conditional: Equatable {}
+extension RPConditional: Equatable {}
 
 public func ==<RP: RPSpace> (
-    lhs: Conditional<RP>,
-    rhs: Conditional<RP>
+    lhs: RPConditional<RP>,
+    rhs: RPConditional<RP>
 ) -> Bool {
     lhs.description == rhs.description
 }
 
-extension Conditional: ExpressibleByStringLiteral {
+extension RPConditional: ExpressibleByStringLiteral {
     public typealias ExtendedGraphemeClusterLiteralType = StringLiteralType
     public typealias UnicodeScalarLiteralType = Character
 
@@ -103,7 +103,7 @@ enum ConditionalInterpretationError: Error {
     case cantCompareValues
 }
 
-func buildConditionalFromString<RP: RPSpace>(_ conditionString: String) throws -> Conditional<RP> {
+func buildConditionalFromString<RP: RPSpace>(_ conditionString: String) throws -> RPConditional<RP> {
     // `&&` conjunctions are handled by the grammar itself.
     .custom(conditionString, try interpretStringCondition(conditionString))
 }

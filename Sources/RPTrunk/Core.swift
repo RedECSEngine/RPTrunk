@@ -12,12 +12,6 @@ public extension Array {
     }
 }
 
-public extension Array where Element: Hashable {
-    func toSet() -> Set<Element> {
-        Set(self)
-    }
-}
-
 #if canImport(UIKit) || canImport(AppKit)
 import Foundation
 typealias UUID = Foundation.UUID

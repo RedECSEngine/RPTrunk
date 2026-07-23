@@ -1,5 +1,5 @@
 
-public struct ConflictResult<RP: RPSpace>: Equatable, Codable {
+public struct RPConflictResult<RP: RPSpace>: Equatable, Codable {
     public let entity: RPEntityId
     public let change: RP.Stats
     public let meta: [String: RPValue]

@@ -1,30 +1,36 @@
-public struct RPItem<RP: RPSpace>: ComponentContainer, Codable, Equatable {
+public struct RPItem<RP: RPSpace>: RPFragmentContainer, Codable, Equatable {
     public var code: RPReferenceCode
     public var displayName: String
     public var maximumStack: Int?
-    public var components: [Component<RP>]
+    public var fragments: [RPFragment<RP>]
     public var ability: RPAbility<RP>?
-    public var conditional: Conditional<RP>
+    public var conditional: RPConditional<RP>
+
+    /// The `RPBody` slot this item is worn in. `nil` means it cannot be equipped.
+    public var equipmentSlotCode: RPEquipmentSlotCode?
+
     public var metadata: RP.ItemMetadata?
 
     public init(
         code: RPReferenceCode,
         displayName: String? = nil,
         maximumStack: Int? = nil,
-        components: [Component<RP>] = [],
+        fragments: [RPFragment<RP>] = [],
         ability: RPAbility<RP>? = nil,
-        conditional: Conditional<RP> = .always
+        conditional: RPConditional<RP> = .always,
+        equipmentSlotCode: RPEquipmentSlotCode? = nil
     ) {
         self.code = code
         self.displayName = displayName ?? code
         self.maximumStack = maximumStack
-        self.components = components
+        self.fragments = fragments
         self.ability = ability
         self.conditional = conditional
+        self.equipmentSlotCode = equipmentSlotCode
     }
 }
 
-public struct RPActiveItem<RP: RPSpace>: Temporal, Codable, Equatable {
+public struct RPActiveItem<RP: RPSpace>: RPTemporal, Codable, Equatable {
     public var id: RPItemId = UUID().uuidString
     public var item: RPItem<RP>
     public var amount: Int
@@ -35,6 +41,8 @@ public struct RPActiveItem<RP: RPSpace>: Temporal, Codable, Equatable {
     public var code: RPReferenceCode { item.code }
     public var displayName: String { item.displayName }
     public var stats: RP.Stats { item.stats }
+    public var equipmentSlotCode: RPEquipmentSlotCode? { item.equipmentSlotCode }
+    public var isEquippable: Bool { item.equipmentSlotCode != nil }
 
     public init(
         item: RPItem<RP>,

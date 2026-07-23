@@ -1,7 +1,7 @@
 import Foundation // TODO: Use foundation essentials
 
 @dynamicMemberLookup
-public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
+public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
 
     public typealias Stats = RP.Stats
     
@@ -21,7 +21,7 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
 
     public var baseStats: Stats = .zero
     public var currentStats: Stats = .zero
-    public var body = Body<RP>()
+    public var body = RPBody<RP>()
     public var inventory: [RPActiveItem<RP>] = []
     public var metadata: RP.EntityMetadata?
 
@@ -58,7 +58,7 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
         self.init([:])
     }
     
-    public func getTotalStats(in rpSpace: RP) -> Stats {
+    public func getTotalStats() -> Stats {
         var totalStats = self.baseStats
         body.wornItems.forEach { item in
             totalStats = totalStats + item.stats
@@ -66,9 +66,9 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
         return totalStats
     }
 
-    public mutating func setCurrentStats(_ newStats: Stats, in rpSpace: RP) {
+    public mutating func setCurrentStats(_ newStats: Stats) {
         var newCurrentStats: [String: RPValue] = [:]
-        let maxStats = getTotalStats(in: rpSpace)
+        let maxStats = getTotalStats()
         for type in RP.statTypes {
             newCurrentStats[type] = newStats[type] < maxStats[type] ? newStats[type] : maxStats[type]
         }
@@ -140,12 +140,12 @@ public struct RPEntity<RP: RPSpace>: Temporal, InventoryManager, Codable {
         threat.removeValue(forKey: id)
     }
 
-    public mutating func addExecutableAbility(_ ability: RPAbility<RP>, conditional: Conditional<RP>) {
+    public mutating func addExecutableAbility(_ ability: RPAbility<RP>, conditional: RPConditional<RP>) {
         let activeAbility = RPActiveAbility<RP>(entityId: id, ability: ability, conditional: conditional)
         executableAbilities[ability.code] = activeAbility
     }
 
-    public mutating func addPassiveAbility(_ ability: RPAbility<RP>, conditional: Conditional<RP>) {
+    public mutating func addPassiveAbility(_ ability: RPAbility<RP>, conditional: RPConditional<RP>) {
         let activeAbility = RPActiveAbility<RP>(entityId: id, ability: ability, conditional: conditional)
         passiveAbilities[ability.code] = activeAbility
     }

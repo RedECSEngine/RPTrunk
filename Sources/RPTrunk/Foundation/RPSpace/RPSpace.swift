@@ -36,7 +36,7 @@ public protocol RPSpace: Codable {
         in rpSpace: Self,
         target: RPEntityId,
         conflict: Stats
-    ) -> ConflictResult<Self>
+    ) -> RPConflictResult<Self>
 
     /// How events translate into threat between entities. Declared as a
     /// requirement so conformances can customize it; the default
@@ -44,7 +44,7 @@ public protocol RPSpace: Codable {
     static func resolveThreatChanges(
         for eventResult: RPEventResult<Self>,
         in rpSpace: Self
-    ) -> [ThreatChange]
+    ) -> [RPThreatChange]
 
     func entityById(_ id: RPEntityId) -> Entity?
     func teamById(_ id: RPTeamId) -> Team?
@@ -251,7 +251,7 @@ extension RPSpace {
         }
         modifyEntity(id: sourceId) { e, _ in
             e.inventory.removeAll { $0.id == id }
-            e.body.wornItems.removeAll { $0.id == id }
+            e.body.unequip(itemId: id)
         }
         return receiveItem(outgoing, to: recipientId, from: sourceId)
     }
@@ -262,9 +262,40 @@ extension RPSpace {
         let outgoing = source.inventory + source.body.wornItems
         modifyEntity(id: sourceId) { e, _ in
             e.inventory = []
-            e.body.wornItems = []
+            e.body.unequipAll()
         }
         return outgoing.flatMap { receiveItem($0, to: recipientId, from: sourceId) }
+    }
+
+    /// Moves a carried item out of the inventory and onto the body. Fails when
+    /// the entity is not carrying `id`, the item has no `equipmentSlotCode`, or
+    /// its slot is already full.
+    @discardableResult
+    public mutating func equipItem(id: RPItemId, on entityId: RPEntityId) -> Bool {
+        guard let entity = entityById(entityId),
+              let item = entity.inventory.first(where: { $0.id == id }),
+              entity.body.canEquip(item)
+        else {
+            return false
+        }
+        modifyEntity(id: entityId) { e, _ in
+            e.inventory.removeAll { $0.id == id }
+            e.body.equip(item)
+        }
+        return true
+    }
+
+    /// Moves a worn item off the body and back into the inventory.
+    @discardableResult
+    public mutating func unequipItem(id: RPItemId, on entityId: RPEntityId) -> Bool {
+        guard entityById(entityId)?.body.wornItems.contains(where: { $0.id == id }) == true else {
+            return false
+        }
+        modifyEntity(id: entityId) { e, _ in
+            guard let removed = e.body.unequip(itemId: id) else { return }
+            e.inventory.append(removed)
+        }
+        return true
     }
 
     public func collectAllEvent(from sourceId: RPEntityId, to recipientId: RPEntityId) -> RPEvent<Self> {
@@ -273,7 +304,7 @@ extension RPSpace {
             initiator: sourceId,
             ability: RPAbility<Self>(
                 code: "collect",
-                components: [Component(itemExchange: RPItemExchange(kind: .transferAll))]
+                fragments: [RPFragment(itemExchange: RPItemExchange(kind: .transferAll))]
             ),
             targets: [recipientId],
             rpSpace: self

@@ -1,6 +1,6 @@
 /// A single adjustment to one entity's threat toward another, produced by
 /// `RPSpace.resolveThreatChanges` after an event resolves.
-public struct ThreatChange: Equatable, Codable {
+public struct RPThreatChange: Equatable, Codable {
     /// The entity whose threat table changes.
     public var holder: RPEntityId
     /// The entity the threat is held toward.
@@ -21,11 +21,11 @@ public extension RPSpace {
     static func resolveThreatChanges(
         for eventResult: RPEventResult<Self>,
         in rpSpace: Self
-    ) -> [ThreatChange] {
+    ) -> [RPThreatChange] {
         []
     }
 
-    mutating func applyThreatChanges(_ changes: [ThreatChange]) {
+    mutating func applyThreatChanges(_ changes: [RPThreatChange]) {
         for change in changes {
             modifyEntity(id: change.holder) { entity, _ in
                 entity.addThreat(toward: change.toward, amount: change.delta)

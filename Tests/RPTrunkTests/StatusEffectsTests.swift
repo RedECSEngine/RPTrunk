@@ -20,8 +20,8 @@ final class StatusEffectsTests: XCTestCase {
         let se = RPStatusEffect<TestRPSpace>(
             code: "Test",
             tags: [],
-            components: [
-                Component(stats: .init(dict: [\.hp: 1]))
+            fragments: [
+                RPFragment(stats: .init(dict: [\.hp: 1]))
             ],
             duration: 2,
             charges: nil

@@ -1,9 +1,9 @@
 public struct RPEventResult<RP: RPSpace>: Equatable, Codable {
     public let event: RPEvent<RP>
-    public let effects: [ConflictResult<RP>]
+    public let effects: [RPConflictResult<RP>]
     public let itemTransfers: [RPItemTransfer]
 
-    init(_ event: RPEvent<RP>, _ effects: [ConflictResult<RP>], _ itemTransfers: [RPItemTransfer] = []) {
+    init(_ event: RPEvent<RP>, _ effects: [RPConflictResult<RP>], _ itemTransfers: [RPItemTransfer] = []) {
         self.event = event
         self.effects = effects
         self.itemTransfers = itemTransfers
@@ -58,11 +58,11 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
 
     // MARK: - Results calculation and application
 
-    public func getResults(in rpSpace: RP) -> [ConflictResult<RP>] {
-        var results: [ConflictResult<RP>] = []
+    public func getResults(in rpSpace: RP) -> [RPConflictResult<RP>] {
+        var results: [RPConflictResult<RP>] = []
         
         let totalStats = getStats()
-        results += targets.map { target -> ConflictResult<RP> in
+        results += targets.map { target -> RPConflictResult<RP> in
             RP.resolveConflict(
                 self,
                 in: rpSpace,
@@ -83,11 +83,11 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
         return results
     }
 
-    func applyResults(_ results: [ConflictResult<RP>], in rpSpace: inout RP) -> [RPItemTransfer] {
+    func applyResults(_ results: [RPConflictResult<RP>], in rpSpace: inout RP) -> [RPItemTransfer] {
         results.forEach { result -> Void in
             let newStats = (rpSpace.entityById(result.entity)?.currentStats ?? .zero) + result.change
-            rpSpace.modifyEntity(id: result.entity, perform: {
-                $0.setCurrentStats(newStats, in: $1)
+            rpSpace.modifyEntity(id: result.entity, perform: { e, _ in
+                e.setCurrentStats(newStats)
             })
         }
         applyStatusEffectChanges(to: targets, in: &rpSpace)

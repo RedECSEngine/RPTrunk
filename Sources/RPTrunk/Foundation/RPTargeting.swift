@@ -13,9 +13,9 @@ public struct RPTargeting<RP: RPSpace>: Codable {
     }
 
     public let type: SelectionType
-    public let conditional: Conditional<RP>
+    public let conditional: RPConditional<RP>
 
-    public init(_ type: SelectionType, _ conditional: Conditional<RP>) {
+    public init(_ type: SelectionType, _ conditional: RPConditional<RP>) {
         self.type = type
         self.conditional = conditional
     }
@@ -78,12 +78,12 @@ public struct RPTargeting<RP: RPSpace>: Codable {
 
 public extension RPTargeting {
     static func fromString(_ query: String) -> RPTargeting {
-        let components = query.split(separator: ":", omittingEmptySubsequences: false)
-        guard let type = components.first.map(String.init) else {
+        let parts = query.split(separator: ":", omittingEmptySubsequences: false)
+        guard let type = parts.first.map(String.init) else {
             fatalError("Unexpected format for string translation to target")
         }
 
-        let condition: Conditional<RP> = components.count > 1 ? Conditional(String(components[1])) : .always
+        let condition: RPConditional<RP> = parts.count > 1 ? RPConditional(String(parts[1])) : .always
 
         switch type {
         case "self":
@@ -119,7 +119,7 @@ public func == <RP: RPSpace>(lhs: RPTargeting<RP>, rhs: RPTargeting<RP>) -> Bool
 }
 
 extension RPTargeting {
-    func toComponent() -> Component<RP> {
-        Component<RP>(targetType: self)
+    func toFragment() -> RPFragment<RP> {
+        RPFragment<RP>(targetType: self)
     }
 }

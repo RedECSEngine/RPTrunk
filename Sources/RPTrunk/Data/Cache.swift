@@ -24,8 +24,8 @@ open class RPCache<RP: RPSpace> {
 
     public func loadAbilities(_ abilities: [RPReferenceCode: AbilityJSON<RP>]) throws {
         try abilities.forEach { (code, data) in
-            let components: [Component] = try buildComponent(data)
-            var ability = RPAbility<RP>(code: code, displayName: data.displayName, components: components, cooldown: data.cooldown)
+            let fragments: [RPFragment] = try buildFragments(data)
+            var ability = RPAbility<RP>(code: code, displayName: data.displayName, fragments: fragments, cooldown: data.cooldown)
             ability.metadata = data.metadata
             self.abilities[code] = ability
         }
@@ -33,12 +33,12 @@ open class RPCache<RP: RPSpace> {
 
     public func loadStatusEffects(_ statusEffects: [RPReferenceCode: StatusEffectJSON<RP>]) throws {
         try statusEffects.forEach { (code, data) in
-            let components: [Component<RP>] = try buildComponent(data)
+            let fragments: [RPFragment<RP>] = try buildFragments(data)
             let se = RPStatusEffect<RP>(
                 code: code,
                 displayName: data.displayName,
                 tags: [],
-                components: components,
+                fragments: fragments,
                 duration: data.duration,
                 charges: data.charges,
                 impairsAction: data.impairsAction ?? false,
@@ -56,9 +56,10 @@ open class RPCache<RP: RPSpace> {
             entity.baseStats = stats
             entity.displayName = data.displayName ?? code
             entity.currentStats = stats
+            entity.body.equipmentSlotCapacities = data.equipmentSlots ?? [:]
             data.abilities?.forEach {
                 ability in
-                let conditional = Conditional<RP>(ability.conditional)
+                let conditional = RPConditional<RP>(ability.conditional)
                 if let ability = self.abilities[ability.code] {
                     entity.addExecutableAbility(ability, conditional: conditional)
                 }
@@ -69,16 +70,17 @@ open class RPCache<RP: RPSpace> {
 
     public func loadItems(_ items: [RPReferenceCode: ItemJSON<RP>]) throws {
         try items.forEach { (code, data) in
-            let components: [Component<RP>] = try buildComponent(data)
+            let fragments: [RPFragment<RP>] = try buildFragments(data)
             let ability = try data.ability.map { try getAbility($0) }
-            let conditional = Conditional<RP>(data.conditional ?? "always")
+            let conditional = RPConditional<RP>(data.conditional ?? "always")
             var item = RPItem<RP>(
                 code: code,
                 displayName: data.displayName,
                 maximumStack: data.maximumStack,
-                components: components,
+                fragments: fragments,
                 ability: ability,
-                conditional: conditional
+                conditional: conditional,
+                equipmentSlotCode: data.equipmentSlotCode
             )
             item.metadata = data.metadata
             self.items[code] = item
@@ -96,38 +98,38 @@ open class RPCache<RP: RPSpace> {
         RPActiveItem(item: try getItem(code), amount: amount)
     }
 
-    public func buildComponent<C: ComponentsContainerJSON>(_ component: C) throws -> [Component<RP>] where C.Stats == RP.Stats  {
-        var components: [Component<RP>] = []
+    public func buildFragments<C: FragmentsContainerJSON>(_ fragment: C) throws -> [RPFragment<RP>] where C.Stats == RP.Stats  {
+        var fragments: [RPFragment<RP>] = []
         
-        if let stats = component.stats {
-            components.append(Component(stats: stats))
+        if let stats = fragment.stats {
+            fragments.append(RPFragment(stats: stats))
         }
-        if let cost = component.cost {
-            components.append(Component(cost: cost))
+        if let cost = fragment.cost {
+            fragments.append(RPFragment(cost: cost))
         }
-        if let requirements = component.requirements {
-            components.append(Component(requirements: requirements))
+        if let requirements = fragment.requirements {
+            fragments.append(RPFragment(requirements: requirements))
         }
-        if let statusEffects = component.statusEffects {
-            components += try statusEffects.map { try getStatusEffect($0) }
+        if let statusEffects = fragment.statusEffects {
+            fragments += try statusEffects.map { try getStatusEffect($0) }
         }
-        if let target = component.target {
+        if let target = fragment.target {
             let type = RPTargeting<RP>.fromString(target)
-            components.append(Component<RP>(targetType: type))
+            fragments.append(RPFragment<RP>(targetType: type))
         }
-        if let discharge = component.discharge {
-            components.append(Component<RP>(dischargedStatusEffects: discharge))
+        if let discharge = fragment.discharge {
+            fragments.append(RPFragment<RP>(dischargedStatusEffects: discharge))
         }
-        if let c = component.components {
-            components += try c.map { try getComponent($0) }
+        if let c = fragment.fragments {
+            fragments += try c.map { try getFragment($0) }
         }
         
-        return components
+        return fragments
     }
 
-    public func buildConditional(_ data: [String: AnyObject]) -> Conditional<RP> {
+    public func buildConditional(_ data: [String: AnyObject]) -> RPConditional<RP> {
         if let query = data["conditional"] as? String {
-            return Conditional(query)
+            return RPConditional(query)
         }
         return .always
     }
@@ -139,15 +141,15 @@ open class RPCache<RP: RPSpace> {
         throw RPCache.CacheError.notFound(name)
     }
 
-    public func getStatusEffect(_ name: String) throws -> Component<RP> {
+    public func getStatusEffect(_ name: String) throws -> RPFragment<RP> {
         if let se = statusEffects[name] {
-            return Component<RP>(statusEffects: [se])
+            return RPFragment<RP>(statusEffects: [se])
         }
         throw RPCache.CacheError.notFound(name)
     }
 
-    public func getComponent(_ name: String) throws -> Component<RP> {
-        // TODO: expand this function to try other types of components before throwing an error
+    public func getFragment(_ name: String) throws -> RPFragment<RP> {
+        // TODO: expand this function to try other types of fragments before throwing an error
         guard let se = try? getStatusEffect(name) else {
             throw RPCache.CacheError.notFound(name)
         }

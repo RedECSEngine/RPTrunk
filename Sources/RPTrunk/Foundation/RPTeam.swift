@@ -1,4 +1,4 @@
-public struct RPTeam<RP: RPSpace>: InventoryManager, Codable, Equatable {
+public struct RPTeam<RP: RPSpace>: Codable, Equatable {
     public var id: RPTeamId = UUID().uuidString
     public private(set) var entities: Set<RPEntityId> = []
     public var allies: Set<RPTeamId> = []

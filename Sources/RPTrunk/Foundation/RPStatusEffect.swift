@@ -18,7 +18,7 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
         code: RPReferenceCode,
         displayName: String? = nil,
         tags: [String],
-        components: [Component<RP>],
+        fragments: [RPFragment<RP>],
         duration: Double?,
         charges: Int?,
         impairsAction: Bool = false,
@@ -32,9 +32,9 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
         self.impairsAction = impairsAction
         self.period = period
 
-        if components.count > 0 {
-            let components: [Component<RP>] = components + [RPTargeting<RP>(.oneself, .always).toComponent()]
-            ability = RPAbility(code: code, displayName: displayName, components: components, cooldown: nil)
+        if fragments.count > 0 {
+            let fragments: [RPFragment<RP>] = fragments + [RPTargeting<RP>(.oneself, .always).toFragment()]
+            ability = RPAbility(code: code, displayName: displayName, fragments: fragments, cooldown: nil)
         } else {
             ability = nil
         }
@@ -55,7 +55,7 @@ public func ==<Stats: StatsType> (lhs: RPStatusEffect<Stats>, rhs: RPStatusEffec
 /**
     A Status effect, currently active on an entity
  */
-public struct RPActiveStatusEffect<RP: RPSpace>: Temporal, Codable {
+public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
     public var deltaTick: RPTimeIncrement = 0
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { statusEffect.duration ?? 0 }
