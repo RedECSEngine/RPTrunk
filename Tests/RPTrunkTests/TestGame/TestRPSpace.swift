@@ -11,26 +11,26 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
     public init() {}
 
     /// Test hook: lets individual tests define how events produce threat.
-    nonisolated(unsafe) static var threatRule: ((RPEventResult<TestRPSpace>) -> [ThreatChange])?
+    nonisolated(unsafe) static var threatRule: ((RPEventResult<TestRPSpace>) -> [RPThreatChange])?
 
     public static func resolveThreatChanges(
         for eventResult: RPEventResult<TestRPSpace>,
         in rpSpace: TestRPSpace
-    ) -> [ThreatChange] {
+    ) -> [RPThreatChange] {
         threatRule?(eventResult) ?? []
     }
     
-    public static func resolveConflict(_ event: RPEvent<Self>, in rpSpace: Self, target: RPEntityId, conflict: Stats) -> ConflictResult<Self> {
-        ConflictResult(.init(), .zero)
+    public static func resolveConflict(_ event: RPEvent<Self>, in rpSpace: Self, target: RPEntityId, conflict: Stats) -> RPConflictResult<Self> {
+        RPConflictResult(.init(), .zero)
         //    public func resolveConflict(
         //        _ event: RPEvent,
         //        in rpSpace: RPSpace,
         //        target: RPEntityId,
         //        conflict: Stats
-        //    )  -> ConflictResult {
+        //    )  -> RPConflictResult {
         //
         //        guard let target = rpSpace.entityById(target) else {
-        //            return ConflictResult(entityId: target, [:])
+        //            return RPConflictResult(entityId: target, [:])
         //        }
         //
         //        // hp result - part 1 - damage hits against hp, with defense as reduction
@@ -45,7 +45,7 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
         //        // for reducing defense if state is below 0
         //        let defenseResult = conflict["defense"] >= 0 ? 0 : conflict["defense"]
         //
-        //        return ConflictResult(target, [
+        //        return RPConflictResult(target, [
         //            "hp": hpResult,
         //            "mp": mpResult,
         //            "damage": dmgResult,

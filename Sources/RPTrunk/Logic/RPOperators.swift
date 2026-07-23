@@ -1,5 +1,5 @@
 
-public enum ConditionalOperator: String, CaseIterable {
+public enum RPConditionalOperator: String, CaseIterable {
     case GreaterThan = ">"
     case LessThan = "<"
     case Equal = "=="

@@ -41,17 +41,12 @@ final class EntityTests: XCTestCase {
     }
     
     func test_entity_stats_are_sum_of_components() {
-        let sword = RPActiveItem<TestRPSpace>(item: RPItem(code: "sword", components: [
-            Component(stats: .init(dict: [\.damage: 10]))
-        ]))
-        let helmet = RPActiveItem<TestRPSpace>(item: RPItem(code: "helmet", components: [
-            Component(stats: .init(dict: [\.damage: 5]))
-        ]))
-        
-        entity.body.wornItems = [sword, helmet]
-        
+        entity.body.equip(TestEquipment.sword)
+        entity.body.equip(TestEquipment.helmet)
+
+        XCTAssertEqual(entity.body.wornItems.count, 2)
         XCTAssertEqual(entity.getTotalStats(in: rpSpace).damage, 15)
-        
+
         entity.setCurrentStats(.init(dict: [\.damage: 100]), in: rpSpace)
         XCTAssertEqual(entity.damage, 15)
     }
@@ -70,7 +65,7 @@ final class EntityTests: XCTestCase {
     }
 
     func test_status_effects_should_be_able_to_remove_status_effect_by_name() {
-        let se = RPStatusEffect<TestRPSpace>(code: "Death", tags: ["KO"], components: [], duration: nil, charges: 1)
+        let se = RPStatusEffect<TestRPSpace>(code: "Death", tags: ["KO"], fragments: [], duration: nil, charges: 1)
         entity.applyStatusEffect(se)
 
         XCTAssertEqual(entity.hasStatus("Death"), true)
@@ -80,7 +75,7 @@ final class EntityTests: XCTestCase {
     }
 
     func test_status_effects_discharges_to_remove_a_status_effect_with_multiple_charges() {
-        let se = RPStatusEffect<TestRPSpace>(code: "Charge", tags: ["boost"], components: [], duration: nil, charges: 2)
+        let se = RPStatusEffect<TestRPSpace>(code: "Charge", tags: ["boost"], fragments: [], duration: nil, charges: 2)
         entity.applyStatusEffect(se)
 
         XCTAssertEqual(entity.hasStatus("Charge"), true)

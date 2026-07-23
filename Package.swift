@@ -4,12 +4,13 @@ import PackageDescription
 
 let package = Package(
     name: "RPTrunk",
-    // Matches swift-parsing's minimum requirements.
+    // Minimum that ships `CodingKeyRepresentable`, which `RPCode` needs so a
+    // dictionary keyed by a code still encodes as a JSON object.
     platforms: [
-        .iOS(.v13),
-        .macOS(.v10_15),
-        .tvOS(.v13),
-        .watchOS(.v6),
+        .iOS("15.4"),
+        .macOS("12.3"),
+        .tvOS("15.4"),
+        .watchOS("8.5"),
     ],
     products: [
         .library(

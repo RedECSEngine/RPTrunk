@@ -1,8 +1,8 @@
 
-public struct RPAbility<RP: RPSpace>: ComponentContainer, Codable {
+public struct RPAbility<RP: RPSpace>: RPFragmentContainer, Codable {
     public var code: RPReferenceCode
     public var displayName: String
-    public var components: [Component<RP>]
+    public var fragments: [RPFragment<RP>]
     public var cooldown: RPTimeIncrement
     public var repeats: Int = 1
     public var metadata: RP.AbilityMetadata?
@@ -10,12 +10,12 @@ public struct RPAbility<RP: RPSpace>: ComponentContainer, Codable {
     public init(
         code: RPReferenceCode,
         displayName: String? = nil,
-        components: [Component<RP>] = [],
+        fragments: [RPFragment<RP>] = [],
         cooldown: RPTimeIncrement? = nil
     ) {
         self.code = code
         self.displayName = displayName ?? code
-        self.components = components
+        self.fragments = fragments
         self.cooldown = cooldown ?? 0
     }
 }
@@ -28,16 +28,16 @@ public func == <RP: RPSpace>(lhs: RPAbility<RP>, rhs: RPAbility<RP>) -> Bool {
 /**
     An ability, currently active on an entity
  */
-public struct RPActiveAbility<RP: RPSpace>: Temporal, Codable {
+public struct RPActiveAbility<RP: RPSpace>: RPTemporal, Codable {
     public typealias Stats = RP.Stats
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { ability.cooldown }
 
     public var entityId: RPEntityId
     public let ability: RPAbility<RP>
-    public let conditional: Conditional<RP>
+    public let conditional: RPConditional<RP>
 
-    public init(entityId: RPEntityId, ability: RPAbility<RP>, conditional: Conditional<RP>) {
+    public init(entityId: RPEntityId, ability: RPAbility<RP>, conditional: RPConditional<RP>) {
         self.entityId = entityId
         self.ability = ability
         self.conditional = conditional

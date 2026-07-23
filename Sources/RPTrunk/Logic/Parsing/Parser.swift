@@ -26,7 +26,7 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
     }
 }
 
-func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> Conditional<RP>.Predicate {
+func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPConditional<RP>.Predicate {
     let lhs: [ParserResultType<RP>] = try compileOperand(clause.lhs)
 
     if let comparison = clause.comparison {
@@ -56,8 +56,8 @@ func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> Conditional
     }
 }
 
-func compileCondition<RP: RPSpace>(_ condition: ParsedCondition) throws -> Conditional<RP>.Predicate {
-    let predicates: [Conditional<RP>.Predicate] = try condition.clauses.map(compileClause)
+func compileCondition<RP: RPSpace>(_ condition: ParsedCondition) throws -> RPConditional<RP>.Predicate {
+    let predicates: [RPConditional<RP>.Predicate] = try condition.clauses.map(compileClause)
     if predicates.count == 1 {
         return predicates[0]
     }
@@ -69,7 +69,7 @@ func compileCondition<RP: RPSpace>(_ condition: ParsedCondition) throws -> Condi
     }
 }
 
-func interpretStringCondition<RP: RPSpace>(_ condition: String) throws -> Conditional<RP>.Predicate {
+func interpretStringCondition<RP: RPSpace>(_ condition: String) throws -> RPConditional<RP>.Predicate {
     let parsed: ParsedCondition
     do {
         parsed = try parseCondition(condition)

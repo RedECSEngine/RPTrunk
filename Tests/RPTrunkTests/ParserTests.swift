@@ -148,7 +148,7 @@ final class ParserTests: XCTestCase {
 
     func testUnknownStatFailsCompilation() {
         XCTAssertThrowsError(
-            try interpretStringCondition("wisdom > 10") as Conditional<TestRPSpace>.Predicate
+            try interpretStringCondition("wisdom > 10") as RPConditional<TestRPSpace>.Predicate
         ) { error in
             XCTAssertEqual(error is ConditionalInterpretationError, true)
         }
@@ -177,15 +177,15 @@ final class ParserTests: XCTestCase {
         rpSpace.addEntity(entity)
         rpSpace.addEntity(enemy)
 
-        let entityPredicate: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("  hp    >    target.hp  ")
+        let entityPredicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("  hp    >    target.hp  ")
         XCTAssertEqual(try entityPredicate(entity.id, rpSpace), true)
         XCTAssertEqual(try entityPredicate(enemy.id, rpSpace), false)
 
-        let hpValuePredicate: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("hp == 40")
+        let hpValuePredicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("hp == 40")
         XCTAssertEqual(try hpValuePredicate(entity.id, rpSpace), true)
         XCTAssertEqual(try hpValuePredicate(enemy.id, rpSpace), false)
 
-        let hpGreaterThanPredicate: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("hp > 30")
+        let hpGreaterThanPredicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("hp > 30")
         XCTAssertEqual(try hpGreaterThanPredicate(entity.id, rpSpace), true)
         XCTAssertEqual(try hpGreaterThanPredicate(enemy.id, rpSpace), false)
 
@@ -194,10 +194,10 @@ final class ParserTests: XCTestCase {
         }
         XCTAssertEqual(try hpGreaterThanPredicate(entity.id, rpSpace), false)
 
-        let hpPercentagePredicate: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("hp% > 10%")
+        let hpPercentagePredicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("hp% > 10%")
         XCTAssertEqual(try hpPercentagePredicate(entity.id, rpSpace), true)
 
-        let malformedPredicate: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("hp > 10%")
+        let malformedPredicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("hp > 10%")
         XCTAssertThrowsError(try malformedPredicate(entity.id, rpSpace)) { error in
             XCTAssertEqual(error is ConditionalInterpretationError, true)
         }
@@ -211,7 +211,7 @@ final class ParserTests: XCTestCase {
         rpSpace.addEntity(entity)
         rpSpace.addEntity(enemy)
 
-        let predicate: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("hp > 30 && hp > target.hp")
+        let predicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("hp > 30 && hp > target.hp")
         XCTAssertEqual(try predicate(entity.id, rpSpace), true)
         XCTAssertEqual(try predicate(enemy.id, rpSpace), false)
     }
@@ -224,15 +224,15 @@ final class ParserTests: XCTestCase {
         rpSpace.addEntity(entity)
         rpSpace.addEntity(enemy)
 
-        let healingQuery: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("   Healing?   ")
-        let healingQuery2: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("   Healing?   ==   false  ")
-        let dyingQuery: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("   Dieing?   ")
-        let dyingQuery2: Conditional<TestRPSpace>.Predicate = try interpretStringCondition("   Dieing?    ==   false  ")
+        let healingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   Healing?   ")
+        let healingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   Healing?   ==   false  ")
+        let dyingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   Dieing?   ")
+        let dyingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   Dieing?    ==   false  ")
 
         let statusEffect = RPStatusEffect<TestRPSpace>(
             code: "Healing",
             tags: [],
-            components: [],
+            fragments: [],
             duration: 1,
             charges: 0
         )

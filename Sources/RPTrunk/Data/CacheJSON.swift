@@ -12,7 +12,7 @@ public struct RPCacheJSON<RP: RPSpace>: Codable, Equatable {
     public var items: [String: ItemJSON<RP>]?
 }
 
-public protocol ComponentsContainerJSON {
+public protocol FragmentsContainerJSON {
     associatedtype Stats: StatsType
     var stats: Stats? { get }
     var cost: Stats? { get }
@@ -20,10 +20,10 @@ public protocol ComponentsContainerJSON {
     var statusEffects: [String]? { get }
     var target: String? { get }
     var discharge: [String]? { get }
-    var components: [String]? { get }
+    var fragments: [String]? { get }
 }
 
-public struct StatusEffectJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJSON {
+public struct StatusEffectJSON<RP: RPSpace>: Codable, Equatable, FragmentsContainerJSON {
     public var displayName: String?
     public var stats: RP.Stats?
     public var cost: RP.Stats?
@@ -31,7 +31,7 @@ public struct StatusEffectJSON<RP: RPSpace>: Codable, Equatable, ComponentsConta
     public var statusEffects: [String]?
     public var target: String?
     public var discharge: [String]?
-    public var components: [String]?
+    public var fragments: [String]?
 
     public var duration: RPTimeIncrement?
     public var charges: Int?
@@ -49,11 +49,15 @@ public struct EntityJSON<RP: RPSpace>: Codable, Equatable {
     public var displayName: String?
     public var stats: RP.Stats? = .zero
     public var abilities: [AbilityJSON]?
-    
+
+    /// This body's equipment slots and how many items each admits. Slots left
+    /// undeclared are unlimited, so declare every slot that should be capped.
+    public var equipmentSlots: [RPEquipmentSlotCode: Int]?
+
     public var metadata: RP.EntityMetadata?
 }
 
-public struct AbilityJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJSON {
+public struct AbilityJSON<RP: RPSpace>: Codable, Equatable, FragmentsContainerJSON {
     public var displayName: String?
     public var stats: RP.Stats?
     public var cost: RP.Stats?
@@ -61,14 +65,14 @@ public struct AbilityJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJ
     public var statusEffects: [String]?
     public var target: String?
     public var discharge: [String]?
-    public var components: [String]?
+    public var fragments: [String]?
 
     public let cooldown: RPTimeIncrement?
 
     public var metadata: RP.AbilityMetadata?
 }
 
-public struct ItemJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJSON {
+public struct ItemJSON<RP: RPSpace>: Codable, Equatable, FragmentsContainerJSON {
     public var displayName: String?
     public var stats: RP.Stats?
     public var cost: RP.Stats?
@@ -76,12 +80,15 @@ public struct ItemJSON<RP: RPSpace>: Codable, Equatable, ComponentsContainerJSON
     public var statusEffects: [String]?
     public var target: String?
     public var discharge: [String]?
-    public var components: [String]?
+    public var fragments: [String]?
 
     public var ability: String?
     public var conditional: String?
     public var cooldown: RPTimeIncrement?
     public var maximumStack: Int?
+
+    /// The `RPBody` slot this item is worn in. Omitted means not equippable.
+    public var equipmentSlotCode: RPEquipmentSlotCode?
 
     public var metadata: RP.ItemMetadata?
 }

@@ -1,6 +1,6 @@
-public struct Component<RP: RPSpace>: Codable, Equatable {
-    fileprivate struct IntermediaryContainer: ComponentContainer {
-        let components: [Component]
+public struct RPFragment<RP: RPSpace>: Codable, Equatable {
+    fileprivate struct IntermediaryContainer: RPFragmentContainer {
+        let fragments: [RPFragment]
     }
     
     public typealias Stats = RP.Stats
@@ -41,8 +41,8 @@ public struct Component<RP: RPSpace>: Codable, Equatable {
         self.itemExchange = itemExchange
     }
 
-    public init(flattenedFrom components: [Component]) {
-        let container = IntermediaryContainer(components: components)
+    public init(flattenedFrom fragments: [RPFragment]) {
+        let container = IntermediaryContainer(fragments: fragments)
 
         stats = container.stats
         cost = container.cost

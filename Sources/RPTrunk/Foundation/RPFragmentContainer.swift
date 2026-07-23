@@ -1,31 +1,31 @@
-public protocol ComponentContainer {
+public protocol RPFragmentContainer {
     associatedtype RP: RPSpace
     typealias Stats = RP.Stats
-    var components: [Component<RP>] { get }
+    var fragments: [RPFragment<RP>] { get }
 }
 
-public extension ComponentContainer {
+public extension RPFragmentContainer {
     var stats: Stats {
-        components
+        fragments
             .compactMap { $0.getStats() }
             .reduce(.zero, +)
     }
 
     var cost: Stats {
-        components
+        fragments
             .compactMap { $0.getCost() }
             .reduce(.zero, +)
     }
 
     var requirements: Stats {
-        components
+        fragments
             .compactMap { $0.getRequirements() }
             .reduce(.zero, +)
     }
 
     var targeting: RPTargeting<RP> {
-        for component in components {
-            if let t = component.getTargeting() {
+        for fragment in fragments {
+            if let t = fragment.getTargeting() {
                 return t
             }
         }
@@ -33,18 +33,18 @@ public extension ComponentContainer {
     }
 
     var statusEffects: [RPStatusEffect<RP>] {
-        components
+        fragments
             .flatMap { $0.getStatusEffects() }
     }
 
     var dischargedStatusEffects: [String] {
-        components
+        fragments
             .flatMap { $0.getDischargedStatusEffects() }
     }
 
     var itemExchange: RPItemExchange? {
-        for component in components {
-            if let exchange = component.getItemExchange() {
+        for fragment in fragments {
+            if let exchange = fragment.getItemExchange() {
                 return exchange
             }
         }

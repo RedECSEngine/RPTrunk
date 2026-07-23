@@ -162,7 +162,7 @@ final class ThreatTests: XCTestCase {
     func makeAttack() -> RPAbility<TestRPSpace> {
         var stats = TestStats()
         stats.damage = 4
-        return RPAbility(code: "Attack", components: [Component(stats: stats)])
+        return RPAbility(code: "Attack", fragments: [RPFragment(stats: stats)])
     }
 
     func testEventsProduceNoThreatByDefault() {
@@ -184,7 +184,7 @@ final class ThreatTests: XCTestCase {
         TestRPSpace.threatRule = { eventResult in
             guard let initiator = eventResult.event.initiator else { return [] }
             return eventResult.event.targets.map { targetId in
-                ThreatChange(holder: targetId, toward: initiator, delta: 4)
+                RPThreatChange(holder: targetId, toward: initiator, delta: 4)
             }
         }
 

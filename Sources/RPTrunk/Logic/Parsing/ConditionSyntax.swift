@@ -52,10 +52,10 @@ public struct ConditionOperand: Equatable {
 }
 
 public struct ConditionComparison: Equatable {
-    public var op: ConditionalOperator
+    public var op: RPConditionalOperator
     public var rhs: ConditionOperand
 
-    public init(op: ConditionalOperator, rhs: ConditionOperand) {
+    public init(op: RPConditionalOperator, rhs: ConditionOperand) {
         self.op = op
         self.rhs = rhs
     }
@@ -176,16 +176,16 @@ struct ConditionOperandParser: ConditionParserPrinter {
 }
 
 struct ConditionOperatorParser: ConditionParserPrinter {
-    func parse(_ input: inout Substring) throws -> ConditionalOperator {
+    func parse(_ input: inout Substring) throws -> RPConditionalOperator {
         let body = input.prefix(while: { "><=!".contains($0) })
-        guard let op = ConditionalOperator(rawValue: String(body)) else {
+        guard let op = RPConditionalOperator(rawValue: String(body)) else {
             throw ConditionSyntaxError.expectedOperator
         }
         input.removeFirst(body.count)
         return op
     }
 
-    func print(_ output: ConditionalOperator, into input: inout Substring) throws {
+    func print(_ output: RPConditionalOperator, into input: inout Substring) throws {
         input.insert(contentsOf: output.rawValue, at: input.startIndex)
     }
 }

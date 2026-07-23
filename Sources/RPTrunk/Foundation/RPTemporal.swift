@@ -8,7 +8,7 @@ public struct RPMoment {
     }
 }
 
-public protocol Temporal {
+public protocol RPTemporal {
     associatedtype RP: RPSpace
     var currentTick: RPTimeIncrement { get set }
     var maximumTick: RPTimeIncrement { get }
@@ -19,7 +19,7 @@ public protocol Temporal {
     func getPendingEvents(in rpSpace: RP) -> [RPEvent<RP>]
 }
 
-extension Temporal {
+extension RPTemporal {
     func isCoolingDown() -> Bool {
         currentTick < maximumTick
     }
