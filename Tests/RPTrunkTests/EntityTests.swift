@@ -29,13 +29,13 @@ final class EntityTests: XCTestCase {
     }
 
     func test_should_be_able_to_have_any_stats_value_within_the_baseStats_range() {
-        entity.setCurrentStats(.init(dict: [\.hp: 15, \.damage: 0]), in: rpSpace)
+        entity.setCurrentStats(.init(dict: [\.hp: 15, \.damage: 0]))
         XCTAssertEqual(entity.hp, 15)
         XCTAssertEqual(entity.damage, 0)
     }
 
     func test_should_not_be_able_to_exceed_base_stats() {
-        entity.setCurrentStats(.init(dict: [\.hp: 45, \.damage: 10]), in: rpSpace)
+        entity.setCurrentStats(.init(dict: [\.hp: 45, \.damage: 10]))
         XCTAssertEqual(entity.hp, 30)
         XCTAssertEqual(entity.damage, 0)
     }
@@ -45,9 +45,9 @@ final class EntityTests: XCTestCase {
         entity.body.equip(TestEquipment.helmet)
 
         XCTAssertEqual(entity.body.wornItems.count, 2)
-        XCTAssertEqual(entity.getTotalStats(in: rpSpace).damage, 15)
+        XCTAssertEqual(entity.getTotalStats().damage, 15)
 
-        entity.setCurrentStats(.init(dict: [\.damage: 100]), in: rpSpace)
+        entity.setCurrentStats(.init(dict: [\.damage: 100]))
         XCTAssertEqual(entity.damage, 15)
     }
 
@@ -62,6 +62,30 @@ final class EntityTests: XCTestCase {
         let reactionEvents = rpSpace.entities[entity.id]?.getPendingPassiveEvents(in: rpSpace)
         XCTAssertEqual(reactionEvents?.count, 1)
         XCTAssertEqual(reactionEvents?.first?.ability, ability)
+    }
+
+    func test_global_cooldown_gates_actions_even_when_the_ability_is_ready() {
+        let ability = RPAbility<TestRPSpace>(
+            code: "Strike",
+            fragments: [RPFragment(targetType: RPTargeting(.oneself, .always))]
+        )
+        rpSpace.entities[entity.id]?.addExecutableAbility(ability, conditional: .always)
+
+        let firstEvents = rpSpace.entities[entity.id]!.getPendingExecutableEvents(in: rpSpace)
+        XCTAssertEqual(firstEvents.count, 1)
+
+        _ = rpSpace.performEvents(firstEvents)
+
+        XCTAssertTrue(rpSpace.entities[entity.id]!.isCoolingDown())
+        XCTAssertTrue(rpSpace.entities[entity.id]!.executableAbilities["Strike"]!.canExecute(in: rpSpace))
+        XCTAssertTrue(rpSpace.entities[entity.id]!.getPendingExecutableEvents(in: rpSpace).isEmpty)
+
+        rpSpace.tick(RPMoment(delta: 499))
+        XCTAssertTrue(rpSpace.entities[entity.id]!.getPendingExecutableEvents(in: rpSpace).isEmpty)
+
+        rpSpace.tick(RPMoment(delta: 1))
+        XCTAssertFalse(rpSpace.entities[entity.id]!.isCoolingDown())
+        XCTAssertEqual(rpSpace.entities[entity.id]!.getPendingExecutableEvents(in: rpSpace).count, 1)
     }
 
     func test_status_effects_should_be_able_to_remove_status_effect_by_name() {

@@ -136,7 +136,7 @@ final class EquipmentSpaceTests: XCTestCase {
         let wearer = rpSpace.entityById("wearer")!
         XCTAssertTrue(wearer.inventory.isEmpty)
         XCTAssertEqual(wearer.body.wornItems.map(\.code), ["sword"])
-        XCTAssertEqual(wearer.getTotalStats(in: rpSpace).damage, 10)
+        XCTAssertEqual(wearer.getTotalStats().damage, 10)
     }
 
     func test_equipping_fails_when_the_slot_is_full_and_leaves_the_item_carried() {
@@ -158,7 +158,7 @@ final class EquipmentSpaceTests: XCTestCase {
         let wearer = rpSpace.entityById("wearer")!
         XCTAssertEqual(wearer.inventory.map(\.code), ["sword"])
         XCTAssertTrue(wearer.body.wornItems.isEmpty)
-        XCTAssertEqual(wearer.getTotalStats(in: rpSpace).damage, 0)
+        XCTAssertEqual(wearer.getTotalStats().damage, 0)
     }
 
     func test_transfer_takes_worn_items_off_the_body() {

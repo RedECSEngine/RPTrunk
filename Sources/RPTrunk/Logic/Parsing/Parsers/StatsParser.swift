@@ -12,7 +12,7 @@ func getStat<RP: RPSpace>(_ stat: String, usePercent: Bool) -> (ParserResultType
            let rpEntity = rpSpace.entityById(e) {
             let currentValue = rpEntity[stat]
             if usePercent {
-                let percent: Double = (Double(currentValue) / Double(rpEntity.getTotalStats()[stat]) * 100).rounded()
+                let percent: Double = (Double(currentValue) / Double(RP.fullyResolvedStats(for: rpEntity)[stat]) * 100).rounded()
                 return .valueResult(.percent(percent))
             }
             return .valueResult(.rpValue(currentValue))

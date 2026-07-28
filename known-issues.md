@@ -24,3 +24,20 @@ issue lives in the repo where its *symptom* is felt.
   `.init(delta: 3000)`, or construct the effect with `period: 1` to assert the
   old "pulses immediately" intent. Needs Kai's call on the intended semantics,
   so it was left red rather than edited to green.
+- **Update (2026-07-27):** this is once again the *only* red test — the compile
+  drift below had been masking it.
+
+## Resolved
+
+### Tests: suite stopped compiling after the equipment-slots merge
+- **Where:** `Tests/RPTrunkTests/EntityTests.swift` (4 call sites),
+  `Tests/RPTrunkTests/EquipmentTests.swift` (2 call sites).
+- **Symptom:** `swift test` failed to build — `extra argument 'in' in call` /
+  `argument passed to call that takes no arguments`.
+- **Cause:** the equipment-slots merge (29ff664) dropped the `in rpSpace`
+  parameter from `RPEntity.setCurrentStats` and `getTotalStats` but did not
+  update the tests, so the whole suite (including the deliberately-red periodic
+  status effect test above) silently stopped running.
+- **Fixed:** with the entity global-cooldown change (2026-07-27) — call sites
+  mechanically updated to the merged parameterless API; no semantic changes.
+  Commit hash pending.

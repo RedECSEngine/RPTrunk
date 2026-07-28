@@ -29,8 +29,13 @@ public protocol RPSpace: Codable {
 
     static func createDefaultEntity(cache: RPCache<Self>) -> Entity
     
+    /// Where we calculate any relationship between stats to determine to final values
+    /// e.g. where we calculate how stamina translates to HP
+    /// or any other kinds of specialized game state that could impact final stats
+    static func fullyResolvedStats(for stats: Self.Stats) -> Self.Stats
+
     /// How any interaction between to entities in resolves.
-    ///  Events contain all the data necessary to calculate an end result
+    /// Events contain all the data necessary to calculate an end result
     static func resolveConflict(
         _ event: RPEvent<Self>,
         in rpSpace: Self,
@@ -69,6 +74,10 @@ public extension RPSpace {
     
     static func createDefaultEntity(cache: RPCache<Self>) -> Entity {
         Entity()
+    }
+    
+    static func fullyResolvedStats(for rpEntity: RPEntity<Self>) -> Stats {
+        fullyResolvedStats(for: rpEntity.cumulativeWornStats())
     }
     
     func getEnemies(of entityId: RPEntityId) -> Set<RPEntityId> {
@@ -172,7 +181,12 @@ extension RPSpace {
 
         let mainEventResults = events
             .flatMap { event -> [RPEvent<Self>] in
-                event.resetInitiatorCooldowns(in: &self)
+                switch event.category {
+                case .standardConflict:
+                    event.resetInitiatorCooldowns(in: &self)
+                case .periodicEffect, .itemExchangeOnly:
+                    break
+                }
                 return [event]
             }
             .map { $0.execute(in: &self) }

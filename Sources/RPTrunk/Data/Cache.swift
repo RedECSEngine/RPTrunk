@@ -53,9 +53,8 @@ open class RPCache<RP: RPSpace> {
             let stats = data.stats ?? .zero
             var entity = RPEntity<RP>.new(cache: self)
             entity.code = code
-            entity.baseStats = stats
+            entity.setBaseStats(stats)
             entity.displayName = data.displayName ?? code
-            entity.currentStats = stats
             entity.body.equipmentSlotCapacities = data.equipmentSlots ?? [:]
             data.abilities?.forEach {
                 ability in

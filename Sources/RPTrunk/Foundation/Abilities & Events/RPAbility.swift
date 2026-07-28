@@ -47,7 +47,10 @@ public struct RPActiveAbility<RP: RPSpace>: RPTemporal, Codable {
         guard isCoolingDown() == false else {
             return false
         }
+        return wouldExecute(in: rpSpace)
+    }
 
+    public func wouldExecute(in rpSpace: RP) -> Bool {
         guard let e = rpSpace.entityById(entityId) else {
             return false
         }
@@ -64,6 +67,10 @@ public struct RPActiveAbility<RP: RPSpace>: RPTemporal, Codable {
             return []
         }
         return createEvents(in: rpSpace)
+    }
+
+    public func predictEvents(in rpSpace: RP) -> [RPEvent<RP>] {
+        createEvents(in: rpSpace)
     }
 
     fileprivate func createEvents(in rpSpace: RP) -> [RPEvent<RP>] {

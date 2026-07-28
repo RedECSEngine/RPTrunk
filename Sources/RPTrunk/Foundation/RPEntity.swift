@@ -17,10 +17,11 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
     public var teamId: RPTeamId?
 
     public var currentTick: RPTimeIncrement = 0
-    public var maximumTick: RPTimeIncrement = 0
+    public var globalCooldown: RPTimeIncrement = 2500
+    public var maximumTick: RPTimeIncrement { globalCooldown }
 
-    public var baseStats: Stats = .zero
-    public var currentStats: Stats = .zero
+    public private(set) var baseStats: Stats = .zero
+    public private(set) var currentStats: Stats = .zero
     public var body = RPBody<RP>()
     public var inventory: [RPActiveItem<RP>] = []
     public var metadata: RP.EntityMetadata?
@@ -50,25 +51,32 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
     }
 
     public init(_ data: [String: RPValue]) {
-        baseStats = Stats(dict: data)
-        currentStats = baseStats
+        let stats = Stats(dict: data)
+        baseStats = stats
+        currentStats = RP.fullyResolvedStats(for: stats)
+        currentTick = globalCooldown
     }
 
     public init() {
         self.init([:])
     }
     
-    public func getTotalStats() -> Stats {
+    public func cumulativeWornStats() -> Stats {
         var totalStats = self.baseStats
         body.wornItems.forEach { item in
             totalStats = totalStats + item.stats
         }
         return totalStats
     }
+    
+    public mutating func setBaseStats(_ newStats: Stats) {
+        baseStats = newStats
+        currentStats = RP.fullyResolvedStats(for: newStats)
+    }
 
     public mutating func setCurrentStats(_ newStats: Stats) {
         var newCurrentStats: [String: RPValue] = [:]
-        let maxStats = getTotalStats()
+        let maxStats = RP.fullyResolvedStats(for: self)
         for type in RP.statTypes {
             newCurrentStats[type] = newStats[type] < maxStats[type] ? newStats[type] : maxStats[type]
         }
@@ -230,6 +238,49 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
             .map { $0.getPendingEvents(in: rpSpace) } ?? []
 
         return abilityEvents
+    }
+
+    public func predictNextEvents(within horizon: RPTimeIncrement, in rpSpace: RP) -> [RPPredictedEvent<RP>] {
+        guard canPerformEvents() else {
+            return []
+        }
+
+        let viable = executableAbilities.values.filter {
+            $0.wouldExecute(in: rpSpace)
+                && (currentStats >= $0.ability.cost || $0.ability.cost == .zero)
+                && $0.predictEvents(in: rpSpace).first?.targets.isEmpty == false
+        }
+        guard viable.isEmpty == false else {
+            return []
+        }
+
+        var entityReadyAt = Swift.max(0, maximumTick - currentTick)
+        var abilityReadyAt: [RPReferenceCode: RPTimeIncrement] = viable.reduce(into: [:]) {
+            $0[$1.ability.code] = Swift.max(0, $1.maximumTick - $1.currentTick)
+        }
+
+        var predictions: [RPPredictedEvent<RP>] = []
+        var lastActAt: RPTimeIncrement = -1
+        while entityReadyAt <= horizon {
+            guard let chosen = viable
+                .first(where: { (abilityReadyAt[$0.ability.code] ?? 0) <= entityReadyAt })
+                ?? viable.min(by: {
+                    (abilityReadyAt[$0.ability.code] ?? 0) < (abilityReadyAt[$1.ability.code] ?? 0)
+                }),
+                  let event = chosen.predictEvents(in: rpSpace).first
+            else {
+                break
+            }
+            let actAt = Swift.max(entityReadyAt, abilityReadyAt[chosen.ability.code] ?? 0)
+            guard actAt <= horizon, actAt > lastActAt || predictions.isEmpty else {
+                break
+            }
+            predictions.append(RPPredictedEvent(event: event, readyIn: actAt))
+            lastActAt = actAt
+            abilityReadyAt[chosen.ability.code] = actAt + chosen.maximumTick
+            entityReadyAt = actAt + maximumTick
+        }
+        return predictions
     }
 
     public func getPendingPassiveEvents(in rpSpace: RP) -> [RPEvent<RP>] {
