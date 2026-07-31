@@ -8,11 +8,11 @@
 
 func getStat<RP: RPSpace>(_ stat: String, usePercent: Bool) -> (ParserResultType<RP>, RP) -> ParserResultType<RP> {
     { input, rpSpace in
-        if case let .entityResult(e) = input,
-           let rpEntity = rpSpace.entityById(e) {
-            let currentValue = rpEntity[stat]
+        if case let .bodyResult(e) = input,
+           let rpBody = rpSpace.bodyById(e) {
+            let currentValue = rpBody[stat]
             if usePercent {
-                let percent: Double = (Double(currentValue) / Double(RP.fullyResolvedStats(for: rpEntity)[stat]) * 100).rounded()
+                let percent: Double = (Double(currentValue) / Double(RP.fullyResolvedStats(for: rpBody)[stat]) * 100).rounded()
                 return .valueResult(.percent(percent))
             }
             return .valueResult(.rpValue(currentValue))

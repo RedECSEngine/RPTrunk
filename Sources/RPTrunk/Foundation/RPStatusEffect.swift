@@ -53,7 +53,7 @@ public func ==<Stats: StatsType> (lhs: RPStatusEffect<Stats>, rhs: RPStatusEffec
         && lhs.ability == rhs.ability
 }
 /**
-    A Status effect, currently active on an entity
+    A Status effect, currently active on an body
  */
 public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
     public var deltaTick: RPTimeIncrement = 0
@@ -64,7 +64,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
 
     var level: Int? // power level of the buff, if it is stackable
 
-    public var entityId: RPEntityId
+    public var bodyId: RPBodyId
     fileprivate let statusEffect: RPStatusEffect<RP>
 
     public var code: RPReferenceCode { statusEffect.code }
@@ -72,15 +72,15 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
     public var tags: [String] { statusEffect.tags }
 
     public init(
-        entityId: RPEntityId,
+        bodyId: RPBodyId,
         statusEffect: RPStatusEffect<RP>
     ) {
-        self.entityId = entityId
+        self.bodyId = bodyId
         self.statusEffect = statusEffect
         currentCharge = statusEffect.charges ?? 0
     }
 
-    public func shouldDisableEntity() -> Bool {
+    public func shouldDisableBody() -> Bool {
         statusEffect.impairsAction
     }
 
@@ -90,7 +90,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
             return []
         }
         if let ability = statusEffect.ability {
-            return [RPEvent(category: .periodicEffect(name: code), initiator: entityId, ability: ability, rpSpace: rpSpace)]
+            return [RPEvent(category: .periodicEffect(name: code), initiator: bodyId, ability: ability, rpSpace: rpSpace)]
         }
         return []
     }

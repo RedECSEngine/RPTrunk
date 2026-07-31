@@ -1,11 +1,11 @@
 import Foundation // TODO: Use foundation essentials
 
 @dynamicMemberLookup
-public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
+public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
 
     public typealias Stats = RP.Stats
     
-    public var id: RPEntityId = UUID().uuidString {
+    public var id: RPBodyId = UUID().uuidString {
         didSet {
             updateIds()
         }
@@ -22,17 +22,17 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
 
     public private(set) var baseStats: Stats = .zero
     public private(set) var currentStats: Stats = .zero
-    public var body = RPBody<RP>()
+    public var equipment = RPEquipment<RP>()
     public var inventory: [RPActiveItem<RP>] = []
-    public var metadata: RP.EntityMetadata?
+    public var metadata: RP.BodyMetadata?
 
     public internal(set) var executableAbilities: [String: RPActiveAbility<RP>] = [:]
     public internal(set) var passiveAbilities: [String: RPActiveAbility<RP>] = [:]
     public internal(set) var statusEffects: [String: RPActiveStatusEffect<RP>] = [:]
 
-    public var targets: Set<RPEntityId> = []
+    public var targets: Set<RPBodyId> = []
 
-    public internal(set) var threat: [RPEntityId: RPValue] = [:]
+    public internal(set) var threat: [RPBodyId: RPValue] = [:]
 
     /// Threat removed per unit of tick time. Zero (the default) disables
     /// decay entirely.
@@ -46,8 +46,8 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
         currentStats[keyPath: keyPath]
     }
 
-    public static func new(cache: RPCache<RP>) -> RPEntity {
-        RP.createDefaultEntity(cache: cache)
+    public static func new(cache: RPCache<RP>) -> RPBody {
+        RP.createDefaultBody(cache: cache)
     }
 
     public init(_ data: [String: RPValue]) {
@@ -63,7 +63,7 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
     
     public func cumulativeWornStats() -> Stats {
         var totalStats = self.baseStats
-        body.wornItems.forEach { item in
+        equipment.wornItems.forEach { item in
             totalStats = totalStats + item.stats
         }
         return totalStats
@@ -94,7 +94,7 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
             }
     }
 
-    public func getPossibleTargets() -> Set<RPEntityId>? {
+    public func getPossibleTargets() -> Set<RPBodyId>? {
         if targets.count > 0 {
             return targets
         }
@@ -102,9 +102,9 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
         return nil
     }
 
-    public func getTarget() -> RPEntityId? {
+    public func getTarget() -> RPBodyId? {
         var highestThreat = RPValue.min
-        var candidates: [RPEntityId] = []
+        var candidates: [RPBodyId] = []
         for id in targets {
             let value = threat[id] ?? 0
             if value > highestThreat {
@@ -120,23 +120,23 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
     // MARK: - Threat
 
     /// Threat entries from highest to lowest, ties broken by id.
-    public var threatList: [(entityId: RPEntityId, threat: RPValue)] {
+    public var threatList: [(bodyId: RPBodyId, threat: RPValue)] {
         threat
             .sorted { lhs, rhs in
                 lhs.value != rhs.value ? lhs.value > rhs.value : lhs.key < rhs.key
             }
-            .map { (entityId: $0.key, threat: $0.value) }
+            .map { (bodyId: $0.key, threat: $0.value) }
     }
 
-    public func holdsThreat(toward id: RPEntityId) -> Bool {
+    public func holdsThreat(toward id: RPBodyId) -> Bool {
         threat[id] != nil
     }
 
-    public mutating func addThreat(toward id: RPEntityId, amount: RPValue) {
+    public mutating func addThreat(toward id: RPBodyId, amount: RPValue) {
         setThreat(toward: id, amount: (threat[id] ?? 0) + amount)
     }
 
-    public mutating func setThreat(toward id: RPEntityId, amount: RPValue) {
+    public mutating func setThreat(toward id: RPBodyId, amount: RPValue) {
         if amount > 0 {
             threat[id] = amount
         } else {
@@ -144,17 +144,17 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
         }
     }
 
-    public mutating func clearThreat(toward id: RPEntityId) {
+    public mutating func clearThreat(toward id: RPBodyId) {
         threat.removeValue(forKey: id)
     }
 
     public mutating func addExecutableAbility(_ ability: RPAbility<RP>, conditional: RPConditional<RP>) {
-        let activeAbility = RPActiveAbility<RP>(entityId: id, ability: ability, conditional: conditional)
+        let activeAbility = RPActiveAbility<RP>(bodyId: id, ability: ability, conditional: conditional)
         executableAbilities[ability.code] = activeAbility
     }
 
     public mutating func addPassiveAbility(_ ability: RPAbility<RP>, conditional: RPConditional<RP>) {
-        let activeAbility = RPActiveAbility<RP>(entityId: id, ability: ability, conditional: conditional)
+        let activeAbility = RPActiveAbility<RP>(bodyId: id, ability: ability, conditional: conditional)
         passiveAbilities[ability.code] = activeAbility
     }
 
@@ -163,7 +163,7 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
             // TODO: Handle stackability of status effects rather than just resetting
             statusEffects[statusEffect.code]?.resetCooldown()
         } else {
-            statusEffects[statusEffect.code] = RPActiveStatusEffect<RP>(entityId: id, statusEffect: statusEffect)
+            statusEffects[statusEffect.code] = RPActiveStatusEffect<RP>(bodyId: id, statusEffect: statusEffect)
         }
     }
 
@@ -184,6 +184,14 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
 
     public mutating func resetCooldown() {
         currentTick = 0
+    }
+
+    public mutating func leaveEncounter() {
+        teamId = nil
+        currentTick = 0
+        statusEffects = [:]
+        targets = []
+        threat = [:]
     }
 
     public mutating func resetAbility(byName name: String) {
@@ -254,16 +262,16 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
             return []
         }
 
-        var entityReadyAt = Swift.max(0, maximumTick - currentTick)
+        var bodyReadyAt = Swift.max(0, maximumTick - currentTick)
         var abilityReadyAt: [RPReferenceCode: RPTimeIncrement] = viable.reduce(into: [:]) {
             $0[$1.ability.code] = Swift.max(0, $1.maximumTick - $1.currentTick)
         }
 
         var predictions: [RPPredictedEvent<RP>] = []
         var lastActAt: RPTimeIncrement = -1
-        while entityReadyAt <= horizon {
+        while bodyReadyAt <= horizon {
             guard let chosen = viable
-                .first(where: { (abilityReadyAt[$0.ability.code] ?? 0) <= entityReadyAt })
+                .first(where: { (abilityReadyAt[$0.ability.code] ?? 0) <= bodyReadyAt })
                 ?? viable.min(by: {
                     (abilityReadyAt[$0.ability.code] ?? 0) < (abilityReadyAt[$1.ability.code] ?? 0)
                 }),
@@ -271,14 +279,14 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
             else {
                 break
             }
-            let actAt = Swift.max(entityReadyAt, abilityReadyAt[chosen.ability.code] ?? 0)
+            let actAt = Swift.max(bodyReadyAt, abilityReadyAt[chosen.ability.code] ?? 0)
             guard actAt <= horizon, actAt > lastActAt || predictions.isEmpty else {
                 break
             }
             predictions.append(RPPredictedEvent(event: event, readyIn: actAt))
             lastActAt = actAt
             abilityReadyAt[chosen.ability.code] = actAt + chosen.maximumTick
-            entityReadyAt = actAt + maximumTick
+            bodyReadyAt = actAt + maximumTick
         }
         return predictions
     }
@@ -295,22 +303,22 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
     fileprivate mutating func updateIds() {
         executableAbilities.keys.forEach {
             abilityName in
-            executableAbilities[abilityName]?.entityId = id
+            executableAbilities[abilityName]?.bodyId = id
         }
         passiveAbilities.keys.forEach {
             abilityName in
-            passiveAbilities[abilityName]?.entityId = id
+            passiveAbilities[abilityName]?.bodyId = id
         }
         statusEffects.keys.forEach {
             abilityName in
-            statusEffects[abilityName]?.entityId = id
+            statusEffects[abilityName]?.bodyId = id
         }
     }
 
     // Querying
 
     public func canPerformEvents() -> Bool {
-        for se in statusEffects.values where se.shouldDisableEntity() {
+        for se in statusEffects.values where se.shouldDisableBody() {
             return false
         }
         return true
@@ -321,19 +329,19 @@ public struct RPEntity<RP: RPSpace>: RPTemporal, Codable {
     }
 }
 
-extension RPEntity: CustomStringConvertible {
+extension RPBody: CustomStringConvertible {
     public var description: String {
-        "Entity:\n " + String(describing: currentStats)
+        "Body:\n " + String(describing: currentStats)
     }
 }
 
-extension RPEntity: Equatable {}
+extension RPBody: Equatable {}
 
-public func == <RP: RPSpace>(_ lhs: RPEntity<RP>, _ rhs: RPEntity<RP>) -> Bool {
+public func == <RP: RPSpace>(_ lhs: RPBody<RP>, _ rhs: RPBody<RP>) -> Bool {
     lhs.id == rhs.id
 }
 
-extension RPEntity: Hashable {
+extension RPBody: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }

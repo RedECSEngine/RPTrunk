@@ -11,8 +11,8 @@ func getStatus
 (_ status: String) -> (ParserResultType<RP>, RP) -> ParserResultType<RP> {
     {
         input, rpSpace in
-        if case let .entityResult(e) = input {
-            let found = rpSpace.entityById(e)?.hasStatus(status) == true
+        if case let .bodyResult(e) = input {
+            let found = rpSpace.bodyById(e)?.hasStatus(status) == true
             return .valueResult(.bool(found))
         }
         return .nothing

@@ -1,6 +1,6 @@
 public struct RPTeam<RP: RPSpace>: Codable, Equatable {
     public var id: RPTeamId = UUID().uuidString
-    public private(set) var entities: Set<RPEntityId> = []
+    public private(set) var bodies: Set<RPBodyId> = []
     public var allies: Set<RPTeamId> = []
     public var enemies: Set<RPTeamId> = []
 
@@ -8,8 +8,8 @@ public struct RPTeam<RP: RPSpace>: Codable, Equatable {
     
     public init() { }
 
-    public mutating func add(_ entity: inout RPEntity<RP>) {
-        entity.teamId = id
-        entities.insert(entity.id)
+    public mutating func add(_ body: inout RPBody<RP>) {
+        body.teamId = id
+        bodies.insert(body.id)
     }
 }

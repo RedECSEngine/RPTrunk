@@ -16,40 +16,40 @@ final class ThreatTests: XCTestCase {
     // MARK: - Target selection
 
     func testGetTargetIsDeterministicWithoutThreat() {
-        var entity = RPEntity<TestRPSpace>(["hp": 10])
-        entity.targets = ["c", "a", "b"]
-        XCTAssertEqual(entity.getTarget(), "a", "no threat: lowest id wins, always")
+        var body = RPBody<TestRPSpace>(["hp": 10])
+        body.targets = ["c", "a", "b"]
+        XCTAssertEqual(body.getTarget(), "a", "no threat: lowest id wins, always")
     }
 
     func testGetTargetPrefersHighestThreat() {
-        var entity = RPEntity<TestRPSpace>(["hp": 10])
-        entity.targets = ["a", "b", "c"]
-        entity.addThreat(toward: "b", amount: 10)
-        entity.addThreat(toward: "c", amount: 5)
-        XCTAssertEqual(entity.getTarget(), "b")
+        var body = RPBody<TestRPSpace>(["hp": 10])
+        body.targets = ["a", "b", "c"]
+        body.addThreat(toward: "b", amount: 10)
+        body.addThreat(toward: "c", amount: 5)
+        XCTAssertEqual(body.getTarget(), "b")
     }
 
     func testGetTargetBreaksThreatTiesById() {
-        var entity = RPEntity<TestRPSpace>(["hp": 10])
-        entity.targets = ["b", "c"]
-        entity.addThreat(toward: "b", amount: 10)
-        entity.addThreat(toward: "c", amount: 10)
-        XCTAssertEqual(entity.getTarget(), "b")
+        var body = RPBody<TestRPSpace>(["hp": 10])
+        body.targets = ["b", "c"]
+        body.addThreat(toward: "b", amount: 10)
+        body.addThreat(toward: "c", amount: 10)
+        XCTAssertEqual(body.getTarget(), "b")
     }
 
     func testGetTargetIgnoresThreatOutsidePerception() {
-        var entity = RPEntity<TestRPSpace>(["hp": 10])
-        entity.targets = ["a"]
-        entity.addThreat(toward: "z", amount: 100) // no longer a valid target
-        XCTAssertEqual(entity.getTarget(), "a")
+        var body = RPBody<TestRPSpace>(["hp": 10])
+        body.targets = ["a"]
+        body.addThreat(toward: "z", amount: 100) // no longer a valid target
+        XCTAssertEqual(body.getTarget(), "a")
     }
 
     func testFriendlyTargetingIgnoresThreat() {
-        var healer = RPEntity<TestRPSpace>(["hp": 10])
+        var healer = RPBody<TestRPSpace>(["hp": 10])
         healer.id = "healer"
-        var allyA = RPEntity<TestRPSpace>(["hp": 10])
+        var allyA = RPBody<TestRPSpace>(["hp": 10])
         allyA.id = "ally-a"
-        var allyB = RPEntity<TestRPSpace>(["hp": 10])
+        var allyB = RPBody<TestRPSpace>(["hp": 10])
         allyB.id = "ally-b"
 
         var team = RPTeam<TestRPSpace>()
@@ -62,9 +62,9 @@ final class ThreatTests: XCTestCase {
         healer.addThreat(toward: "ally-b", amount: 100)
 
         var space = TestRPSpace()
-        space.addEntity(healer)
-        space.addEntity(allyA)
-        space.addEntity(allyB)
+        space.addBody(healer)
+        space.addBody(allyA)
+        space.addBody(allyB)
         space.setTeams([team])
 
         let targeting = RPTargeting<TestRPSpace>(.singleFriendly, .always)
@@ -74,75 +74,75 @@ final class ThreatTests: XCTestCase {
     // MARK: - Table mechanics
 
     func testThreatClampsAtZeroAndRemovesEntries() {
-        var entity = RPEntity<TestRPSpace>(["hp": 10])
-        entity.addThreat(toward: "a", amount: 10)
-        entity.addThreat(toward: "a", amount: -25)
-        XCTAssertFalse(entity.holdsThreat(toward: "a"))
-        XCTAssertTrue(entity.threat.isEmpty)
+        var body = RPBody<TestRPSpace>(["hp": 10])
+        body.addThreat(toward: "a", amount: 10)
+        body.addThreat(toward: "a", amount: -25)
+        XCTAssertFalse(body.holdsThreat(toward: "a"))
+        XCTAssertTrue(body.threat.isEmpty)
     }
 
     func testThreatListIsOrdered() {
-        var entity = RPEntity<TestRPSpace>(["hp": 10])
-        entity.addThreat(toward: "c", amount: 5)
-        entity.addThreat(toward: "a", amount: 10)
-        entity.addThreat(toward: "b", amount: 10)
-        XCTAssertEqual(entity.threatList.map(\.entityId), ["a", "b", "c"])
-        XCTAssertEqual(entity.threatList.map(\.threat), [10, 10, 5])
+        var body = RPBody<TestRPSpace>(["hp": 10])
+        body.addThreat(toward: "c", amount: 5)
+        body.addThreat(toward: "a", amount: 10)
+        body.addThreat(toward: "b", amount: 10)
+        XCTAssertEqual(body.threatList.map(\.bodyId), ["a", "b", "c"])
+        XCTAssertEqual(body.threatList.map(\.threat), [10, 10, 5])
     }
 
     func testThreatDecayRemovesEntriesOverTime() {
-        var entity = RPEntity<TestRPSpace>(["hp": 10])
-        entity.threatDecayPerTick = 2
-        entity.addThreat(toward: "a", amount: 5)
+        var body = RPBody<TestRPSpace>(["hp": 10])
+        body.threatDecayPerTick = 2
+        body.addThreat(toward: "a", amount: 5)
 
-        entity.tick(RPMoment(delta: 1)) // -2 -> 3
-        XCTAssertEqual(entity.threat["a"], 3)
+        body.tick(RPMoment(delta: 1)) // -2 -> 3
+        XCTAssertEqual(body.threat["a"], 3)
 
-        entity.tick(RPMoment(delta: 2)) // -4 -> clamped out
-        XCTAssertFalse(entity.holdsThreat(toward: "a"))
+        body.tick(RPMoment(delta: 2)) // -4 -> clamped out
+        XCTAssertFalse(body.holdsThreat(toward: "a"))
     }
 
     func testDecayDisabledByDefault() {
-        var entity = RPEntity<TestRPSpace>(["hp": 10])
-        entity.addThreat(toward: "a", amount: 5)
-        entity.tick(RPMoment(delta: 100))
-        XCTAssertEqual(entity.threat["a"], 5)
+        var body = RPBody<TestRPSpace>(["hp": 10])
+        body.addThreat(toward: "a", amount: 5)
+        body.tick(RPMoment(delta: 100))
+        XCTAssertEqual(body.threat["a"], 5)
     }
 
     // MARK: - Space-level queries and cleanup
 
     func testSpaceThreatQueriesAndCleanup() {
-        var attacker = RPEntity<TestRPSpace>(["hp": 10])
+        var attacker = RPBody<TestRPSpace>(["hp": 10])
         attacker.id = "attacker"
-        var bystander = RPEntity<TestRPSpace>(["hp": 10])
+        var bystander = RPBody<TestRPSpace>(["hp": 10])
         bystander.id = "bystander"
-        var victim = RPEntity<TestRPSpace>(["hp": 10])
+        var victim = RPBody<TestRPSpace>(["hp": 10])
         victim.id = "victim"
 
-        rpSpace.addEntity(attacker)
-        rpSpace.addEntity(bystander)
-        rpSpace.addEntity(victim)
+        rpSpace.addBody(attacker)
+        rpSpace.addBody(bystander)
+        rpSpace.addBody(victim)
 
         rpSpace.applyThreatChanges([
             .init(holder: "attacker", toward: "victim", delta: 12),
         ])
 
         XCTAssertTrue(rpSpace.isThreatened("victim"))
-        XCTAssertEqual(rpSpace.entitiesThreatening("victim"), ["attacker"])
+        XCTAssertEqual(rpSpace.bodiesThreatening("victim"), ["attacker"])
         XCTAssertFalse(rpSpace.isThreatened("bystander"))
 
         // victim leaves play: every table drops it
         rpSpace.clearAllThreat(toward: "victim")
         XCTAssertFalse(rpSpace.isThreatened("victim"))
-        XCTAssertEqual(rpSpace.entityById("attacker")?.threat.isEmpty, true)
+        XCTAssertEqual(rpSpace.bodyById("attacker")?.threat.isEmpty, true)
     }
 
     // MARK: - RPEvent pipeline integration
 
-    func makeCombatSpace() -> (TestRPSpace, attacker: RPEntityId, target: RPEntityId) {
-        var attacker = RPEntity<TestRPSpace>(["hp": 30, "damage": 4])
+    func makeCombatSpace() -> (TestRPSpace, attacker: RPBodyId, target: RPBodyId) {
+        var attacker = RPBody<TestRPSpace>(["hp": 30, "damage": 4])
         attacker.id = "attacker"
-        var target = RPEntity<TestRPSpace>(["hp": 30])
+        var target = RPBody<TestRPSpace>(["hp": 30])
         target.id = "target"
         attacker.targets = [target.id]
 
@@ -153,8 +153,8 @@ final class ThreatTests: XCTestCase {
         targetTeam.add(&target)
         attackerTeam.enemies = [targetTeam.id]
         targetTeam.enemies = [attackerTeam.id]
-        space.addEntity(attacker)
-        space.addEntity(target)
+        space.addBody(attacker)
+        space.addBody(target)
         space.setTeams([attackerTeam, targetTeam])
         return (space, attacker.id, target.id)
     }
@@ -171,8 +171,8 @@ final class ThreatTests: XCTestCase {
 
         _ = space.performEvents([event])
 
-        XCTAssertEqual(space.entityById(attackerId)?.threat.isEmpty, true)
-        XCTAssertEqual(space.entityById(targetId)?.threat.isEmpty, true)
+        XCTAssertEqual(space.bodyById(attackerId)?.threat.isEmpty, true)
+        XCTAssertEqual(space.bodyById(targetId)?.threat.isEmpty, true)
     }
 
     func testEventsProduceThreatViaConformanceRule() {
@@ -191,7 +191,7 @@ final class ThreatTests: XCTestCase {
         let event = RPEvent(initiator: attackerId, ability: makeAttack(), rpSpace: space)
         _ = space.performEvents([event])
 
-        let victim = space.entityById(targetId)
+        let victim = space.bodyById(targetId)
         XCTAssertEqual(victim?.threat[attackerId], 4)
         XCTAssertTrue(space.isThreatened(attackerId))
     }

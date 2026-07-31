@@ -4,7 +4,7 @@ public enum RPConditional<RP: RPSpace>: Codable {
         case rawValue
     }
 
-    public typealias Predicate = (RPEntityId, RP) throws -> Bool
+    public typealias Predicate = (RPBodyId, RP) throws -> Bool
 
     case always
     case never
@@ -47,7 +47,7 @@ public enum RPConditional<RP: RPSpace>: Codable {
         try container.encode(toString(), forKey: .rawValue)
     }
 
-    public func exec(_ e: RPEntity<RP>, rpSpace: RP) throws -> Bool {
+    public func exec(_ e: RPBody<RP>, rpSpace: RP) throws -> Bool {
         switch self {
         case .always:
             return true

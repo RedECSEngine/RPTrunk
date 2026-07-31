@@ -6,14 +6,14 @@
 //
 
 public protocol RPSpaceDictionary: RPSpace {
-    var entities: [RPEntityId: RPEntity<Self>] { get set }
+    var bodies: [RPBodyId: RPBody<Self>] { get set }
     var teams: [RPTeamId: RPTeam<Self>] { get set }
     var pendingGameMasterEvents: [RPEvent<Self>] { get set }
 }
 
 extension RPSpaceDictionary {
-    public func allEntities() -> Dictionary<RPEntityId, RPEntity<Self>>.Keys {
-        entities.keys
+    public func allBodies() -> Dictionary<RPBodyId, RPBody<Self>>.Keys {
+        bodies.keys
     }
 
     public func allTeams() -> Dictionary<RPTeamId, RPTeam<Self>>.Keys  {
@@ -24,16 +24,16 @@ extension RPSpaceDictionary {
         pendingGameMasterEvents
     }
 
-    public func entityById(_ id: RPEntityId) -> RPEntity<Self>? {
-        entities[id]
+    public func bodyById(_ id: RPBodyId) -> RPBody<Self>? {
+        bodies[id]
     }
     public func teamById(_ id: RPTeamId) -> RPTeam<Self>? {
         teams[id]
     }
 
-    public mutating func addEntity(_ entity: RPEntity<Self>) {
-        assert(entities[entity.id] == nil, "attempting to add entity that already exists in this space")
-        entities[entity.id] = entity
+    public mutating func addBody(_ body: RPBody<Self>) {
+        assert(bodies[body.id] == nil, "attempting to add body that already exists in this space")
+        bodies[body.id] = body
     }
 
     public mutating func queueGameMasterEvent(_ event: RPEvent<Self>) {
@@ -44,10 +44,10 @@ extension RPSpaceDictionary {
         pendingGameMasterEvents.removeAll(where: { $0.id == id })
     }
 
-    public mutating func modifyEntity(id: RPEntityId, perform: (inout RPEntity<Self>, Self) -> Void) {
-        guard var entity = entities[id] else { return }
-        perform(&entity, self)
-        entities[id] = entity
+    public mutating func modifyBody(id: RPBodyId, perform: (inout RPBody<Self>, Self) -> Void) {
+        guard var body = bodies[id] else { return }
+        perform(&body, self)
+        bodies[id] = body
     }
 
     public mutating func modifyTeam(id: RPTeamId, perform: (inout RPTeam<Self>, Self) -> Void) {

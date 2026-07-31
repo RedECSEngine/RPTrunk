@@ -1,4 +1,4 @@
-/// The `RPBody` slot an item is worn in.
+/// The `RPEquipment` slot an item is worn in.
 public struct RPEquipmentSlotCode: RPIdentifierCode {
     public let rawValue: String
 
@@ -7,7 +7,7 @@ public struct RPEquipmentSlotCode: RPIdentifierCode {
     }
 }
 
-public struct RPBody<RP: RPSpace>: Codable, Equatable {
+public struct RPEquipment<RP: RPSpace>: Codable, Equatable {
     public private(set) var equipmentSlots: [RPEquipmentSlotCode: [RPActiveItem<RP>]] = [:]
 
     /// How many items each slot admits. A slot with no entry is unlimited.

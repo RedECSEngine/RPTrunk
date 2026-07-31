@@ -1,5 +1,5 @@
 
-public protocol StatsType: Numeric, Comparable, Codable {
+public protocol StatsType: Numeric, Comparable, Codable, CustomStringConvertible {
     /// all stored properties should have default values
     init()
     
@@ -12,6 +12,18 @@ public protocol StatsType: Numeric, Comparable, Codable {
     
     /// keypaths to be used in arithmetic and comparison. This should include all stored properties, as new copies are made during arithmetic
     static var numericAndComparableKeys: [WritableKeyPath<Self, Int>] { get }
+}
+
+extension StatsType {
+    public var description: String {
+        Self.dynamicKeys.keys.compactMap { key in
+            let value = self[key]
+            guard value != 0 else {
+                return nil
+            }
+            return "\(key):" + String(self[key])
+        }.joined(separator: "\n")
+    }
 }
 
 extension StatsType {

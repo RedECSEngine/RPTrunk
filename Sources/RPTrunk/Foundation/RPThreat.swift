@@ -1,15 +1,15 @@
-/// A single adjustment to one entity's threat toward another, produced by
+/// A single adjustment to one body's threat toward another, produced by
 /// `RPSpace.resolveThreatChanges` after an event resolves.
 public struct RPThreatChange: Equatable, Codable {
-    /// The entity whose threat table changes.
-    public var holder: RPEntityId
-    /// The entity the threat is held toward.
-    public var toward: RPEntityId
+    /// The body whose threat table changes.
+    public var holder: RPBodyId
+    /// The body the threat is held toward.
+    public var toward: RPBodyId
     /// Positive builds threat, negative reduces it. Threat is clamped at
     /// zero and zero entries are removed from the table.
     public var delta: RPValue
 
-    public init(holder: RPEntityId, toward: RPEntityId, delta: RPValue) {
+    public init(holder: RPBodyId, toward: RPBodyId, delta: RPValue) {
         self.holder = holder
         self.toward = toward
         self.delta = delta
@@ -27,27 +27,27 @@ public extension RPSpace {
 
     mutating func applyThreatChanges(_ changes: [RPThreatChange]) {
         for change in changes {
-            modifyEntity(id: change.holder) { entity, _ in
-                entity.addThreat(toward: change.toward, amount: change.delta)
+            modifyBody(id: change.holder) { body, _ in
+                body.addThreat(toward: change.toward, amount: change.delta)
             }
         }
     }
 
-    mutating func clearAllThreat(toward id: RPEntityId) {
-        for holderId in allEntities() where holderId != id {
-            modifyEntity(id: holderId) { entity, _ in
-                entity.clearThreat(toward: id)
+    mutating func clearAllThreat(toward id: RPBodyId) {
+        for holderId in allBodies() where holderId != id {
+            modifyBody(id: holderId) { body, _ in
+                body.clearThreat(toward: id)
             }
         }
     }
 
-    func entitiesThreatening(_ id: RPEntityId) -> [RPEntityId] {
-        allEntities()
-            .filter { entityById($0)?.holdsThreat(toward: id) == true }
+    func bodiesThreatening(_ id: RPBodyId) -> [RPBodyId] {
+        allBodies()
+            .filter { bodyById($0)?.holdsThreat(toward: id) == true }
             .sorted()
     }
 
-    func isThreatened(_ id: RPEntityId) -> Bool {
-        allEntities().contains { entityById($0)?.holdsThreat(toward: id) == true }
+    func isThreatened(_ id: RPBodyId) -> Bool {
+        allBodies().contains { bodyById($0)?.holdsThreat(toward: id) == true }
     }
 }

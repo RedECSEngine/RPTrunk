@@ -3,7 +3,7 @@
 /*:
 
  # Conditional interpreter TODOS
-  - "anyAlly" // ally to entity (or array of entities?)
+  - "anyAlly" // ally to body (or array of bodies?)
 
  # Other todos
  - Buffs/Debuffs
@@ -14,7 +14,7 @@
  - Magics
   - affinities/resistances
 
- - Printable entities/contents
+ - Printable bodies/contents
 
  */
 

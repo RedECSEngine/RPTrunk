@@ -26,19 +26,19 @@ public func == <RP: RPSpace>(lhs: RPAbility<RP>, rhs: RPAbility<RP>) -> Bool {
 }
 
 /**
-    An ability, currently active on an entity
+    An ability, currently active on an body
  */
 public struct RPActiveAbility<RP: RPSpace>: RPTemporal, Codable {
     public typealias Stats = RP.Stats
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { ability.cooldown }
 
-    public var entityId: RPEntityId
+    public var bodyId: RPBodyId
     public let ability: RPAbility<RP>
     public let conditional: RPConditional<RP>
 
-    public init(entityId: RPEntityId, ability: RPAbility<RP>, conditional: RPConditional<RP>) {
-        self.entityId = entityId
+    public init(bodyId: RPBodyId, ability: RPAbility<RP>, conditional: RPConditional<RP>) {
+        self.bodyId = bodyId
         self.ability = ability
         self.conditional = conditional
     }
@@ -51,7 +51,7 @@ public struct RPActiveAbility<RP: RPSpace>: RPTemporal, Codable {
     }
 
     public func wouldExecute(in rpSpace: RP) -> Bool {
-        guard let e = rpSpace.entityById(entityId) else {
+        guard let e = rpSpace.bodyById(bodyId) else {
             return false
         }
 
@@ -74,7 +74,7 @@ public struct RPActiveAbility<RP: RPSpace>: RPTemporal, Codable {
     }
 
     fileprivate func createEvents(in rpSpace: RP) -> [RPEvent<RP>] {
-        (0 ..< ability.repeats).map { _ in RPEvent<RP>(initiator: entityId, ability: ability, rpSpace: rpSpace) }
+        (0 ..< ability.repeats).map { _ in RPEvent<RP>(initiator: bodyId, ability: ability, rpSpace: rpSpace) }
     }
 
     public mutating func tick(_ moment: RPMoment) {
@@ -88,7 +88,7 @@ public struct RPActiveAbility<RP: RPSpace>: RPTemporal, Codable {
     }
 
     //TODO: revisit this function, was made pre-value type conversion
-    public func copyForEntity(_ entity: RPEntity<RP>) -> RPActiveAbility {
-        RPActiveAbility(entityId: entity.id, ability: ability, conditional: conditional)
+    public func copyForBody(_ body: RPBody<RP>) -> RPActiveAbility {
+        RPActiveAbility(bodyId: body.id, ability: ability, conditional: conditional)
     }
 }

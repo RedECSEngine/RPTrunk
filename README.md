@@ -6,18 +6,18 @@ Nothing is final.
 ## Dev Notes Summer 2021
 
 - RPSpace
-  - Game master events (events on entities from the game)
+  - Game master events (events on bodies from the game)
   - Pending game master events, prioritized (when triggered mid combat)
 
 ## Dev notes! (Old)
 
 ### >>>>>>>> Targeting
-- "anyAlly" // ally to entity (or array of entities?)
+- "anyAlly" // ally to body (or array of bodies?)
 - 'smart' targeting. Possibly game rules for who to target in an array
 - Allies / Enemies
 
 ### Metadata
-- Entity Metadata dictionary
+- Body Metadata dictionary
 - metadata parser possibly "target.?hasTheStaff = true" -> target.meta["hasTheStaff"]
 
 ### Caching
@@ -31,4 +31,4 @@ Nothing is final.
 - Abilities w/ area of effect
 
 ### Debug
-- Printable entities/contents
+- Printable bodies/contents

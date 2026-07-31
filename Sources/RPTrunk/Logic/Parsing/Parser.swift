@@ -32,9 +32,9 @@ func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPCondition
     if let comparison = clause.comparison {
         let op = comparison.op
         let rhs: [ParserResultType<RP>] = try compileOperand(comparison.rhs)
-        return { entity, rpSpace -> Bool in
-            let lhsResult = extractValue(entity, evaluators: lhs, in: rpSpace)
-            let rhsResult = extractValue(entity, evaluators: rhs, in: rpSpace)
+        return { body, rpSpace -> Bool in
+            let lhsResult = extractValue(body, evaluators: lhs, in: rpSpace)
+            let rhsResult = extractValue(body, evaluators: rhs, in: rpSpace)
             guard let l = lhsResult, let r = rhsResult else {
                 return false
             }
@@ -51,8 +51,8 @@ func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPCondition
             reason: "A clause without an operator must be a status query"
         )
     }
-    return { entity, rpSpace -> Bool in
-        extractValue(entity, evaluators: lhs, in: rpSpace) == .bool(true)
+    return { body, rpSpace -> Bool in
+        extractValue(body, evaluators: lhs, in: rpSpace) == .bool(true)
     }
 }
 
@@ -61,10 +61,10 @@ func compileCondition<RP: RPSpace>(_ condition: ParsedCondition) throws -> RPCon
     if predicates.count == 1 {
         return predicates[0]
     }
-    return { entity, rpSpace in
+    return { body, rpSpace in
         // all clauses must hold
         try predicates.contains(where: { predicate -> Bool in
-            try !predicate(entity, rpSpace)
+            try !predicate(body, rpSpace)
         }) == false
     }
 }
@@ -82,11 +82,11 @@ func interpretStringCondition<RP: RPSpace>(_ condition: String) throws -> RPCond
 // MARK: - Value extraction
 
 func extractValue<RP: RPSpace>(
-    _ entity: RPEntityId,
+    _ body: RPBodyId,
     evaluators: [ParserResultType<RP>],
     in rpSpace: RP
 ) -> ParserValueType? {
-    let initial = ParserResultType<RP>.entityResult(entity: entity)
+    let initial = ParserResultType<RP>.bodyResult(body: body)
 
     let final = evaluators.reduce(initial, {
         prev, current -> ParserResultType<RP> in
@@ -107,7 +107,7 @@ func extractValue<RP: RPSpace>(
 }
 
 public func extractValue<RP: RPSpace>(
-    _ entity: RPEntityId,
+    _ body: RPBodyId,
     evaluate evaluationString: String,
     in rpSpace: RP
 ) -> ParserValueType? {
@@ -120,5 +120,5 @@ public func extractValue<RP: RPSpace>(
     else {
         return nil
     }
-    return extractValue(entity, evaluators: evaluators, in: rpSpace)
+    return extractValue(body, evaluators: evaluators, in: rpSpace)
 }

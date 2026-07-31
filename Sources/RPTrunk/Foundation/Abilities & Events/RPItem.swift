@@ -6,7 +6,7 @@ public struct RPItem<RP: RPSpace>: RPFragmentContainer, Codable, Equatable {
     public var ability: RPAbility<RP>?
     public var conditional: RPConditional<RP>
 
-    /// The `RPBody` slot this item is worn in. `nil` means it cannot be equipped.
+    /// The `RPEquipment` slot this item is worn in. `nil` means it cannot be equipped.
     public var equipmentSlotCode: RPEquipmentSlotCode?
 
     public var metadata: RP.ItemMetadata?
@@ -61,12 +61,12 @@ public struct RPActiveItem<RP: RPSpace>: RPTemporal, Codable, Equatable {
         item.maximumStack.map { max(0, $0 - amount) }
     }
 
-    public func canExecute(by entityId: RPEntityId, in rpSpace: RP) -> Bool {
+    public func canExecute(by bodyId: RPBodyId, in rpSpace: RP) -> Bool {
         guard isCoolingDown() == false else {
             return false
         }
 
-        guard let e = rpSpace.entityById(entityId),
+        guard let e = rpSpace.bodyById(bodyId),
               let a = item.ability,
               a.cost < e.currentStats
         else {
@@ -80,12 +80,12 @@ public struct RPActiveItem<RP: RPSpace>: RPTemporal, Codable, Equatable {
         []
     }
 
-    public func getPendingEvents(by entityId: RPEntityId, in rpSpace: RP) -> [RPEvent<RP>] {
+    public func getPendingEvents(by bodyId: RPBodyId, in rpSpace: RP) -> [RPEvent<RP>] {
         guard isCoolingDown() == false, let ability = item.ability else {
             return []
         }
         return (0 ..< ability.repeats).map { _ in
-            RPEvent(initiator: entityId, ability: ability, rpSpace: rpSpace)
+            RPEvent(initiator: bodyId, ability: ability, rpSpace: rpSpace)
         }
     }
 

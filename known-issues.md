@@ -24,10 +24,40 @@ issue lives in the repo where its *symptom* is felt.
   `.init(delta: 3000)`, or construct the effect with `period: 1` to assert the
   old "pulses immediately" intent. Needs Kai's call on the intended semantics,
   so it was left red rather than edited to green.
-- **Update (2026-07-27):** this is once again the *only* red test — the compile
-  drift below had been masking it.
+- **Update (2026-07-31):** still red, and no longer the only one — see the
+  global-cooldown entry below.
+
+### Tests: `test_global_cooldown_gates_actions_even_when_the_ability_is_ready` assumes a 500ms GCD
+- **Where:** `Tests/RPTrunkTests/BodyTests.swift:67`.
+- **Symptom:** `swift test` is red — `XCTAssertFalse failed` at line 87 and
+  `XCTAssertEqual failed: ("0") is not equal to ("1")` at line 88.
+- **Cause:** the test performs an event, ticks 499 + 1 = 500ms, and expects the
+  global cooldown to have elapsed. `RPBody.globalCooldown` defaults to 2500, so
+  the body is still cooling down at 500 and offers no pending events. The test
+  was written against a 500ms default and never ran — the whole target failed to
+  compile from the commit that introduced it (2f0f904) until 2026-07-31.
+- **Confirmed pre-existing:** the compile break, and this failure behind it,
+  both predate the entity→body rename.
+- **Fix direction:** decide which is right — a 2500ms `globalCooldown` default
+  with the test ticking 2499 + 1, or a 500ms default. Needs Kai's call on the
+  intended pacing, so it was left red rather than edited to green.
 
 ## Resolved
+
+### Tests: the target had stopped compiling again at 2f0f904
+- **Where:** `Tests/RPTrunkTests/TestGame/TestRPSpace.swift`,
+  `BodyTests.swift`, `EquipmentTests.swift`, `ParserTests.swift`.
+- **Symptom:** `swift test` failed to build — `TestRPSpace does not conform to
+  RPSpace`, `no dynamic member 'getTotalStats'`, `'currentStats' setter is
+  inaccessible`.
+- **Cause:** 2f0f904 added the `fullyResolvedStats(for stats:)` requirement,
+  replaced `getTotalStats()` with `cumulativeWornStats()`, and made
+  `currentStats` `private(set)`, without updating the test target.
+- **Fixed:** 2026-07-31, mechanically, so the rename could be verified —
+  `TestRPSpace` gained an identity `fullyResolvedStats`, `getTotalStats()` call
+  sites became `cumulativeWornStats()`, and the direct `currentStats.hp` write
+  became `setCurrentStats`. Worth a look: the identity implementation is a
+  placeholder, not a considered rule. Commit hash pending.
 
 ### Tests: suite stopped compiling after the equipment-slots merge
 - **Where:** `Tests/RPTrunkTests/EntityTests.swift` (4 call sites),

@@ -7,13 +7,13 @@ final class StatusEffectsTests: XCTestCase {
     ]
     
     var rpSpace: TestRPSpace!
-    var entity: RPEntity<TestRPSpace>!
+    var body: RPBody<TestRPSpace>!
 
     override func setUp() {
-        entity = RPEntity<TestRPSpace>(["hp": 30])
-        entity.id = "abcd"
+        body = RPBody<TestRPSpace>(["hp": 30])
+        body.id = "abcd"
         rpSpace = TestRPSpace()
-        rpSpace.addEntity(entity)
+        rpSpace.addBody(body)
     }
 
     func testPeriodicStatusEffectEventsAndDecay() {
@@ -26,7 +26,7 @@ final class StatusEffectsTests: XCTestCase {
             duration: 2,
             charges: nil
         )
-        var activeSE = RPActiveStatusEffect(entityId: "abcd", statusEffect: se)
+        var activeSE = RPActiveStatusEffect(bodyId: "abcd", statusEffect: se)
 
         XCTAssertEqual(activeSE.isCoolingDown(), true)
         XCTAssertEqual(activeSE.getPendingEvents(in: rpSpace).count, 0)

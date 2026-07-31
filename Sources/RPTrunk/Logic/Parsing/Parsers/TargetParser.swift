@@ -10,8 +10,8 @@ func getTarget<RP: RPSpace>(
     _ input: ParserResultType<RP>,
     in rpSpace: RP
 ) -> ParserResultType<RP> {
-    if case let .entityResult(e) = input, let target = rpSpace.entityById(e)?.getTarget() {
-        return .entityResult(entity: target)
+    if case let .bodyResult(e) = input, let target = rpSpace.bodyById(e)?.getTarget() {
+        return .bodyResult(body: target)
     }
     return .nothing
 }

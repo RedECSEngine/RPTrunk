@@ -3,7 +3,7 @@ public struct RPEventResult<RP: RPSpace>: Equatable, Codable {
     public let effects: [RPConflictResult<RP>]
     public let itemTransfers: [RPItemTransfer]
 
-    init(_ event: RPEvent<RP>, _ effects: [RPConflictResult<RP>], _ itemTransfers: [RPItemTransfer] = []) {
+    public init(_ event: RPEvent<RP>, _ effects: [RPConflictResult<RP>], _ itemTransfers: [RPItemTransfer] = []) {
         self.event = event
         self.effects = effects
         self.itemTransfers = itemTransfers
@@ -21,14 +21,14 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
     public var id = UUID().uuidString
     public let category: Category
     public let ability: RPAbility<RP>
-    public let targets: Set<RPEntityId>
-    public let initiator: RPEntityId?
+    public let targets: Set<RPBodyId>
+    public let initiator: RPBodyId?
 
     public init(
         category: Category = .standardConflict,
-        initiator: RPEntityId,
+        initiator: RPBodyId,
         ability: RPAbility<RP>,
-        targets: Set<RPEntityId>? = nil,
+        targets: Set<RPBodyId>? = nil,
         rpSpace: RP
     ) {
         self.category = category
@@ -40,7 +40,7 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
     public init(
         category: Category = .standardConflict,
         ability: RPAbility<RP>,
-        targets: Set<RPEntityId>
+        targets: Set<RPBodyId>
     ) {
         self.category = category
         self.initiator = nil
@@ -57,6 +57,9 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
     }
 
     // MARK: - Results calculation and application
+    public func predictedResults(in rpSpace: RP) -> RPEventResult<RP> {
+        RPEventResult(self, self.getResults(in: rpSpace))
+    }
 
     public func getResults(in rpSpace: RP) -> [RPConflictResult<RP>] {
         var results: [RPConflictResult<RP>] = []
@@ -71,11 +74,11 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
             )
         }
         
-        if let initiator = initiator, let entity = rpSpace.entityById(initiator) {
+        if let initiator = initiator, let body = rpSpace.bodyById(initiator) {
             results.append(RP.resolveConflict(
                 self,
                 in: rpSpace,
-                target: entity.id,
+                target: body.id,
                 conflict: getCost()
             ))
         }
@@ -85,8 +88,8 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
 
     func applyResults(_ results: [RPConflictResult<RP>], in rpSpace: inout RP) -> [RPItemTransfer] {
         results.forEach { result -> Void in
-            let newStats = (rpSpace.entityById(result.entity)?.currentStats ?? .zero) + result.change
-            rpSpace.modifyEntity(id: result.entity, perform: { e, _ in
+            let newStats = (rpSpace.bodyById(result.body)?.currentStats ?? .zero) + result.change
+            rpSpace.modifyBody(id: result.body, perform: { e, _ in
                 e.setCurrentStats(newStats)
             })
         }
@@ -94,19 +97,19 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
         let itemTransfers = applyItemExchange(in: &rpSpace)
 
         if case let .periodicEffect(name) = category, let initiator = initiator {
-            rpSpace.modifyEntity(id: initiator) { entity, space in
-                entity.statusEffects[name]?.incrementTick()
+            rpSpace.modifyBody(id: initiator) { body, space in
+                body.statusEffects[name]?.incrementTick()
             }
         }
         return itemTransfers
     }
 
-    private func applyStatusEffectChanges(to targets: Set<RPEntityId>, in rpSpace: inout RP) {
+    private func applyStatusEffectChanges(to targets: Set<RPBodyId>, in rpSpace: inout RP) {
         ability.dischargedStatusEffects
             .forEach {
                 name in
                 targets.forEach { target in
-                    rpSpace.modifyEntity(id: target) { t, _ in t.dischargeStatusEffect(name) }
+                    rpSpace.modifyBody(id: target) { t, _ in t.dischargeStatusEffect(name) }
                 }
             }
 
@@ -114,7 +117,7 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
             .forEach {
                 se in
                 targets.forEach { target in
-                    rpSpace.modifyEntity(id: target) { t, _ in t.applyStatusEffect(se) }
+                    rpSpace.modifyBody(id: target) { t, _ in t.applyStatusEffect(se) }
                 }
             }
     }
@@ -145,7 +148,7 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
 
     public func resetInitiatorCooldowns(in rpSpace: inout RP) {
         guard let initiator = initiator else { return }
-        rpSpace.modifyEntity(id: initiator) { e, _ in
+        rpSpace.modifyBody(id: initiator) { e, _ in
             e.resetCooldown()
             e.resetAbility(byName: ability.code)
         }

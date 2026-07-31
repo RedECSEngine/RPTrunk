@@ -4,11 +4,15 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
     
     public typealias Stats = TestStats
     
-    public var entities: [RPEntityId: RPEntity<Self>] = [:]
+    public var bodies: [RPBodyId: RPBody<Self>] = [:]
     public var teams: [RPTeamId: RPTeam<Self>] = [:]
     public var pendingGameMasterEvents: [RPEvent<TestRPSpace>] = []
 
     public init() {}
+
+    public static func fullyResolvedStats(for stats: TestStats) -> TestStats {
+        stats
+    }
 
     /// Test hook: lets individual tests define how events produce threat.
     nonisolated(unsafe) static var threatRule: ((RPEventResult<TestRPSpace>) -> [RPThreatChange])?
@@ -20,17 +24,17 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
         threatRule?(eventResult) ?? []
     }
     
-    public static func resolveConflict(_ event: RPEvent<Self>, in rpSpace: Self, target: RPEntityId, conflict: Stats) -> RPConflictResult<Self> {
+    public static func resolveConflict(_ event: RPEvent<Self>, in rpSpace: Self, target: RPBodyId, conflict: Stats) -> RPConflictResult<Self> {
         RPConflictResult(.init(), .zero)
         //    public func resolveConflict(
         //        _ event: RPEvent,
         //        in rpSpace: RPSpace,
-        //        target: RPEntityId,
+        //        target: RPBodyId,
         //        conflict: Stats
         //    )  -> RPConflictResult {
         //
-        //        guard let target = rpSpace.entityById(target) else {
-        //            return RPConflictResult(entityId: target, [:])
+        //        guard let target = rpSpace.bodyById(target) else {
+        //            return RPConflictResult(bodyId: target, [:])
         //        }
         //
         //        // hp result - part 1 - damage hits against hp, with defense as reduction

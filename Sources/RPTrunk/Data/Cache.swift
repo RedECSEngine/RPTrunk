@@ -6,11 +6,11 @@ open class RPCache<RP: RPSpace> {
         case invalidFormat(String)
     }
     
-    typealias AbilityData = AbilityJSON<RP>
+    typealias AbilityData = RPAbilityJSON<RP>
 
     public var abilities: [RPReferenceCode: RPAbility<RP>] = [:]
     public var statusEffects: [RPReferenceCode: RPStatusEffect<RP>] = [:]
-    public var entities: [RPReferenceCode: RPEntity<RP>] = [:]
+    public var bodies: [RPReferenceCode: RPBody<RP>] = [:]
     public var items: [RPReferenceCode: RPItem<RP>] = [:]
 
     public init() {}
@@ -18,11 +18,11 @@ open class RPCache<RP: RPSpace> {
     public func load(_ data: RPCacheJSON<RP>) throws {
         try loadStatusEffects(data.statusEffects ?? [:])
         try loadAbilities(data.abilities ?? [:])
-        try loadEntities(data.entities ?? [:])
+        try loadBodies(data.bodies ?? [:])
         try loadItems(data.items ?? [:])
     }
 
-    public func loadAbilities(_ abilities: [RPReferenceCode: AbilityJSON<RP>]) throws {
+    public func loadAbilities(_ abilities: [RPReferenceCode: RPAbilityJSON<RP>]) throws {
         try abilities.forEach { (code, data) in
             let fragments: [RPFragment] = try buildFragments(data)
             var ability = RPAbility<RP>(code: code, displayName: data.displayName, fragments: fragments, cooldown: data.cooldown)
@@ -31,7 +31,7 @@ open class RPCache<RP: RPSpace> {
         }
     }
 
-    public func loadStatusEffects(_ statusEffects: [RPReferenceCode: StatusEffectJSON<RP>]) throws {
+    public func loadStatusEffects(_ statusEffects: [RPReferenceCode: RPStatusEffectJSON<RP>]) throws {
         try statusEffects.forEach { (code, data) in
             let fragments: [RPFragment<RP>] = try buildFragments(data)
             let se = RPStatusEffect<RP>(
@@ -48,26 +48,26 @@ open class RPCache<RP: RPSpace> {
         }
     }
 
-    public func loadEntities(_ entities: [RPReferenceCode: EntityJSON<RP>]) throws {
-        entities.forEach {(code, data) in
+    public func loadBodies(_ bodies: [RPReferenceCode: RPBodyJSON<RP>]) throws {
+        bodies.forEach {(code, data) in
             let stats = data.stats ?? .zero
-            var entity = RPEntity<RP>.new(cache: self)
-            entity.code = code
-            entity.setBaseStats(stats)
-            entity.displayName = data.displayName ?? code
-            entity.body.equipmentSlotCapacities = data.equipmentSlots ?? [:]
+            var body = RPBody<RP>.new(cache: self)
+            body.code = code
+            body.setBaseStats(stats)
+            body.displayName = data.displayName ?? code
+            body.equipment.equipmentSlotCapacities = data.equipmentSlots ?? [:]
             data.abilities?.forEach {
                 ability in
                 let conditional = RPConditional<RP>(ability.conditional)
                 if let ability = self.abilities[ability.code] {
-                    entity.addExecutableAbility(ability, conditional: conditional)
+                    body.addExecutableAbility(ability, conditional: conditional)
                 }
             }
-            self.entities[code] = entity
+            self.bodies[code] = body
         }
     }
 
-    public func loadItems(_ items: [RPReferenceCode: ItemJSON<RP>]) throws {
+    public func loadItems(_ items: [RPReferenceCode: RPItemJSON<RP>]) throws {
         try items.forEach { (code, data) in
             let fragments: [RPFragment<RP>] = try buildFragments(data)
             let ability = try data.ability.map { try getAbility($0) }
@@ -97,7 +97,7 @@ open class RPCache<RP: RPSpace> {
         RPActiveItem(item: try getItem(code), amount: amount)
     }
 
-    public func buildFragments<C: FragmentsContainerJSON>(_ fragment: C) throws -> [RPFragment<RP>] where C.Stats == RP.Stats  {
+    public func buildFragments<C: RPFragmentsContainerJSON>(_ fragment: C) throws -> [RPFragment<RP>] where C.Stats == RP.Stats  {
         var fragments: [RPFragment<RP>] = []
         
         if let stats = fragment.stats {
@@ -155,11 +155,11 @@ open class RPCache<RP: RPSpace> {
         return se
     }
 
-    public func newEntity(_ name: String) throws -> RPEntity<RP> {
-        guard var entity = entities[name] else {
+    public func newBody(_ name: String) throws -> RPBody<RP> {
+        guard var body = bodies[name] else {
             throw RPCache.CacheError.notFound(name)
         }
-        entity.id = UUID().uuidString
-        return entity
+        body.id = UUID().uuidString
+        return body
     }
 }
