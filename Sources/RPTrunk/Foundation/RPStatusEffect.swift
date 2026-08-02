@@ -66,12 +66,11 @@ public func ==<Stats: StatsType> (lhs: RPStatusEffect<Stats>, rhs: RPStatusEffec
     A Status effect, currently active on an body
  */
 public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
-    public var deltaTick: RPTimeIncrement = 0
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { statusEffect.duration ?? 0 }
 
     var currentCharge: Int = 0
-    public private(set) var remainingPulses: Int = 0
+    public private(set) var pulsesDelivered: Int = 0
 
     var level: Int? // power level of the buff, if it is stackable
 
@@ -89,10 +88,15 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         self.bodyId = bodyId
         self.statusEffect = statusEffect
         currentCharge = statusEffect.charges ?? 0
-        remainingPulses = statusEffect.totalPulses
     }
 
     public var persistentStats: RP.Stats { statusEffect.persistentStats }
+
+    /// Pulses this effect still owes. An effect with no duration owes them
+    /// indefinitely, so this stays at zero for it and expiry never consults it.
+    public var remainingPulses: Int {
+        Swift.max(0, statusEffect.totalPulses - pulsesDelivered)
+    }
 
     public var isExpired: Bool {
         if statusEffect.charges != nil, currentCharge <= 0 {
@@ -101,18 +105,26 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         guard let duration = statusEffect.duration else {
             return false
         }
-        return currentTick >= duration && remainingPulses <= 0
+        return remainingPulses <= 0 && currentTick >= duration
+    }
+
+    /// Elapsed time the next pulse is owed at, measured from when the effect was
+    /// applied rather than from the last pulse — so a late pulse never pushes the
+    /// ones after it later still.
+    private var nextPulseDueAt: RPTimeIncrement? {
+        guard statusEffect.ability != nil else { return nil }
+        return RPTimeIncrement(pulsesDelivered + 1) * statusEffect.period
     }
 
     public func getPendingEvents(in rpSpace: RP) -> [RPEvent<RP>] {
-        // Pulse once the accumulated time reaches the effect's configured period.
-        guard !isExpired, deltaTick >= statusEffect.period else {
+        guard !isExpired,
+              let ability = statusEffect.ability,
+              let dueAt = nextPulseDueAt,
+              currentTick >= dueAt
+        else {
             return []
         }
-        if let ability = statusEffect.ability {
-            return [RPEvent(category: .periodicEffect(name: code), initiator: bodyId, ability: ability, rpSpace: rpSpace)]
-        }
-        return []
+        return [RPEvent(category: .periodicEffect(name: code), initiator: bodyId, ability: ability, rpSpace: rpSpace)]
     }
 
     public mutating func tick(_ moment: RPMoment) {
@@ -121,18 +133,15 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         }
 
         currentTick += moment.delta
-        deltaTick += moment.delta
     }
 
     public mutating func didPulse() {
-        deltaTick = Swift.max(0, deltaTick - statusEffect.period)
-        remainingPulses = Swift.max(0, remainingPulses - 1)
+        pulsesDelivered += 1
     }
 
     public mutating func resetCooldown() {
         currentTick = 0
-        deltaTick = 0
-        remainingPulses = statusEffect.totalPulses
+        pulsesDelivered = 0
     }
 
     public mutating func expendCharge() {
