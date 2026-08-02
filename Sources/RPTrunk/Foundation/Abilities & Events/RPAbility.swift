@@ -42,6 +42,11 @@ public struct RPActiveAbility<RP: RPSpace>: RPTemporal, Codable {
         self.bodyId = bodyId
         self.ability = ability
         self.conditional = conditional
+        currentTick = ability.cooldown
+    }
+
+    public func isCoolingDown() -> Bool {
+        currentTick < maximumTick
     }
 
     public func canExecute(in rpSpace: RP) -> Bool {

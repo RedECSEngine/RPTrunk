@@ -190,7 +190,6 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     public mutating func leaveEncounter() {
         teamId = nil
         currentTick = 0
-        statusEffects = [:]
         targets = []
         threat = [:]
     }
@@ -330,6 +329,10 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     }
 
     // Querying
+
+    public func isCoolingDown() -> Bool {
+        currentTick < maximumTick
+    }
 
     public func canPerformEvents() -> Bool {
         for code in RP.actionImpairingStatuses where hasStatus(code) {
