@@ -6,6 +6,8 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
     public let code: RPReferenceCode
     public let displayName: String
     public let tags: Set<RPStatusCode>
+    public let persistentFragments: [RPFragment<RP>]
+    public let persistentStats: RP.Stats
     // both duration and charge can be used or one or the other
     let duration: RPTimeIncrement?
     let charges: Int? // the number of charges left
@@ -17,7 +19,8 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
         code: RPReferenceCode,
         displayName: String? = nil,
         tags: Set<RPStatusCode>,
-        fragments: [RPFragment<RP>],
+        persistentFragments: [RPFragment<RP>] = [],
+        periodicFragments: [RPFragment<RP>] = [],
         duration: Double?,
         charges: Int?,
         period: RPTimeIncrement = RPStatusEffect.defaultPeriod
@@ -25,12 +28,14 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
         self.code = code
         self.displayName = displayName ?? code
         self.tags = tags
+        self.persistentFragments = persistentFragments
+        self.persistentStats = RPFragment(flattenedFrom: persistentFragments).stats ?? .zero
         self.duration = duration
         self.charges = charges
         self.period = period
 
-        if fragments.count > 0 {
-            let fragments: [RPFragment<RP>] = fragments + [RPTargeting<RP>(.oneself, .always).toFragment()]
+        if periodicFragments.count > 0 {
+            let fragments: [RPFragment<RP>] = periodicFragments + [RPTargeting<RP>(.oneself, .always).toFragment()]
             ability = RPAbility(code: code, displayName: displayName, fragments: fragments, cooldown: nil)
         } else {
             ability = nil
@@ -40,6 +45,13 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
     public func getStatusEffects() -> [RPStatusEffect] {
         [self]
     }
+
+    var totalPulses: Int {
+        guard ability != nil, let duration = duration, period > 0 else {
+            return 0
+        }
+        return Int(duration / period)
+    }
 }
 
 extension RPStatusEffect: Equatable {}
@@ -47,17 +59,18 @@ extension RPStatusEffect: Equatable {}
 public func ==<Stats: StatsType> (lhs: RPStatusEffect<Stats>, rhs: RPStatusEffect<Stats>) -> Bool {
     lhs.code == rhs.code
         && lhs.tags == rhs.tags
+        && lhs.persistentFragments == rhs.persistentFragments
         && lhs.ability == rhs.ability
 }
 /**
     A Status effect, currently active on an body
  */
 public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
-    public var deltaTick: RPTimeIncrement = 0
     public var currentTick: RPTimeIncrement = 0
     public var maximumTick: RPTimeIncrement { statusEffect.duration ?? 0 }
 
     var currentCharge: Int = 0
+    public private(set) var pulsesDelivered: Int = 0
 
     var level: Int? // power level of the buff, if it is stackable
 
@@ -77,45 +90,56 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         currentCharge = statusEffect.charges ?? 0
     }
 
+    public var persistentStats: RP.Stats { statusEffect.persistentStats }
+
+    public var remainingPulses: Int {
+        Swift.max(0, statusEffect.totalPulses - pulsesDelivered)
+    }
+
+    public var isExpired: Bool {
+        if statusEffect.charges != nil, currentCharge <= 0 {
+            return true
+        }
+        guard let duration = statusEffect.duration else {
+            return false
+        }
+        return remainingPulses <= 0 && currentTick >= duration
+    }
+
+    private var nextPulseDueAt: RPTimeIncrement? {
+        guard statusEffect.ability != nil else { return nil }
+        return RPTimeIncrement(pulsesDelivered + 1) * statusEffect.period
+    }
+
     public func getPendingEvents(in rpSpace: RP) -> [RPEvent<RP>] {
-        // Pulse once the accumulated time reaches the effect's configured period.
-        guard deltaTick >= statusEffect.period else {
+        guard !isExpired,
+              let ability = statusEffect.ability,
+              let dueAt = nextPulseDueAt,
+              currentTick >= dueAt
+        else {
             return []
         }
-        if let ability = statusEffect.ability {
-            return [RPEvent(category: .periodicEffect(name: code), initiator: bodyId, ability: ability, rpSpace: rpSpace)]
-        }
-        return []
+        return [RPEvent(category: .periodicEffect(name: code), initiator: bodyId, ability: ability, rpSpace: rpSpace)]
     }
 
     public mutating func tick(_ moment: RPMoment) {
-        guard isCoolingDown() else {
+        guard !isExpired else {
             return
         }
 
-        deltaTick += moment.delta
+        currentTick += moment.delta
     }
 
-    public mutating func incrementTick() {
-        deltaTick = 0
-        currentTick += 1
+    public mutating func didPulse() {
+        pulsesDelivered += 1
     }
 
     public mutating func resetCooldown() {
         currentTick = 0
+        pulsesDelivered = 0
     }
 
     public mutating func expendCharge() {
         currentCharge -= 1
-        if currentCharge <= 0 {
-            currentTick = maximumTick
-        }
-    }
-
-    public func isCoolingDown() -> Bool {
-        guard statusEffect.duration != nil else {
-            return false
-        }
-        return currentTick < maximumTick
     }
 }

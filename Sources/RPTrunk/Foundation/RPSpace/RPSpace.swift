@@ -29,6 +29,10 @@ public protocol RPSpace: Codable {
 
     static var actionImpairingStatuses: Set<RPStatusCode> { get }
 
+    static func timeMultiplier(for body: RPBody<Self>) -> Double
+
+    static func timeMultiplier(for body: RPBody<Self>, statusEffect code: RPReferenceCode) -> Double
+
     static func createDefaultBody(cache: RPCache<Self>) -> Body
     
     /// Where we calculate any relationship between stats to determine to final values
@@ -76,12 +80,16 @@ public extension RPSpace {
 
     static var actionImpairingStatuses: Set<RPStatusCode> { [] }
 
+    static func timeMultiplier(for body: RPBody<Self>) -> Double { 1 }
+
+    static func timeMultiplier(for body: RPBody<Self>, statusEffect code: RPReferenceCode) -> Double { 1 }
+
     static func createDefaultBody(cache: RPCache<Self>) -> Body {
         Body()
     }
     
     static func fullyResolvedStats(for rpBody: RPBody<Self>) -> Stats {
-        fullyResolvedStats(for: rpBody.cumulativeWornStats())
+        fullyResolvedStats(for: rpBody.cumulativeStats())
     }
     
     func getEnemies(of bodyId: RPBodyId) -> Set<RPBodyId> {

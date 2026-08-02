@@ -61,10 +61,13 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         self.init([:])
     }
     
-    public func cumulativeWornStats() -> Stats {
+    public func cumulativeStats() -> Stats {
         var totalStats = self.baseStats
         equipment.wornItems.forEach { item in
             totalStats = totalStats + item.stats
+        }
+        statusEffects.values.forEach { effect in
+            totalStats = totalStats + effect.persistentStats
         }
         return totalStats
     }
@@ -197,26 +200,40 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     }
 
     public mutating func tick(_ moment: RPMoment) {
+        let ownMoment = RPMoment(delta: moment.delta * RP.timeMultiplier(for: self))
+        let effectDeltas = statusEffects.keys.reduce(into: [String: RPTimeIncrement]()) {
+            $0[$1] = moment.delta * RP.timeMultiplier(for: self, statusEffect: $1)
+        }
+
         if currentTick < maximumTick {
-            currentTick += moment.delta
+            currentTick += ownMoment.delta
         }
 
         for key in statusEffects.keys {
-            statusEffects[key]?.tick(moment)
+            statusEffects[key]?.tick(RPMoment(delta: effectDeltas[key] ?? moment.delta))
+        }
+        let live = statusEffects.filter { !$0.value.isExpired }
+        if live.count != statusEffects.count {
+            statusEffects = live
+            recalculateStats()
         }
 
         for name in executableAbilities.keys {
-            executableAbilities[name]?.tick(moment)
+            executableAbilities[name]?.tick(ownMoment)
         }
 
         if threatDecayPerTick > 0, !threat.isEmpty {
-            let decay = RPValue((threatDecayPerTick * moment.delta).rounded())
+            let decay = RPValue((threatDecayPerTick * ownMoment.delta).rounded())
             if decay > 0 {
                 for id in threat.keys {
                     setThreat(toward: id, amount: (threat[id] ?? 0) - decay)
                 }
             }
         }
+    }
+
+    public mutating func recalculateStats() {
+        setCurrentStats(currentStats)
     }
 
     public func getPendingEvents(in rpSpace: RP) -> [RPEvent<RP>] {

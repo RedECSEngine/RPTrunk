@@ -106,7 +106,7 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
 
         if case let .periodicEffect(name) = category, let initiator = initiator {
             rpSpace.modifyBody(id: initiator) { body, space in
-                body.statusEffects[name]?.incrementTick()
+                body.statusEffects[name]?.didPulse()
             }
         }
         return itemTransfers

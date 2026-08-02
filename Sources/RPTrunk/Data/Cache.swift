@@ -39,12 +39,16 @@ open class RPCache<RP: RPSpace> {
 
     public func loadStatusEffects(_ statusEffects: [RPReferenceCode: RPStatusEffectJSON<RP>]) throws {
         try statusEffects.forEach { (code, data) in
-            let fragments: [RPFragment<RP>] = try buildFragments(data)
+            let persistent: [RPFragment<RP>] = try (data.persistentFragments ?? [])
+                .flatMap { try buildFragments($0) }
+            let periodic: [RPFragment<RP>] = try (data.periodicFragments ?? [])
+                .flatMap { try buildFragments($0) }
             let se = RPStatusEffect<RP>(
                 code: code,
                 displayName: data.displayName,
                 tags: Set(data.tags ?? []),
-                fragments: fragments,
+                persistentFragments: persistent,
+                periodicFragments: periodic,
                 duration: data.duration,
                 charges: data.charges,
                 period: data.period ?? RPStatusEffect<RP>.defaultPeriod

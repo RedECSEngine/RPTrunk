@@ -26,8 +26,7 @@ public protocol RPFragmentsContainerJSON {
     var fragments: [String]? { get }
 }
 
-public struct RPStatusEffectJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContainerJSON {
-    public var displayName: String?
+public struct RPFragmentSetJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContainerJSON {
     public var stats: RP.Stats?
     public var statsCost: RP.Stats?
     public var requiredStats: RP.Stats?
@@ -38,8 +37,14 @@ public struct RPStatusEffectJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsCo
     public var target: String?
     public var discharge: [RPStatusCode]?
     public var fragments: [String]?
+}
 
+public struct RPStatusEffectJSON<RP: RPSpace>: Codable, Equatable {
+    public var displayName: String?
     public var tags: [RPStatusCode]?
+
+    public var persistentFragments: [RPFragmentSetJSON<RP>]?
+    public var periodicFragments: [RPFragmentSetJSON<RP>]?
 
     public var duration: RPTimeIncrement?
     public var charges: Int?
