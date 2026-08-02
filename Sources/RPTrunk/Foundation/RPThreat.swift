@@ -41,6 +41,12 @@ public extension RPSpace {
         }
     }
 
+    func threatsAgainst(_ id: RPBodyId) -> [RPValue] {
+        allBodies()
+            .filter { $0 != id }
+            .compactMap { bodyById($0)?.threat[id] }
+    }
+
     func bodiesThreatening(_ id: RPBodyId) -> [RPBodyId] {
         allBodies()
             .filter { bodyById($0)?.holdsThreat(toward: id) == true }

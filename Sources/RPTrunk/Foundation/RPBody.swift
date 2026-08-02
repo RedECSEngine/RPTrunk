@@ -89,9 +89,7 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         }
 
         return executableAbilities.values
-            .filter {
-                $0.canExecute(in: rpSpace) && (currentStats >= $0.ability.cost || $0.ability.cost == .zero)
-            }
+            .filter { $0.canExecute(in: rpSpace) }
     }
 
     public func getPossibleTargets() -> Set<RPBodyId>? {
@@ -167,9 +165,9 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         }
     }
 
-    public mutating func dischargeStatusEffect(_ label: String) {
+    public mutating func dischargeStatusEffect(_ tag: RPStatusCode) {
         let relevantEffectNames = statusEffects.values
-            .filter { $0.tags.contains(label) }
+            .filter { $0.tags.contains(tag) }
             .map(\.code)
 
         relevantEffectNames
@@ -255,7 +253,6 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
 
         let viable = executableAbilities.values.filter {
             $0.wouldExecute(in: rpSpace)
-                && (currentStats >= $0.ability.cost || $0.ability.cost == .zero)
                 && $0.predictEvents(in: rpSpace).first?.targets.isEmpty == false
         }
         guard viable.isEmpty == false else {
@@ -318,14 +315,14 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     // Querying
 
     public func canPerformEvents() -> Bool {
-        for se in statusEffects.values where se.shouldDisableBody() {
+        for code in RP.actionImpairingStatuses where hasStatus(code) {
             return false
         }
         return true
     }
 
-    public func hasStatus(_ name: String) -> Bool {
-        statusEffects[name] != nil
+    public func hasStatus(_ code: RPStatusCode) -> Bool {
+        statusEffects.values.contains { $0.tags.contains(code) }
     }
 }
 

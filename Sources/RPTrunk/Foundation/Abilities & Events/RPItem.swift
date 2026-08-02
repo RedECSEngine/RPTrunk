@@ -68,7 +68,7 @@ public struct RPActiveItem<RP: RPSpace>: RPTemporal, Codable, Equatable {
 
         guard let e = rpSpace.bodyById(bodyId),
               let a = item.ability,
-              a.cost < e.currentStats
+              a.statsCost < e.currentStats
         else {
             return false
         }

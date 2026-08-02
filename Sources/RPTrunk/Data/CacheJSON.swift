@@ -15,27 +15,34 @@ public struct RPCacheJSON<RP: RPSpace>: Codable, Equatable {
 public protocol RPFragmentsContainerJSON {
     associatedtype Stats: StatsType
     var stats: Stats? { get }
-    var cost: Stats? { get }
-    var requirements: Stats? { get }
+    var statsCost: Stats? { get }
+    var requiredStats: Stats? { get }
+    var requiredStatuses: [String]? { get }
+    var threatRequirement: RPThreatRequirement? { get }
+    var threatCost: RPValue? { get }
     var statusEffects: [String]? { get }
     var target: String? { get }
-    var discharge: [String]? { get }
+    var discharge: [RPStatusCode]? { get }
     var fragments: [String]? { get }
 }
 
 public struct RPStatusEffectJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContainerJSON {
     public var displayName: String?
     public var stats: RP.Stats?
-    public var cost: RP.Stats?
-    public var requirements: RP.Stats?
+    public var statsCost: RP.Stats?
+    public var requiredStats: RP.Stats?
+    public var requiredStatuses: [String]?
+    public var threatRequirement: RPThreatRequirement?
+    public var threatCost: RPValue?
     public var statusEffects: [String]?
     public var target: String?
-    public var discharge: [String]?
+    public var discharge: [RPStatusCode]?
     public var fragments: [String]?
+
+    public var tags: [RPStatusCode]?
 
     public var duration: RPTimeIncrement?
     public var charges: Int?
-    public var impairsAction: Bool? = false
     /// Time (ms) between periodic pulses; omitted uses `RPStatusEffect.defaultPeriod`.
     public var period: RPTimeIncrement?
 }
@@ -60,12 +67,17 @@ public struct RPBodyJSON<RP: RPSpace>: Codable, Equatable {
 public struct RPAbilityJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContainerJSON {
     public var displayName: String?
     public var stats: RP.Stats?
-    public var cost: RP.Stats?
-    public var requirements: RP.Stats?
+    public var statsCost: RP.Stats?
+    public var requiredStats: RP.Stats?
+    public var requiredStatuses: [String]?
+    public var threatRequirement: RPThreatRequirement?
+    public var threatCost: RPValue?
     public var statusEffects: [String]?
     public var target: String?
-    public var discharge: [String]?
+    public var discharge: [RPStatusCode]?
     public var fragments: [String]?
+
+    public var subAbilities: [String]?
 
     public let cooldown: RPTimeIncrement?
 
@@ -75,11 +87,14 @@ public struct RPAbilityJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContain
 public struct RPItemJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContainerJSON {
     public var displayName: String?
     public var stats: RP.Stats?
-    public var cost: RP.Stats?
-    public var requirements: RP.Stats?
+    public var statsCost: RP.Stats?
+    public var requiredStats: RP.Stats?
+    public var requiredStatuses: [String]?
+    public var threatRequirement: RPThreatRequirement?
+    public var threatCost: RPValue?
     public var statusEffects: [String]?
     public var target: String?
-    public var discharge: [String]?
+    public var discharge: [RPStatusCode]?
     public var fragments: [String]?
 
     public var ability: String?

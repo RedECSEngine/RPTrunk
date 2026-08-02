@@ -29,6 +29,12 @@ open class RPCache<RP: RPSpace> {
             ability.metadata = data.metadata
             self.abilities[code] = ability
         }
+
+        try abilities.forEach { (code, data) in
+            guard let subAbilities = data.subAbilities else { return }
+            let resolved = try subAbilities.map { try getAbility($0) }
+            self.abilities[code]?.subAbilities = resolved
+        }
     }
 
     public func loadStatusEffects(_ statusEffects: [RPReferenceCode: RPStatusEffectJSON<RP>]) throws {
@@ -37,11 +43,10 @@ open class RPCache<RP: RPSpace> {
             let se = RPStatusEffect<RP>(
                 code: code,
                 displayName: data.displayName,
-                tags: [],
+                tags: Set(data.tags ?? []),
                 fragments: fragments,
                 duration: data.duration,
                 charges: data.charges,
-                impairsAction: data.impairsAction ?? false,
                 period: data.period ?? RPStatusEffect<RP>.defaultPeriod
             )
             self.statusEffects[code] = se
@@ -103,17 +108,26 @@ open class RPCache<RP: RPSpace> {
         if let stats = fragment.stats {
             fragments.append(RPFragment(stats: stats))
         }
-        if let cost = fragment.cost {
-            fragments.append(RPFragment(cost: cost))
+        if let statsCost = fragment.statsCost {
+            fragments.append(RPFragment(statsCost: statsCost))
         }
-        if let requirements = fragment.requirements {
-            fragments.append(RPFragment(requirements: requirements))
+        if let requiredStats = fragment.requiredStats {
+            fragments.append(RPFragment(requiredStats: requiredStats))
+        }
+        if let requiredStatuses = fragment.requiredStatuses {
+            fragments.append(RPFragment(requiredStatuses: requiredStatuses.map { RPStatusRequirement($0) }))
+        }
+        if let threatRequirement = fragment.threatRequirement {
+            fragments.append(RPFragment(threatRequirement: threatRequirement))
+        }
+        if let threatCost = fragment.threatCost {
+            fragments.append(RPFragment(threatCost: threatCost))
         }
         if let statusEffects = fragment.statusEffects {
             fragments += try statusEffects.map { try getStatusEffect($0) }
         }
         if let target = fragment.target {
-            let type = RPTargeting<RP>.fromString(target)
+            let type = try RPTargeting<RP>.fromString(target)
             fragments.append(RPFragment<RP>(targetType: type))
         }
         if let discharge = fragment.discharge {

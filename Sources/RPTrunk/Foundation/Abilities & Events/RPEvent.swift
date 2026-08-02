@@ -2,6 +2,7 @@ public struct RPEventResult<RP: RPSpace>: Equatable, Codable {
     public let event: RPEvent<RP>
     public let effects: [RPConflictResult<RP>]
     public let itemTransfers: [RPItemTransfer]
+    public var subResults: [RPEventResult<RP>] = []
 
     public init(_ event: RPEvent<RP>, _ effects: [RPConflictResult<RP>], _ itemTransfers: [RPItemTransfer] = []) {
         self.event = event
@@ -23,6 +24,7 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
     public let ability: RPAbility<RP>
     public let targets: Set<RPBodyId>
     public let initiator: RPBodyId?
+    public let subEvents: [RPEvent<RP>]
 
     public init(
         category: Category = .standardConflict,
@@ -35,8 +37,11 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
         self.initiator = initiator
         self.ability = ability
         self.targets = targets ?? ability.targeting.getValidTargets(for: initiator, in: rpSpace)
+        self.subEvents = ability.subAbilities.map {
+            RPEvent(category: category, initiator: initiator, ability: $0, rpSpace: rpSpace)
+        }
     }
-    
+
     public init(
         category: Category = .standardConflict,
         ability: RPAbility<RP>,
@@ -46,6 +51,7 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
         self.initiator = nil
         self.ability = ability
         self.targets = targets
+        self.subEvents = []
     }
 
     func getStats() -> Stats {
@@ -53,12 +59,14 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
     }
 
     func getCost() -> Stats {
-        ability.cost * -1
+        ability.statsCost * -1
     }
 
     // MARK: - Results calculation and application
     public func predictedResults(in rpSpace: RP) -> RPEventResult<RP> {
-        RPEventResult(self, self.getResults(in: rpSpace))
+        var result = RPEventResult(self, self.getResults(in: rpSpace))
+        result.subResults = subEvents.map { $0.predictedResults(in: rpSpace) }
+        return result
     }
 
     public func getResults(in rpSpace: RP) -> [RPConflictResult<RP>] {
@@ -139,11 +147,23 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
     public func execute(in rpSpace: inout RP) -> RPEventResult<RP> {
         let results = getResults(in: rpSpace)
         let itemTransfers = applyResults(results, in: &rpSpace)
-        let eventResult = RPEventResult<RP>(self, results, itemTransfers)
+        var eventResult = RPEventResult<RP>(self, results, itemTransfers)
         rpSpace.applyThreatChanges(
-            RP.resolveThreatChanges(for: eventResult, in: rpSpace)
+            declaredThreatChanges() + RP.resolveThreatChanges(for: eventResult, in: rpSpace)
         )
+        eventResult.subResults = subEvents.map { $0.execute(in: &rpSpace) }
         return eventResult
+    }
+
+    private func declaredThreatChanges() -> [RPThreatChange] {
+        let threatCost = ability.threatCost
+        guard threatCost != 0, let initiator = initiator else { return [] }
+        return targets.flatMap { target in
+            [
+                RPThreatChange(holder: target, toward: initiator, delta: threatCost),
+                RPThreatChange(holder: initiator, toward: target, delta: threatCost),
+            ]
+        }
     }
 
     public func resetInitiatorCooldowns(in rpSpace: inout RP) {

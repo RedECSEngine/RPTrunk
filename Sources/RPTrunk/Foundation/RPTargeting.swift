@@ -77,26 +77,30 @@ public struct RPTargeting<RP: RPSpace>: Codable {
 }
 
 public extension RPTargeting {
-    static func fromString(_ query: String) -> RPTargeting {
+    enum TargetingError: Error {
+        case unrecognizedSelector(String)
+    }
+
+    static func fromString(_ query: String) throws -> RPTargeting {
         let parts = query.split(separator: ":", omittingEmptySubsequences: false)
         guard let type = parts.first.map(String.init) else {
-            fatalError("Unexpected format for string translation to target")
+            throw TargetingError.unrecognizedSelector(query)
         }
 
         let condition: RPConditional<RP> = parts.count > 1 ? RPConditional(String(parts[1])) : .always
 
         switch type {
-        case "self":
+        case "self", "oneself":
             return RPTargeting(.oneself, condition)
-        case "enemy":
+        case "enemy", "singleEnemy":
             return RPTargeting(.singleEnemy, condition)
         case "all":
             return RPTargeting(.all, condition)
         case "random":
             return RPTargeting(.random, condition)
-        case "allFriendlies":
+        case "allFriendlies", "allFriendly":
             return RPTargeting(.allFriendly, condition)
-        case "allEnemies":
+        case "allEnemies", "allEnemy":
             return RPTargeting(.allEnemy, condition)
         case "ally", "singleFriendly":
             return RPTargeting(.singleFriendly, condition)
@@ -107,7 +111,7 @@ public extension RPTargeting {
         case "allyTeam":
             return RPTargeting(.allyTeam, condition)
         default:
-            return RPTargeting(.all, condition) // type would be the condition in this case
+            throw TargetingError.unrecognizedSelector(type)
         }
     }
 }

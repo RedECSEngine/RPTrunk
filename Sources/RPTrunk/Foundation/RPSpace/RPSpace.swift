@@ -27,6 +27,8 @@ public protocol RPSpace: Codable {
 
     static var statTypes: Set<String> { get }
 
+    static var actionImpairingStatuses: Set<RPStatusCode> { get }
+
     static func createDefaultBody(cache: RPCache<Self>) -> Body
     
     /// Where we calculate any relationship between stats to determine to final values
@@ -71,7 +73,9 @@ public protocol RPSpace: Codable {
 public extension RPSpace {
     
     static var statTypes: Set<String> { Set(Stats.dynamicKeys.keys) }
-    
+
+    static var actionImpairingStatuses: Set<RPStatusCode> { [] }
+
     static func createDefaultBody(cache: RPCache<Self>) -> Body {
         Body()
     }

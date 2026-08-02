@@ -5,6 +5,7 @@ public struct RPAbility<RP: RPSpace>: RPFragmentContainer, Codable {
     public var fragments: [RPFragment<RP>]
     public var cooldown: RPTimeIncrement
     public var repeats: Int = 1
+    public var subAbilities: [RPAbility<RP>] = []
     public var metadata: RP.AbilityMetadata?
 
     public init(
@@ -51,15 +52,30 @@ public struct RPActiveAbility<RP: RPSpace>: RPTemporal, Codable {
     }
 
     public func wouldExecute(in rpSpace: RP) -> Bool {
-        guard let e = rpSpace.bodyById(bodyId) else {
+        guard let body = rpSpace.bodyById(bodyId) else {
             return false
         }
 
-        // TODO: consider stats cost
-        // TODO: consider requirements
-        // TODO: consider item exchange cost
+        let statsCost = ability.statsCost
+        guard statsCost == .zero || body.currentStats >= statsCost else {
+            return false
+        }
 
-        return (try? conditional.exec(e, rpSpace: rpSpace)) ?? false
+        let requiredStats = ability.requiredStats
+        guard requiredStats == .zero || body.currentStats >= requiredStats else {
+            return false
+        }
+
+        guard ability.requiredStatuses.allSatisfy({ $0.isSatisfied(by: body) }) else {
+            return false
+        }
+
+        if let threatRequirement = ability.threatRequirement,
+           !threatRequirement.isSatisfied(against: bodyId, in: rpSpace) {
+            return false
+        }
+
+        return (try? conditional.exec(body, rpSpace: rpSpace)) ?? false
     }
 
     public func getPendingEvents(in rpSpace: RP) -> [RPEvent<RP>] {

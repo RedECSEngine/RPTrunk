@@ -5,11 +5,10 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
 
     public let code: RPReferenceCode
     public let displayName: String
-    public let tags: [String]
+    public let tags: Set<RPStatusCode>
     // both duration and charge can be used or one or the other
     let duration: RPTimeIncrement?
     let charges: Int? // the number of charges left
-    let impairsAction: Bool
     /// Time (ms) between periodic pulses of this effect (heal/damage over time).
     let period: RPTimeIncrement
     let ability: RPAbility<RP>?
@@ -17,11 +16,10 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
     public init(
         code: RPReferenceCode,
         displayName: String? = nil,
-        tags: [String],
+        tags: Set<RPStatusCode>,
         fragments: [RPFragment<RP>],
         duration: Double?,
         charges: Int?,
-        impairsAction: Bool = false,
         period: RPTimeIncrement = RPStatusEffect.defaultPeriod
     ) {
         self.code = code
@@ -29,7 +27,6 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
         self.tags = tags
         self.duration = duration
         self.charges = charges
-        self.impairsAction = impairsAction
         self.period = period
 
         if fragments.count > 0 {
@@ -69,7 +66,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
 
     public var code: RPReferenceCode { statusEffect.code }
     public var displayName: String { statusEffect.displayName }
-    public var tags: [String] { statusEffect.tags }
+    public var tags: Set<RPStatusCode> { statusEffect.tags }
 
     public init(
         bodyId: RPBodyId,
@@ -78,10 +75,6 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         self.bodyId = bodyId
         self.statusEffect = statusEffect
         currentCharge = statusEffect.charges ?? 0
-    }
-
-    public func shouldDisableBody() -> Bool {
-        statusEffect.impairsAction
     }
 
     public func getPendingEvents(in rpSpace: RP) -> [RPEvent<RP>] {
