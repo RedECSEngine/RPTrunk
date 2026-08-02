@@ -81,7 +81,7 @@ public extension RPSpace {
     }
     
     static func fullyResolvedStats(for rpBody: RPBody<Self>) -> Stats {
-        fullyResolvedStats(for: rpBody.cumulativeWornStats())
+        fullyResolvedStats(for: rpBody.cumulativeStats())
     }
     
     func getEnemies(of bodyId: RPBodyId) -> Set<RPBodyId> {

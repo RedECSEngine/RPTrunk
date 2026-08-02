@@ -61,10 +61,13 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         self.init([:])
     }
     
-    public func cumulativeWornStats() -> Stats {
+    public func cumulativeStats() -> Stats {
         var totalStats = self.baseStats
         equipment.wornItems.forEach { item in
             totalStats = totalStats + item.stats
+        }
+        statusEffects.values.forEach { effect in
+            totalStats = totalStats + effect.persistentStats
         }
         return totalStats
     }
@@ -203,6 +206,11 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
 
         for key in statusEffects.keys {
             statusEffects[key]?.tick(moment)
+        }
+        let live = statusEffects.filter { !$0.value.isExpired }
+        if live.count != statusEffects.count {
+            statusEffects = live
+            setCurrentStats(currentStats)
         }
 
         for name in executableAbilities.keys {
