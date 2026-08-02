@@ -92,8 +92,6 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
 
     public var persistentStats: RP.Stats { statusEffect.persistentStats }
 
-    /// Pulses this effect still owes. An effect with no duration owes them
-    /// indefinitely, so this stays at zero for it and expiry never consults it.
     public var remainingPulses: Int {
         Swift.max(0, statusEffect.totalPulses - pulsesDelivered)
     }
@@ -108,9 +106,6 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         return remainingPulses <= 0 && currentTick >= duration
     }
 
-    /// Elapsed time the next pulse is owed at, measured from when the effect was
-    /// applied rather than from the last pulse — so a late pulse never pushes the
-    /// ones after it later still.
     private var nextPulseDueAt: RPTimeIncrement? {
         guard statusEffect.ability != nil else { return nil }
         return RPTimeIncrement(pulsesDelivered + 1) * statusEffect.period

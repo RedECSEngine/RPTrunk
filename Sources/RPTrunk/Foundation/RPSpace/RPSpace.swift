@@ -29,14 +29,8 @@ public protocol RPSpace: Codable {
 
     static var actionImpairingStatuses: Set<RPStatusCode> { get }
 
-    /// Rate at which time passes for a body's own clocks: its global cooldown,
-    /// its ability cooldowns and its threat decay. `1` is real time.
     static func timeMultiplier(for body: RPBody<Self>) -> Double
 
-    /// Rate at which time passes for one status effect the body holds. Kept
-    /// separate from the body's own rate because only a conformance can say
-    /// whether that rate should carry to the effects it holds, and the answer
-    /// may differ per effect — hence the code.
     static func timeMultiplier(for body: RPBody<Self>, statusEffect code: RPReferenceCode) -> Double
 
     static func createDefaultBody(cache: RPCache<Self>) -> Body

@@ -232,9 +232,6 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         }
     }
 
-    /// Re-applies the resolved ceiling to the live stats. Needed whenever
-    /// something that contributed to that ceiling goes away — an expiring buff,
-    /// unequipped gear — since `setCurrentStats` only clamps on write.
     public mutating func recalculateStats() {
         setCurrentStats(currentStats)
     }
