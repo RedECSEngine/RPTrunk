@@ -29,14 +29,14 @@ public protocol RPSpace: Codable {
 
     static var actionImpairingStatuses: Set<RPStatusCode> { get }
 
-    /// How fast time passes for a body's own clocks — its global cooldown, its
-    /// ability cooldowns and its threat decay. A haste effect belongs here.
+    /// Rate at which time passes for a body's own clocks: its global cooldown,
+    /// its ability cooldowns and its threat decay. `1` is real time.
     static func timeMultiplier(for body: RPBody<Self>) -> Double
 
-    /// How fast time passes for one status effect held by a body. Separate from
-    /// the body's own rate because RPTrunk cannot know whether a conformance
-    /// wants haste to shorten its damage-over-time effects too — and the answer
-    /// may differ per effect, hence the code.
+    /// Rate at which time passes for one status effect the body holds. Kept
+    /// separate from the body's own rate because only a conformance can say
+    /// whether that rate should carry to the effects it holds, and the answer
+    /// may differ per effect — hence the code.
     static func timeMultiplier(for body: RPBody<Self>, statusEffect code: RPReferenceCode) -> Double
 
     static func createDefaultBody(cache: RPCache<Self>) -> Body
