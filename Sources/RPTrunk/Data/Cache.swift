@@ -64,6 +64,7 @@ open class RPCache<RP: RPSpace> {
             body.code = code
             body.setBaseStats(stats)
             body.displayName = data.displayName ?? code
+            body.metadata = data.metadata
             body.equipment.equipmentSlotCapacities = data.equipmentSlots ?? [:]
             data.abilities?.forEach {
                 ability in

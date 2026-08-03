@@ -177,7 +177,7 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
             .forEach { self.statusEffects[$0]?.expendCharge() }
 
         relevantEffectNames
-            .filter { self.statusEffects[$0]?.currentCharge == 0 }
+            .filter { (self.statusEffects[$0]?.currentCharge ?? 0) <= 0 }
             .forEach {
                 statusEffects[$0] = nil
             }
