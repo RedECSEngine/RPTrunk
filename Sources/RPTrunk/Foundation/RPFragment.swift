@@ -22,7 +22,7 @@ public struct RPFragment<RP: RPSpace>: Codable, Equatable {
     /// status effect given/applied
     public var statusEffects: [RPStatusEffect<RP>]?
     /// Status types removed
-    public var dischargedStatusEffects: [RPStatusCode]?
+    public var dischargedStatusEffects: [RPStatusTag]?
     
     /// Items that will be exchanged during event
     public var itemExchange: RPItemExchange?
@@ -59,7 +59,7 @@ public struct RPFragment<RP: RPSpace>: Codable, Equatable {
         self.statusEffects = statusEffects
     }
 
-    public init(dischargedStatusEffects: [RPStatusCode]) {
+    public init(dischargedStatusEffects: [RPStatusTag]) {
         self.dischargedStatusEffects = dischargedStatusEffects
     }
 
@@ -90,6 +90,6 @@ public struct RPFragment<RP: RPSpace>: Codable, Equatable {
     public func getThreatCost() -> RPValue? { threatCost }
     public func getTargeting() -> RPTargeting<RP>? { targeting }
     public func getStatusEffects() -> [RPStatusEffect<RP>] { statusEffects ?? [] }
-    public func getDischargedStatusEffects() -> [RPStatusCode] { dischargedStatusEffects ?? [] }
+    public func getDischargedStatusEffects() -> [RPStatusTag] { dischargedStatusEffects ?? [] }
     public func getItemExchange() -> RPItemExchange? { itemExchange }
 }

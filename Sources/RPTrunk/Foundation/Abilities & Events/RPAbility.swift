@@ -2,6 +2,7 @@
 public struct RPAbility<RP: RPSpace>: RPFragmentContainer, Codable {
     public var code: RPReferenceCode
     public var displayName: String
+    public var tags: Set<RPAbilityTag> = []
     public var fragments: [RPFragment<RP>]
     public var cooldown: RPTimeIncrement
     public var repeats: Int = 1
@@ -11,11 +12,13 @@ public struct RPAbility<RP: RPSpace>: RPFragmentContainer, Codable {
     public init(
         code: RPReferenceCode,
         displayName: String? = nil,
+        tags: Set<RPAbilityTag> = [],
         fragments: [RPFragment<RP>] = [],
         cooldown: RPTimeIncrement? = nil
     ) {
         self.code = code
         self.displayName = displayName ?? code
+        self.tags = tags
         self.fragments = fragments
         self.cooldown = cooldown ?? 0
     }

@@ -5,9 +5,10 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
 
     public let code: RPReferenceCode
     public let displayName: String
-    public let tags: Set<RPStatusCode>
+    public let tags: Set<RPStatusTag>
     public let persistentFragments: [RPFragment<RP>]
     public let persistentStats: RP.Stats
+    public var triggers: [RPTrigger<RP>] = []
     // both duration and charge can be used or one or the other
     let duration: RPTimeIncrement?
     let charges: Int? // the number of charges left
@@ -18,7 +19,7 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
     public init(
         code: RPReferenceCode,
         displayName: String? = nil,
-        tags: Set<RPStatusCode>,
+        tags: Set<RPStatusTag>,
         persistentFragments: [RPFragment<RP>] = [],
         periodicFragments: [RPFragment<RP>] = [],
         duration: Double?,
@@ -60,6 +61,7 @@ public func ==<Stats: StatsType> (lhs: RPStatusEffect<Stats>, rhs: RPStatusEffec
     lhs.code == rhs.code
         && lhs.tags == rhs.tags
         && lhs.persistentFragments == rhs.persistentFragments
+        && lhs.triggers == rhs.triggers
         && lhs.ability == rhs.ability
 }
 /**
@@ -71,6 +73,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
 
     var currentCharge: Int = 0
     public private(set) var pulsesDelivered: Int = 0
+    public internal(set) var triggerCooldowns: [RPReferenceCode: RPTimeIncrement] = [:]
 
     var level: Int? // power level of the buff, if it is stackable
 
@@ -79,7 +82,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
 
     public var code: RPReferenceCode { statusEffect.code }
     public var displayName: String { statusEffect.displayName }
-    public var tags: Set<RPStatusCode> { statusEffect.tags }
+    public var tags: Set<RPStatusTag> { statusEffect.tags }
 
     public init(
         bodyId: RPBodyId,
@@ -91,6 +94,22 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
     }
 
     public var persistentStats: RP.Stats { statusEffect.persistentStats }
+
+    public var triggers: [RPTrigger<RP>] { statusEffect.triggers }
+
+    public var usesCharges: Bool { statusEffect.charges != nil }
+
+    public func isTriggerReady(_ trigger: RPTrigger<RP>) -> Bool {
+        triggerCooldowns[trigger.code] == nil
+    }
+
+    /// Puts one of this effect's own triggers on cooldown. A zero cooldown
+    /// stores nothing, so `isTriggerReady` keeps answering true and the trigger
+    /// may fire again immediately.
+    public mutating func startTriggerCooldown(_ trigger: RPTrigger<RP>) {
+        guard trigger.cooldown > 0 else { return }
+        triggerCooldowns[trigger.code] = trigger.cooldown
+    }
 
     public var remainingPulses: Int {
         Swift.max(0, statusEffect.totalPulses - pulsesDelivered)
@@ -122,21 +141,37 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         return [RPEvent(category: .periodicEffect(name: code), initiator: bodyId, ability: ability, rpSpace: rpSpace)]
     }
 
+    /// Advances this effect's own clock. The bearer hands each of its effects a
+    /// delta scaled by that effect's time multiplier, so a status-owned trigger
+    /// cools down on the status's clock rather than the body's.
+    ///
+    /// Trigger cooldowns count *remaining* time down to zero and are removed at
+    /// zero, which is what makes an absent key mean "ready".
     public mutating func tick(_ moment: RPMoment) {
         guard !isExpired else {
             return
         }
 
         currentTick += moment.delta
+
+        for key in triggerCooldowns.keys {
+            let remaining = (triggerCooldowns[key] ?? 0) - moment.delta
+            triggerCooldowns[key] = remaining > 0 ? remaining : nil
+        }
     }
 
     public mutating func didPulse() {
         pulsesDelivered += 1
     }
 
+    /// Refreshes the effect as though it had just been applied — which is
+    /// exactly what re-applying an already-held status does. Duration, pulse
+    /// count and any trigger mid-cooldown all start over; nothing about the
+    /// previous application carries forward.
     public mutating func resetCooldown() {
         currentTick = 0
         pulsesDelivered = 0
+        triggerCooldowns = [:]
     }
 
     public mutating func expendCharge() {

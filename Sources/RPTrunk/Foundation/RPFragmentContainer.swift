@@ -59,7 +59,7 @@ public extension RPFragmentContainer {
             .flatMap { $0.getStatusEffects() }
     }
 
-    var dischargedStatusEffects: [RPStatusCode] {
+    var dischargedStatusEffects: [RPStatusTag] {
         fragments
             .flatMap { $0.getDischargedStatusEffects() }
     }

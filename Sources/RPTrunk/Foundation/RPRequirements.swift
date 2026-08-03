@@ -1,8 +1,8 @@
 public enum RPStatusRequirement: Equatable, Codable, Hashable {
-    case with(RPStatusCode)
-    case without(RPStatusCode)
+    case with(RPStatusTag)
+    case without(RPStatusTag)
 
-    public var code: RPStatusCode {
+    public var code: RPStatusTag {
         switch self {
         case .with(let code), .without(let code):
             return code
@@ -11,9 +11,9 @@ public enum RPStatusRequirement: Equatable, Codable, Hashable {
 
     public init(_ query: String) {
         if query.hasPrefix("!") {
-            self = .without(RPStatusCode(String(query.dropFirst())))
+            self = .without(RPStatusTag(String(query.dropFirst())))
         } else {
-            self = .with(RPStatusCode(query))
+            self = .with(RPStatusTag(query))
         }
     }
 

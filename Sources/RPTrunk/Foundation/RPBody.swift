@@ -27,8 +27,9 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     public var metadata: RP.BodyMetadata?
 
     public internal(set) var executableAbilities: [String: RPActiveAbility<RP>] = [:]
-    public internal(set) var passiveAbilities: [String: RPActiveAbility<RP>] = [:]
     public internal(set) var statusEffects: [String: RPActiveStatusEffect<RP>] = [:]
+    public internal(set) var triggers: [RPTrigger<RP>] = []
+    public internal(set) var triggerCooldowns: [RPReferenceCode: RPTimeIncrement] = [:]
 
     public var targets: Set<RPBodyId> = []
 
@@ -154,9 +155,65 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         executableAbilities[ability.code] = activeAbility
     }
 
-    public mutating func addPassiveAbility(_ ability: RPAbility<RP>, conditional: RPConditional<RP>) {
-        let activeAbility = RPActiveAbility<RP>(bodyId: id, ability: ability, conditional: conditional)
-        passiveAbilities[ability.code] = activeAbility
+    public mutating func addTrigger(_ trigger: RPTrigger<RP>) {
+        triggers.append(trigger)
+    }
+
+    /// Every trigger this body currently answers to, paired with who owns it.
+    ///
+    /// Status-granted triggers are *read* from the effects the body is holding
+    /// rather than copied onto it, so an expiring status takes its reactions
+    /// with it and nothing has to be revoked. Effects are walked in code order
+    /// so a chain built from this list is reproducible across runs.
+    public var allTriggers: [(source: RPTriggerSource, trigger: RPTrigger<RP>)] {
+        triggers.map { (.body, $0) }
+            + statusEffects
+                .sorted { $0.key < $1.key }
+                .flatMap { code, active in
+                    active.triggers.map { (RPTriggerSource.statusEffect(code), $0) }
+                }
+    }
+
+    /// Asks whichever owner holds this trigger's clock whether it is off
+    /// cooldown. A status effect keeps its own trigger cooldowns, so the body
+    /// forwards rather than answering — a status must never write timing state
+    /// into the body it rides on. A status that has since dropped off answers
+    /// false, which is correct: its triggers are gone.
+    public func isTriggerReady(_ source: RPTriggerSource, _ trigger: RPTrigger<RP>) -> Bool {
+        switch source {
+        case .body:
+            return triggerCooldowns[trigger.code] == nil
+        case let .statusEffect(code):
+            return statusEffects[code]?.isTriggerReady(trigger) ?? false
+        }
+    }
+
+    /// Starts a fired trigger's cooldown on whichever owner holds it, mirroring
+    /// `isTriggerReady`. Body-declared triggers land in the body's own map;
+    /// status-granted ones are pushed back into the effect that brought them.
+    public mutating func startTriggerCooldown(_ source: RPTriggerSource, _ trigger: RPTrigger<RP>) {
+        switch source {
+        case .body:
+            guard trigger.cooldown > 0 else { return }
+            triggerCooldowns[trigger.code] = trigger.cooldown
+        case let .statusEffect(code):
+            statusEffects[code]?.startTriggerCooldown(trigger)
+        }
+    }
+
+    /// Bills a fired trigger against the charges of the status that granted it,
+    /// dropping the status once its last charge is gone — which is how an aura
+    /// like "the next three attackers burn" retires itself.
+    ///
+    /// Charge-less effects are left alone entirely, so an aura bounded only by
+    /// duration is unaffected. Removing an effect changes what the body's
+    /// persistent stats sum to, hence the recalculation.
+    public mutating func expendTriggerCharge(ofStatusEffect code: RPReferenceCode) {
+        guard statusEffects[code]?.usesCharges == true else { return }
+        statusEffects[code]?.expendCharge()
+        guard (statusEffects[code]?.currentCharge ?? 0) <= 0 else { return }
+        statusEffects[code] = nil
+        recalculateStats()
     }
 
     public mutating func applyStatusEffect(_ statusEffect: RPStatusEffect<RP>) {
@@ -168,7 +225,7 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         }
     }
 
-    public mutating func dischargeStatusEffect(_ tag: RPStatusCode) {
+    public mutating func dischargeStatusEffect(_ tag: RPStatusTag) {
         let relevantEffectNames = statusEffects.values
             .filter { $0.tags.contains(tag) }
             .map(\.code)
@@ -198,6 +255,18 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         executableAbilities[name]?.resetCooldown()
     }
 
+    /// Advances every clock this body owns by one moment.
+    ///
+    /// Time is not uniform: the body's own cooldowns run at its speed multiplier
+    /// (`ownMoment`) while each status effect gets a delta scaled for that
+    /// effect, so a slowing aura can drag on its bearer without dragging on
+    /// itself. Expired effects are swept here — which changes what persistent
+    /// stats sum to, hence the recalculation.
+    ///
+    /// Only *body-declared* trigger cooldowns are counted down at the end;
+    /// status-granted ones were already advanced inside their own effect's tick
+    /// above. Like those, they count remaining time down and are removed at
+    /// zero, so an absent key means ready.
     public mutating func tick(_ moment: RPMoment) {
         let ownMoment = RPMoment(delta: moment.delta * RP.timeMultiplier(for: self))
         let effectDeltas = statusEffects.keys.reduce(into: [String: RPTimeIncrement]()) {
@@ -221,6 +290,11 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
             executableAbilities[name]?.tick(ownMoment)
         }
 
+        for key in triggerCooldowns.keys {
+            let remaining = (triggerCooldowns[key] ?? 0) - ownMoment.delta
+            triggerCooldowns[key] = remaining > 0 ? remaining : nil
+        }
+
         if threatDecayPerTick > 0, !threat.isEmpty {
             let decay = RPValue((threatDecayPerTick * ownMoment.delta).rounded())
             if decay > 0 {
@@ -236,7 +310,7 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     }
 
     public func getPendingEvents(in rpSpace: RP) -> [RPEvent<RP>] {
-        getPendingPassiveEvents(in: rpSpace) + getPendingExecutableEvents(in: rpSpace)
+        getPendingExecutableEvents(in: rpSpace)
     }
 
     func getPendingStatusEffectEvents(in rpSpace: RP) -> [RPEvent<RP>] {
@@ -304,23 +378,14 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         return predictions
     }
 
-    public func getPendingPassiveEvents(in rpSpace: RP) -> [RPEvent<RP>] {
-        var abilityEvents = [RPEvent<RP>]()
-
-        for activeAbility in passiveAbilities.values where activeAbility.canExecute(in: rpSpace) {
-            abilityEvents += activeAbility.getPendingEvents(in: rpSpace)
-        }
-        return abilityEvents
-    }
-
+    /// Re-stamps this body's id onto the things that cached a copy of it, after
+    /// `id` changes — which happens when a body is minted from the cache.
+    /// Triggers are absent here on purpose: they carry no owner id, and are
+    /// always evaluated against a body passed in at the call site.
     fileprivate mutating func updateIds() {
         executableAbilities.keys.forEach {
             abilityName in
             executableAbilities[abilityName]?.bodyId = id
-        }
-        passiveAbilities.keys.forEach {
-            abilityName in
-            passiveAbilities[abilityName]?.bodyId = id
         }
         statusEffects.keys.forEach {
             abilityName in
@@ -341,7 +406,7 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         return true
     }
 
-    public func hasStatus(_ code: RPStatusCode) -> Bool {
+    public func hasStatus(_ code: RPStatusTag) -> Bool {
         statusEffects.values.contains { $0.tags.contains(code) }
     }
 }

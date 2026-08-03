@@ -27,11 +27,20 @@ public protocol RPSpace: Codable {
 
     static var statTypes: Set<String> { get }
 
-    static var actionImpairingStatuses: Set<RPStatusCode> { get }
+    static var actionImpairingStatuses: Set<RPStatusTag> { get }
 
     static func timeMultiplier(for body: RPBody<Self>) -> Double
 
     static func timeMultiplier(for body: RPBody<Self>, statusEffect code: RPReferenceCode) -> Double
+
+    static var maximumForecastNodes: Int { get }
+
+    static func rollTriggerChance(_ percent: RPValue) -> Bool
+
+    static func additionalEvents(
+        after result: RPEventResult<Self>,
+        in rpSpace: Self
+    ) -> [RPEvent<Self>]
 
     static func createDefaultBody(cache: RPCache<Self>) -> Body
     
@@ -78,11 +87,23 @@ public extension RPSpace {
     
     static var statTypes: Set<String> { Set(Stats.dynamicKeys.keys) }
 
-    static var actionImpairingStatuses: Set<RPStatusCode> { [] }
+    static var actionImpairingStatuses: Set<RPStatusTag> { [] }
 
     static func timeMultiplier(for body: RPBody<Self>) -> Double { 1 }
 
     static func timeMultiplier(for body: RPBody<Self>, statusEffect code: RPReferenceCode) -> Double { 1 }
+
+    static var maximumForecastNodes: Int { 64 }
+
+    static func rollTriggerChance(_ percent: RPValue) -> Bool {
+        percent >= RPChance.certain
+            || Int.random(in: 0 ..< RPChance.certain) < percent
+    }
+
+    static func additionalEvents(
+        after result: RPEventResult<Self>,
+        in rpSpace: Self
+    ) -> [RPEvent<Self>] { [] }
 
     static func createDefaultBody(cache: RPCache<Self>) -> Body {
         Body()
@@ -157,17 +178,16 @@ extension RPSpace {
             }
     }
 
+    /// Everything waiting to happen, in the order a pump should prefer it:
+    /// scripted events first, then status pulses, then what bodies choose to do.
+    ///
+    /// Reactions are deliberately absent — they are not pending work. A trigger
+    /// only ever fires inside a `forecast`, as part of the chain belonging to
+    /// the event that provoked it.
     public func getPendingEvents() -> [RPEvent<Self>] {
         allPendingGameMasterEvents() +
-        getAllPendingPassiveEvents() +
         getAllPendingStatusEffectEvents() +
         getAllPendingExecutableEvents()
-    }
-
-    public func getAllPendingPassiveEvents() -> [RPEvent<Self>] {
-        allTeamedBodyIds()
-            .compactMap(bodyById)
-            .flatMap { $0.getPendingPassiveEvents(in: self) }
     }
 
     /// Periodic events emitted by active status effects (heal/damage over time,
@@ -186,35 +206,158 @@ extension RPSpace {
             .flatMap { $0.getPendingExecutableEvents(in: self) }
     }
 
+    /// Resolves a batch of events straight into this space, with no animation
+    /// and no forecast. Acting spends the initiator's turn, so only
+    /// `.standardConflict` resets cooldowns — a `.triggered` reaction was not a
+    /// choice its owner made, and status pulses are not actions at all.
+    ///
+    /// This applies results the moment it computes them, so a caller that needs
+    /// the chain staged over time should forecast instead.
     public mutating func performEvents(_ events: [RPEvent<Self>]) -> [RPEventResult<Self>] {
         events.forEach { event in
             self.removeGameMasterEvent(id: event.id)
         }
 
-        let mainEventResults = events
+        return events
             .flatMap { event -> [RPEvent<Self>] in
                 switch event.category {
                 case .standardConflict:
                     event.resetInitiatorCooldowns(in: &self)
-                case .periodicEffect, .itemExchangeOnly:
+                case .periodicEffect, .itemExchangeOnly, .triggered:
                     break
                 }
                 return [event]
             }
             .map { $0.execute(in: &self) }
-        
-        let reactionEventResults = mainEventResults.flatMap {
-            eventResult -> [RPEvent<Self>] in
-            eventResult.effects.flatMap {
-                conflictResult -> [RPEvent<Self>] in
-                bodyById(conflictResult.body)?.getPendingPassiveEvents(in: self) ?? []
-            }
-        }
-        .map { $0.execute(in: &self) }
-
-        return mainEventResults + reactionEventResults
     }
 
+    /// Every trigger in the space that would answer this result, already paired
+    /// with the event it would produce.
+    ///
+    /// Each candidate has passed its cooldown, its wake condition and its
+    /// targeting; what it has *not* passed is its chance roll, which is left to
+    /// the caller so no `GameRandom` draw is spent on a trigger that could never
+    /// have produced targets anyway.
+    ///
+    /// Every teamed body is swept because `postEvent` reacts to events its owner
+    /// took no part in; `matches` is what narrows that back down. The sweep is
+    /// sorted because team membership is a `Set`, and an unsorted walk would let
+    /// two shields fire in a different order from one seeded run to the next.
+    public func triggerCandidates(
+        for result: RPEventResult<Self>
+    ) -> [(
+        owner: RPBodyId,
+        source: RPTriggerSource,
+        trigger: RPTrigger<Self>,
+        event: RPEvent<Self>
+    )] {
+        allTeamedBodyIds().sorted().flatMap { ownerId -> [(
+            owner: RPBodyId,
+            source: RPTriggerSource,
+            trigger: RPTrigger<Self>,
+            event: RPEvent<Self>
+        )] in
+            guard let owner = bodyById(ownerId) else { return [] }
+            return owner.allTriggers.compactMap { source, trigger in
+                guard owner.isTriggerReady(source, trigger),
+                      trigger.matches(result, owner: ownerId),
+                      let event = trigger.makeEvent(
+                        owner: ownerId,
+                        reactingTo: result.event,
+                        in: self
+                      )
+                else { return nil }
+                return (ownerId, source, trigger, event)
+            }
+        }
+    }
+
+    /// Bills a trigger that has fired: starts its cooldown and, if a status
+    /// granted it, spends one of that status's charges.
+    ///
+    /// The trigger is re-found by source and ability code rather than passed in,
+    /// so this can be replayed later against the *real* bodies from nothing but
+    /// what a forecast node recorded. A trigger that has since gone — its status
+    /// expired, say — simply isn't found, and only the charge is spent.
+    public mutating func spendTrigger(
+        owner ownerId: RPBodyId,
+        source: RPTriggerSource,
+        of event: RPEvent<Self>
+    ) {
+        modifyBody(id: ownerId) { body, _ in
+            if let match = body.allTriggers.first(where: {
+                $0.source == source && $0.trigger.ability.code == event.ability.code
+            }) {
+                body.startTriggerCooldown(match.source, match.trigger)
+            }
+            if case let .statusEffect(code) = source {
+                body.expendTriggerCharge(ofStatusEffect: code)
+            }
+        }
+    }
+
+    /// Resolves an event and everything it provokes, once, and returns the whole
+    /// chain without touching this space.
+    ///
+    /// The walk runs against a *copy*, so the dice thrown here are the dice that
+    /// count — a caller replays each node with `RPEvent.apply` as its animation
+    /// lands, and never resolves anything twice. Nodes come out breadth-first,
+    /// which is play order: the event, then what it provoked, then what those
+    /// provoked.
+    ///
+    /// Triggers are billed on the copy the moment they are *scheduled* rather
+    /// than when their node runs, so a trigger cannot be picked up twice by two
+    /// results that resolve before its own reaction does. That billing is also
+    /// what terminates the walk: a shield that has fired is on cooldown, a
+    /// charge-bounded aura runs out, and `Die` empties its own targeting once
+    /// the `ko` tag lands. `maximumForecastNodes` catches the one shape none of
+    /// that stops — a zero-cooldown, charge-less trigger feeding itself — and
+    /// says so through `wasTruncated` rather than trimming in silence.
+    public func forecast(_ event: RPEvent<Self>) -> RPForecast<Self> {
+        var simulated = self
+        var nodes: [RPForecast<Self>.Node] = []
+        var pending: [(event: RPEvent<Self>, origin: RPForecast<Self>.Origin, depth: Int)] = [
+            (event, .root, 0),
+        ]
+        var truncated = false
+
+        while !pending.isEmpty {
+            guard nodes.count < Self.maximumForecastNodes else {
+                truncated = true
+                break
+            }
+
+            let (next, origin, depth) = pending.removeFirst()
+            let result = next.execute(in: &simulated)
+            nodes.append(.init(event: next, result: result, origin: origin, depth: depth))
+
+            let candidates = simulated.triggerCandidates(for: result)
+            for candidate in candidates
+            where Self.rollTriggerChance(candidate.trigger.chancePercent) {
+                simulated.spendTrigger(
+                    owner: candidate.owner,
+                    source: candidate.source,
+                    of: candidate.event
+                )
+                pending.append((
+                    candidate.event,
+                    .trigger(
+                        owner: candidate.owner,
+                        source: candidate.source,
+                        code: candidate.trigger.code,
+                        chancePercent: candidate.trigger.chancePercent
+                    ),
+                    depth + 1
+                ))
+            }
+
+            for extra in Self.additionalEvents(after: result, in: simulated) {
+                pending.append((extra, .root, depth + 1))
+            }
+        }
+
+        return RPForecast(nodes: nodes, wasTruncated: truncated)
+    }
 }
 
 public struct RPItemTransfer: Codable, Equatable {

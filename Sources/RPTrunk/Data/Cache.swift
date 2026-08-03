@@ -15,17 +15,35 @@ open class RPCache<RP: RPSpace> {
 
     public init() {}
 
+    /// Loads a whole data file, in dependency order.
+    ///
+    /// Status effects come first because abilities reference them, then
+    /// abilities, then a second pass over the *same* status effects to resolve
+    /// the triggers that reference those abilities — a cycle the two-phase read
+    /// breaks. Bodies and items come last, referencing everything above.
     public func load(_ data: RPCacheJSON<RP>) throws {
         try loadStatusEffects(data.statusEffects ?? [:])
         try loadAbilities(data.abilities ?? [:])
+        try loadStatusEffectTriggers(data.statusEffects ?? [:])
         try loadBodies(data.bodies ?? [:])
         try loadItems(data.items ?? [:])
     }
 
+    /// Builds every ability, then wires sub-abilities in a second pass so an
+    /// ability may reference one declared later in the file. The resolved list
+    /// is assembled into a local before being written back, because reading and
+    /// mutating `self.abilities` in one expression is an exclusivity violation
+    /// that traps at runtime.
     public func loadAbilities(_ abilities: [RPReferenceCode: RPAbilityJSON<RP>]) throws {
         try abilities.forEach { (code, data) in
             let fragments: [RPFragment] = try buildFragments(data)
-            var ability = RPAbility<RP>(code: code, displayName: data.displayName, fragments: fragments, cooldown: data.cooldown)
+            var ability = RPAbility<RP>(
+                code: code,
+                displayName: data.displayName,
+                tags: Set(data.tags ?? []),
+                fragments: fragments,
+                cooldown: data.cooldown
+            )
             ability.metadata = data.metadata
             self.abilities[code] = ability
         }
@@ -57,8 +75,62 @@ open class RPCache<RP: RPSpace> {
         }
     }
 
+    /// The second pass over status effects, run once abilities exist so a
+    /// trigger can name one. Same exclusivity care as `loadAbilities`: resolve
+    /// into a local, then assign.
+    public func loadStatusEffectTriggers(
+        _ statusEffects: [RPReferenceCode: RPStatusEffectJSON<RP>]
+    ) throws {
+        try statusEffects.forEach { (code, data) in
+            guard let triggers = data.triggers else { return }
+            let resolved = try triggers.map { try buildTrigger($0) }
+            self.statusEffects[code]?.triggers = resolved
+        }
+    }
+
+    /// Resolves one authored trigger, throwing rather than degrading.
+    ///
+    /// A trigger that quietly never fires is the worst failure this system has —
+    /// it looks like a balance problem and reads like working data — so an
+    /// unrecognized `triggerType` is an error, and so is aiming at `initiator`
+    /// on `postEventInitiated`, where the initiator is by definition the
+    /// trigger's own owner and the reaction could only ever target nobody. That
+    /// check reads the *effective* targeting: the override if one is given, the
+    /// ability's own rules otherwise.
+    public func buildTrigger(_ data: RPTriggerJSON<RP>) throws -> RPTrigger<RP> {
+        guard let triggerType = RPTrigger<RP>.TriggerType(rawValue: data.triggerType) else {
+            throw CacheError.invalidFormat("unrecognized triggerType `\(data.triggerType)`")
+        }
+
+        let ability = try getAbility(data.ability)
+        let targeting = try data.target.map { try RPTargeting<RP>.fromString($0) }
+
+        guard !(triggerType == .postEventInitiated
+                && (targeting ?? ability.targeting).type == .initiator)
+        else {
+            throw CacheError.invalidFormat(
+                "trigger `\(data.ability)` targets `initiator` on `postEventInitiated`, where the initiator is the trigger's own owner — use `target: oneself`"
+            )
+        }
+
+        return RPTrigger<RP>(
+            code: data.code,
+            triggerType: triggerType,
+            abilityTags: Set(data.abilityTags ?? []),
+            targeting: targeting,
+            ability: ability,
+            chancePercent: data.chancePercent ?? RPChance.certain,
+            cooldown: data.cooldown ?? 0
+        )
+    }
+
+    /// Builds every body from its declared stats, slots, abilities and triggers.
+    /// Unlike abilities and status effects this needs no second pass — bodies
+    /// are loaded last, so everything they reference already resolves. An
+    /// ability naming something that doesn't exist is skipped silently here,
+    /// but a trigger naming one throws.
     public func loadBodies(_ bodies: [RPReferenceCode: RPBodyJSON<RP>]) throws {
-        bodies.forEach {(code, data) in
+        try bodies.forEach {(code, data) in
             let stats = data.stats ?? .zero
             var body = RPBody<RP>.new(cache: self)
             body.code = code
@@ -73,6 +145,7 @@ open class RPCache<RP: RPSpace> {
                     body.addExecutableAbility(ability, conditional: conditional)
                 }
             }
+            try data.triggers?.forEach { body.addTrigger(try buildTrigger($0)) }
             self.bodies[code] = body
         }
     }

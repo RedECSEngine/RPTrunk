@@ -17,15 +17,49 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
     /// Test hook: lets individual tests define how events produce threat.
     nonisolated(unsafe) static var threatRule: ((RPEventResult<TestRPSpace>) -> [RPThreatChange])?
 
+    nonisolated(unsafe) static var conflictRule: (
+        (RPEvent<TestRPSpace>, TestRPSpace, RPBodyId, TestStats) -> RPConflictResult<TestRPSpace>
+    )?
+
+    nonisolated(unsafe) static var chanceRule: ((RPValue) -> Bool)?
+
+    nonisolated(unsafe) static var additionalEventsRule: (
+        (RPEventResult<TestRPSpace>, TestRPSpace) -> [RPEvent<TestRPSpace>]
+    )?
+
+    public static func resetTestHooks() {
+        threatRule = nil
+        conflictRule = nil
+        chanceRule = nil
+        additionalEventsRule = nil
+    }
+
     public static func resolveThreatChanges(
         for eventResult: RPEventResult<TestRPSpace>,
         in rpSpace: TestRPSpace
     ) -> [RPThreatChange] {
         threatRule?(eventResult) ?? []
     }
-    
+
+    public static func rollTriggerChance(_ percent: RPValue) -> Bool {
+        if let chanceRule {
+            return chanceRule(percent)
+        }
+        return percent >= RPChance.certain
+    }
+
+    public static func additionalEvents(
+        after result: RPEventResult<TestRPSpace>,
+        in rpSpace: TestRPSpace
+    ) -> [RPEvent<TestRPSpace>] {
+        additionalEventsRule?(result, rpSpace) ?? []
+    }
+
     public static func resolveConflict(_ event: RPEvent<Self>, in rpSpace: Self, target: RPBodyId, conflict: Stats) -> RPConflictResult<Self> {
-        RPConflictResult(.init(), .zero)
+        if let conflictRule {
+            return conflictRule(event, rpSpace, target, conflict)
+        }
+        return RPConflictResult(bodyId: target, .zero)
         //    public func resolveConflict(
         //        _ event: RPEvent,
         //        in rpSpace: RPSpace,

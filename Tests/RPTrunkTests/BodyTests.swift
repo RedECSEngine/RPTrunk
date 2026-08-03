@@ -45,23 +45,28 @@ final class BodyTests: XCTestCase {
         body.equipment.equip(TestEquipment.helmet)
 
         XCTAssertEqual(body.equipment.wornItems.count, 2)
-        XCTAssertEqual(body.cumulativeWornStats().damage, 15)
+        XCTAssertEqual(body.cumulativeStats().damage, 15)
 
         body.setCurrentStats(.init(dict: [\.damage: 100]))
         XCTAssertEqual(body.damage, 15)
     }
 
-    func test_passive_abilities_should_trigger_on_event_occurrences() {
-        let ability = RPAbility<TestRPSpace>(code: "Test")
-        rpSpace.bodies[body.id]?.addPassiveAbility(ability, conditional: .always)
+    func test_triggers_should_react_to_event_occurrences() {
+        let ability = RPAbility<TestRPSpace>(
+            code: "Test",
+            fragments: [RPFragment(targetType: RPTargeting(.oneself, .always))]
+        )
+        rpSpace.bodies[body.id]?.addTrigger(
+            RPTrigger(triggerType: .postEvent, ability: ability, cooldown: 1000)
+        )
 
         let enemyAbility = RPAbility<TestRPSpace>(code: "enemyAbility")
         let fakeEvent = RPEvent(initiator: enemy.id, ability: enemyAbility, rpSpace: rpSpace)
 
-        _ = fakeEvent.execute(in: &rpSpace)
-        let reactionEvents = rpSpace.bodies[body.id]?.getPendingPassiveEvents(in: rpSpace)
-        XCTAssertEqual(reactionEvents?.count, 1)
-        XCTAssertEqual(reactionEvents?.first?.ability, ability)
+        let chain = rpSpace.forecast(fakeEvent)
+        XCTAssertEqual(chain.reactions.count, 1)
+        XCTAssertEqual(chain.reactions.first?.event.ability, ability)
+        XCTAssertEqual(chain.reactions.first?.event.targets, [body.id])
     }
 
     func test_global_cooldown_gates_actions_even_when_the_ability_is_ready() {
@@ -80,7 +85,7 @@ final class BodyTests: XCTestCase {
         XCTAssertTrue(rpSpace.bodies[body.id]!.executableAbilities["Strike"]!.canExecute(in: rpSpace))
         XCTAssertTrue(rpSpace.bodies[body.id]!.getPendingExecutableEvents(in: rpSpace).isEmpty)
 
-        rpSpace.tick(RPMoment(delta: 499))
+        rpSpace.tick(RPMoment(delta: 2499))
         XCTAssertTrue(rpSpace.bodies[body.id]!.getPendingExecutableEvents(in: rpSpace).isEmpty)
 
         rpSpace.tick(RPMoment(delta: 1))
@@ -89,25 +94,25 @@ final class BodyTests: XCTestCase {
     }
 
     func test_status_effects_should_be_able_to_remove_status_effect_by_name() {
-        let se = RPStatusEffect<TestRPSpace>(code: "Death", tags: ["KO"], fragments: [], duration: nil, charges: 1)
+        let se = RPStatusEffect<TestRPSpace>(code: "Death", tags: ["KO"], duration: nil, charges: 1)
         body.applyStatusEffect(se)
 
-        XCTAssertEqual(body.hasStatus("Death"), true)
+        XCTAssertEqual(body.hasStatus("KO"), true)
 
         body.dischargeStatusEffect("KO")
-        XCTAssertEqual(body.hasStatus("Death"), false)
+        XCTAssertEqual(body.hasStatus("KO"), false)
     }
 
     func test_status_effects_discharges_to_remove_a_status_effect_with_multiple_charges() {
-        let se = RPStatusEffect<TestRPSpace>(code: "Charge", tags: ["boost"], fragments: [], duration: nil, charges: 2)
+        let se = RPStatusEffect<TestRPSpace>(code: "Charge", tags: ["boost"], duration: nil, charges: 2)
         body.applyStatusEffect(se)
 
-        XCTAssertEqual(body.hasStatus("Charge"), true)
+        XCTAssertEqual(body.hasStatus("boost"), true)
 
         body.dischargeStatusEffect("boost")
-        XCTAssertEqual(body.hasStatus("Charge"), true)
+        XCTAssertEqual(body.hasStatus("boost"), true)
 
         body.dischargeStatusEffect("boost")
-        XCTAssertEqual(body.hasStatus("Charge"), false)
+        XCTAssertEqual(body.hasStatus("boost"), false)
     }
 }

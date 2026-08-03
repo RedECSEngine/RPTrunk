@@ -22,7 +22,7 @@ public protocol RPFragmentsContainerJSON {
     var threatCost: RPValue? { get }
     var statusEffects: [String]? { get }
     var target: String? { get }
-    var discharge: [RPStatusCode]? { get }
+    var discharge: [RPStatusTag]? { get }
     var fragments: [String]? { get }
 }
 
@@ -35,16 +35,27 @@ public struct RPFragmentSetJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsCon
     public var threatCost: RPValue?
     public var statusEffects: [String]?
     public var target: String?
-    public var discharge: [RPStatusCode]?
+    public var discharge: [RPStatusTag]?
     public var fragments: [String]?
+}
+
+public struct RPTriggerJSON<RP: RPSpace>: Codable, Equatable {
+    public var code: String?
+    public var triggerType: String
+    public var abilityTags: [RPAbilityTag]?
+    public var target: String?
+    public var ability: String
+    public var chancePercent: RPValue?
+    public var cooldown: RPTimeIncrement?
 }
 
 public struct RPStatusEffectJSON<RP: RPSpace>: Codable, Equatable {
     public var displayName: String?
-    public var tags: [RPStatusCode]?
+    public var tags: [RPStatusTag]?
 
     public var persistentFragments: [RPFragmentSetJSON<RP>]?
     public var periodicFragments: [RPFragmentSetJSON<RP>]?
+    public var triggers: [RPTriggerJSON<RP>]?
 
     public var duration: RPTimeIncrement?
     public var charges: Int?
@@ -66,11 +77,14 @@ public struct RPBodyJSON<RP: RPSpace>: Codable, Equatable {
     /// undeclared are unlimited, so declare every slot that should be capped.
     public var equipmentSlots: [RPEquipmentSlotCode: Int]?
 
+    public var triggers: [RPTriggerJSON<RP>]?
+
     public var metadata: RP.BodyMetadata?
 }
 
 public struct RPAbilityJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContainerJSON {
     public var displayName: String?
+    public var tags: [RPAbilityTag]?
     public var stats: RP.Stats?
     public var statsCost: RP.Stats?
     public var requiredStats: RP.Stats?
@@ -79,7 +93,7 @@ public struct RPAbilityJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContain
     public var threatCost: RPValue?
     public var statusEffects: [String]?
     public var target: String?
-    public var discharge: [RPStatusCode]?
+    public var discharge: [RPStatusTag]?
     public var fragments: [String]?
 
     public var subAbilities: [String]?
@@ -99,7 +113,7 @@ public struct RPItemJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContainerJ
     public var threatCost: RPValue?
     public var statusEffects: [String]?
     public var target: String?
-    public var discharge: [RPStatusCode]?
+    public var discharge: [RPStatusTag]?
     public var fragments: [String]?
 
     public var ability: String?
