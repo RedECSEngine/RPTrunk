@@ -103,9 +103,6 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         triggerCooldowns[trigger.code] == nil
     }
 
-    /// Puts one of this effect's own triggers on cooldown. A zero cooldown
-    /// stores nothing, so `isTriggerReady` keeps answering true and the trigger
-    /// may fire again immediately.
     public mutating func startTriggerCooldown(_ trigger: RPTrigger<RP>) {
         guard trigger.cooldown > 0 else { return }
         triggerCooldowns[trigger.code] = trigger.cooldown
@@ -141,12 +138,6 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         return [RPEvent(category: .periodicEffect(name: code), initiator: bodyId, ability: ability, rpSpace: rpSpace)]
     }
 
-    /// Advances this effect's own clock. The bearer hands each of its effects a
-    /// delta scaled by that effect's time multiplier, so a status-owned trigger
-    /// cools down on the status's clock rather than the body's.
-    ///
-    /// Trigger cooldowns count *remaining* time down to zero and are removed at
-    /// zero, which is what makes an absent key mean "ready".
     public mutating func tick(_ moment: RPMoment) {
         guard !isExpired else {
             return
@@ -154,6 +145,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
 
         currentTick += moment.delta
 
+        // counts remaining time down; cleared at zero, so absent means ready
         for key in triggerCooldowns.keys {
             let remaining = (triggerCooldowns[key] ?? 0) - moment.delta
             triggerCooldowns[key] = remaining > 0 ? remaining : nil
@@ -164,14 +156,10 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         pulsesDelivered += 1
     }
 
-    /// Refreshes the effect as though it had just been applied — which is
-    /// exactly what re-applying an already-held status does. Duration, pulse
-    /// count and any trigger mid-cooldown all start over; nothing about the
-    /// previous application carries forward.
     public mutating func resetCooldown() {
         currentTick = 0
         pulsesDelivered = 0
-        triggerCooldowns = [:]
+        triggerCooldowns = [:] // re-applying makes the effect new, mid-cooldown triggers included
     }
 
     public mutating func expendCharge() {

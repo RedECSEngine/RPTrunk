@@ -27,18 +27,6 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
     public let initiator: RPBodyId?
     public let subEvents: [RPEvent<RP>]
 
-    /// Composes an event and, eagerly, the sub-events its ability declares.
-    ///
-    /// Explicit `targets` bypass the ability's targeting for *this* event only —
-    /// sub-events always resolve their own rules, which is why `reactingTo` is a
-    /// separate parameter rather than something folded into `targets`: it is
-    /// handed down the whole tree so a reaction's sub-ability can aim at the
-    /// attacker too.
-    ///
-    /// `initiator` is who performs this event; `reactingTo` is the event being
-    /// answered. Both are bodies-adjacent and easy to confuse, so note that the
-    /// `.initiator` *targeting selector* reads the latter's initiator, never
-    /// this one.
     public init(
         category: Category = .standardConflict,
         initiator: RPBodyId,
@@ -57,6 +45,7 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
                 reactingTo: triggeringEvent
             )
         self.subEvents = ability.subAbilities.map {
+            // handed down so a sub-ability can aim at the attacker too
             RPEvent(
                 category: category,
                 initiator: initiator,
@@ -180,17 +169,10 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
         return eventResult
     }
 
-    /// Commits an already-resolved result to the space — the second half of
-    /// `execute`, with the rolling half skipped.
-    ///
-    /// Randomness is reused and determinism is recomputed: the
-    /// `RPConflictResult`s carry dice that were thrown when the result was
-    /// produced and must not be thrown twice, while status effects, item
-    /// exchange and threat re-run here because they are functions of the state
-    /// being written to, which has moved on since.
-    ///
-    /// This is what lets a forecast resolve a whole chain up front and then pay
-    /// it out one node at a time as each animation lands.
+    /// Commits an already-resolved result — `execute` with the rolling skipped.
+    /// Randomness is reused and determinism recomputed: the `RPConflictResult`s
+    /// carry dice that must not be thrown twice, while status effects, item
+    /// exchange and threat re-run against a space that has since moved on.
     @discardableResult
     public func apply(
         _ resolved: RPEventResult<RP>,

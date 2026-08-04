@@ -22,16 +22,10 @@ public struct RPTrigger<RP: RPSpace>: Codable, Equatable {
     public let chancePercent: RPValue
     public let cooldown: RPTimeIncrement
 
-    /// `code` keys this trigger's cooldown on whichever owner holds it, and
-    /// defaults to the ability's own code — pass one explicitly only when a
-    /// single owner carries two triggers around the same ability and they
-    /// should cool down separately.
-    ///
-    /// A nil `targeting` means "use the ability's own rules"; supplying one
-    /// overrides them, which is what lets a single ability serve both a direct
-    /// cast and a reaction. It also doubles as the trigger's gate, since
-    /// `RPTargeting` carries a conditional and an empty target set yields no
-    /// event.
+    /// `code` keys this trigger's cooldown on whichever owner holds it. A nil
+    /// `targeting` uses the ability's own rules; supplying one overrides them,
+    /// which is what lets an ability serve both a cast and a reaction — and is
+    /// also the gate, since an empty target set yields no event.
     public init(
         code: RPReferenceCode? = nil,
         triggerType: TriggerType,
@@ -50,15 +44,10 @@ public struct RPTrigger<RP: RPSpace>: Codable, Equatable {
         self.cooldown = cooldown
     }
 
-    /// Whether a resolved event is the *kind* of thing this trigger answers,
-    /// judged purely on the owner's role in it and the ability's tags. It says
-    /// nothing about whether the reaction can actually produce targets — that
-    /// is `makeEvent`'s job — nor about cooldown or chance, which the caller
-    /// gates separately.
-    ///
-    /// `postEvent` matches every event in the space, including ones the owner
-    /// took no part in. An empty `abilityTags` is a subset of every ability's
-    /// tags, so a trigger declaring none wakes on anything its type admits.
+    /// Whether a resolved event is the kind of thing this trigger answers, on
+    /// role and tags alone — cooldown, chance and targeting are gated elsewhere.
+    /// `postEvent` matches every event in the space; an empty `abilityTags` is a
+    /// subset of everything, so declaring none wakes on anything.
     public func matches(_ result: RPEventResult<RP>, owner ownerId: RPBodyId) -> Bool {
         switch triggerType {
         case .postEvent:
@@ -72,15 +61,9 @@ public struct RPTrigger<RP: RPSpace>: Codable, Equatable {
     }
 
     /// Builds the reaction the owner would perform, or nil when it would hit
-    /// nobody. Returning nil is the ordinary outcome, not an error: a
-    /// `.initiator` aim finds nothing when the triggering event had no
-    /// initiator or when that initiator *is* the owner, and any targeting whose
-    /// conditional excludes everyone resolves empty. Callers treat nil as "this
-    /// trigger did not fire", so no cooldown, charge or chance roll is spent.
-    ///
-    /// The triggering event is threaded through rather than just its initiator
-    /// so that the reaction's own sub-abilities resolve their targeting against
-    /// it too — an explicit target set would not reach them.
+    /// nobody — the ordinary outcome, not an error, and callers spend no
+    /// cooldown, charge or roll on it. The whole triggering event is threaded
+    /// through so the reaction's sub-abilities can aim at the attacker too.
     public func makeEvent(
         owner ownerId: RPBodyId,
         reactingTo triggeringEvent: RPEvent<RP>,

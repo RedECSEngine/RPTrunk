@@ -15,25 +15,14 @@ open class RPCache<RP: RPSpace> {
 
     public init() {}
 
-    /// Loads a whole data file, in dependency order.
-    ///
-    /// Status effects come first because abilities reference them, then
-    /// abilities, then a second pass over the *same* status effects to resolve
-    /// the triggers that reference those abilities — a cycle the two-phase read
-    /// breaks. Bodies and items come last, referencing everything above.
     public func load(_ data: RPCacheJSON<RP>) throws {
         try loadStatusEffects(data.statusEffects ?? [:])
         try loadAbilities(data.abilities ?? [:])
-        try loadStatusEffectTriggers(data.statusEffects ?? [:])
+        try loadStatusEffectTriggers(data.statusEffects ?? [:]) // needs the abilities above
         try loadBodies(data.bodies ?? [:])
         try loadItems(data.items ?? [:])
     }
 
-    /// Builds every ability, then wires sub-abilities in a second pass so an
-    /// ability may reference one declared later in the file. The resolved list
-    /// is assembled into a local before being written back, because reading and
-    /// mutating `self.abilities` in one expression is an exclusivity violation
-    /// that traps at runtime.
     public func loadAbilities(_ abilities: [RPReferenceCode: RPAbilityJSON<RP>]) throws {
         try abilities.forEach { (code, data) in
             let fragments: [RPFragment] = try buildFragments(data)
@@ -124,11 +113,6 @@ open class RPCache<RP: RPSpace> {
         )
     }
 
-    /// Builds every body from its declared stats, slots, abilities and triggers.
-    /// Unlike abilities and status effects this needs no second pass — bodies
-    /// are loaded last, so everything they reference already resolves. An
-    /// ability naming something that doesn't exist is skipped silently here,
-    /// but a trigger naming one throws.
     public func loadBodies(_ bodies: [RPReferenceCode: RPBodyJSON<RP>]) throws {
         try bodies.forEach {(code, data) in
             let stats = data.stats ?? .zero
@@ -145,6 +129,7 @@ open class RPCache<RP: RPSpace> {
                     body.addExecutableAbility(ability, conditional: conditional)
                 }
             }
+            // unlike an ability reference, a trigger naming a missing ability throws
             try data.triggers?.forEach { body.addTrigger(try buildTrigger($0)) }
             self.bodies[code] = body
         }

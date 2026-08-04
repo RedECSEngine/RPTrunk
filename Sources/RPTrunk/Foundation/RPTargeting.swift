@@ -21,13 +21,6 @@ public struct RPTargeting<RP: RPSpace>: Codable {
         self.conditional = conditional
     }
 
-    /// Resolves this rule into the bodies an event should land on: gather the
-    /// candidate set, filter it through the conditional, then narrow to one
-    /// where the selector is singular.
-    ///
-    /// `reactingTo` is the event that woke a trigger, and only the `.initiator`
-    /// selector reads it — passing nil (the default, and what every ordinary
-    /// ability does) makes that selector resolve to nothing rather than trap.
     public func getValidTargets(
         for body: RPBodyId,
         in rpSpace: RP,
@@ -59,15 +52,6 @@ public struct RPTargeting<RP: RPSpace>: Codable {
         }
     }
 
-    /// The unfiltered candidate pool for this selector, before the conditional
-    /// runs. Every relationship-based case intersects with `body.targets` —
-    /// the bodies currently in reach — so an ability can't aim across the map.
-    ///
-    /// `.initiator` deliberately skips that intersection: the body is handed to
-    /// us by the triggering event rather than searched for, so a retaliation
-    /// reaches an attacker who struck from outside engagement range. It yields
-    /// nothing when the initiator is the owner, which is what stops a bearer's
-    /// own damage-over-time from proccing their own shield every pulse.
     fileprivate func getValidTargetSet(
         for body: RPBody<RP>,
         in rpSpace: RP,
@@ -75,6 +59,7 @@ public struct RPTargeting<RP: RPSpace>: Codable {
     ) -> Set<RPBodyId> {
         switch type {
         case .initiator:
+            // given by the triggering event, so no intersection with body.targets
             guard let initiator = triggeringEvent?.initiator, initiator != body.id else {
                 return []
             }

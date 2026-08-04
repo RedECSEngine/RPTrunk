@@ -178,12 +178,6 @@ extension RPSpace {
             }
     }
 
-    /// Everything waiting to happen, in the order a pump should prefer it:
-    /// scripted events first, then status pulses, then what bodies choose to do.
-    ///
-    /// Reactions are deliberately absent — they are not pending work. A trigger
-    /// only ever fires inside a `forecast`, as part of the chain belonging to
-    /// the event that provoked it.
     public func getPendingEvents() -> [RPEvent<Self>] {
         allPendingGameMasterEvents() +
         getAllPendingStatusEffectEvents() +
@@ -206,13 +200,6 @@ extension RPSpace {
             .flatMap { $0.getPendingExecutableEvents(in: self) }
     }
 
-    /// Resolves a batch of events straight into this space, with no animation
-    /// and no forecast. Acting spends the initiator's turn, so only
-    /// `.standardConflict` resets cooldowns — a `.triggered` reaction was not a
-    /// choice its owner made, and status pulses are not actions at all.
-    ///
-    /// This applies results the moment it computes them, so a caller that needs
-    /// the chain staged over time should forecast instead.
     public mutating func performEvents(_ events: [RPEvent<Self>]) -> [RPEventResult<Self>] {
         events.forEach { event in
             self.removeGameMasterEvent(id: event.id)
@@ -223,6 +210,7 @@ extension RPSpace {
                 switch event.category {
                 case .standardConflict:
                     event.resetInitiatorCooldowns(in: &self)
+                // a reaction was not a choice its owner made, so it spends no turn
                 case .periodicEffect, .itemExchangeOnly, .triggered:
                     break
                 }
