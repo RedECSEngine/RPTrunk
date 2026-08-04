@@ -93,7 +93,7 @@ final class ForecastTests: XCTestCase {
         let chain = rpSpace.forecast(event)
         let rollsAfterForecast = rolls
 
-        XCTAssertEqual(chain.nodes.count, 1)
+        XCTAssertEqual(chain.forecastedEvents.count, 1)
         XCTAssertGreaterThan(rollsAfterForecast, 0)
 
         let recorded = chain.root.result.effects.first { $0.body == "hero" }?.change.hp
@@ -137,7 +137,7 @@ final class ForecastTests: XCTestCase {
 
         let chain = rpSpace.forecast(attack())
 
-        XCTAssertEqual(chain.nodes.count, 2)
+        XCTAssertEqual(chain.forecastedEvents.count, 2)
         XCTAssertEqual(chain.root.event.ability.code, "Attack")
         XCTAssertEqual(chain.root.depth, 0)
         XCTAssertEqual(chain.reactions.first?.event.ability.code, "Shield Burn")
@@ -145,24 +145,24 @@ final class ForecastTests: XCTestCase {
         XCTAssertFalse(chain.wasTruncated)
     }
 
-    /// Each node remembers what produced it, which is how the real bodies get
+    /// Each forecasted event remembers what produced it, which is how the real bodies get
     /// billed later for a cooldown the simulated copy already spent.
     func testAReactionRecordsTheTriggerItCameFrom() {
         useFlatDamage(1)
         rpSpace.bodies["hero"]?.addTrigger(retaliation(cooldown: 1500))
 
-        let node = rpSpace.forecast(attack()).reactions.first
-        guard case let .trigger(owner, source, code, chancePercent) = node?.origin else {
-            return XCTFail("expected a trigger origin, got \(String(describing: node?.origin))")
+        let forecastedEvent = rpSpace.forecast(attack()).reactions.first
+        guard case let .trigger(owner, source, code, chancePercent) = forecastedEvent?.origin else {
+            return XCTFail("expected a trigger origin, got \(String(describing: forecastedEvent?.origin))")
         }
         XCTAssertEqual(owner, "hero")
         XCTAssertEqual(source, .body)
         XCTAssertEqual(code, "Shield Burn")
         XCTAssertEqual(chancePercent, RPChance.certain)
-        XCTAssertEqual(node?.wasChanceGated, false)
+        XCTAssertEqual(forecastedEvent?.wasChanceGated, false)
     }
 
-    /// Luck is forecast, not avoided: the node is flagged and the chain past it
+    /// Luck is forecast, not avoided: the forecasted event is flagged and the chain past it
     /// is walked normally, so a consumer can discount it rather than miss it.
     func testAChanceGatedNodeIsMarkedAndItsChainStillExplored() {
         useFlatDamage(1)
@@ -180,8 +180,8 @@ final class ForecastTests: XCTestCase {
 
         let chain = rpSpace.forecast(attack())
 
-        XCTAssertEqual(chain.nodes.count, 3, "the chain past a chance node is explored normally")
-        let gated = chain.nodes.first { $0.event.ability.code == "Shield Burn" }
+        XCTAssertEqual(chain.forecastedEvents.count, 3, "the chain past a chance-gated one is explored normally")
+        let gated = chain.forecastedEvents.first { $0.event.ability.code == "Shield Burn" }
         XCTAssertTrue(gated!.wasChanceGated)
         XCTAssertFalse(chain.root.wasChanceGated)
     }
@@ -211,7 +211,7 @@ final class ForecastTests: XCTestCase {
 
         XCTAssertFalse(chain.wasTruncated)
         XCTAssertEqual(
-            chain.nodes.filter { $0.event.ability.code == "Shield Burn" }.count,
+            chain.forecastedEvents.filter { $0.event.ability.code == "Shield Burn" }.count,
             1,
             "hero's shield is on cooldown by the time the riposte lands on them"
         )
@@ -229,7 +229,7 @@ final class ForecastTests: XCTestCase {
         let chain = rpSpace.forecast(attack())
 
         XCTAssertTrue(chain.wasTruncated, "a zero-cooldown self-feeding trigger must be bounded")
-        XCTAssertEqual(chain.nodes.count, TestRPSpace.maximumForecastNodes)
+        XCTAssertEqual(chain.forecastedEvents.count, TestRPSpace.maximumForecastedEvents)
     }
 
     /// A status-granted shield, optionally bounded by charges instead of time.
@@ -354,7 +354,7 @@ final class ForecastTests: XCTestCase {
         let chain = rpSpace.forecast(attack())
 
         XCTAssertFalse(chain.wasTruncated)
-        XCTAssertEqual(chain.nodes.filter { $0.event.ability.code == "Shield Burn" }.count, 1)
+        XCTAssertEqual(chain.forecastedEvents.filter { $0.event.ability.code == "Shield Burn" }.count, 1)
     }
 
     /// A body-declared trigger's cooldown actually advances — the passive it
@@ -419,7 +419,7 @@ final class ForecastTests: XCTestCase {
 
         let chain = rpSpace.forecast(attack())
 
-        XCTAssertEqual(chain.nodes.count, 2)
+        XCTAssertEqual(chain.forecastedEvents.count, 2)
         XCTAssertEqual(chain.reactions.first?.event.ability.code, "Aftershock")
         XCTAssertEqual(chain.reactions.first?.origin, .root)
     }

@@ -9,13 +9,13 @@ public struct RPForecast<RP: RPSpace>: Equatable, Codable {
         )
     }
 
-    public struct Node: Equatable, Codable {
+    public struct ForecastedEvent: Equatable, Codable {
         public let event: RPEvent<RP>
         public let result: RPEventResult<RP>
         public let origin: Origin
         public let depth: Int
 
-        /// `result` is already resolved, so replaying a node applies it rather
+        /// `result` is already resolved, so replaying a forecasted event applies it rather
         /// than rolling again. `depth` keeps the shape the flat list loses.
         public init(
             event: RPEvent<RP>,
@@ -35,14 +35,14 @@ public struct RPForecast<RP: RPSpace>: Equatable, Codable {
         }
     }
 
-    public let nodes: [Node]
+    public let forecastedEvents: [ForecastedEvent]
     public let wasTruncated: Bool
 
-    public init(nodes: [Node], wasTruncated: Bool) {
-        self.nodes = nodes
+    public init(forecastedEvents: [ForecastedEvent], wasTruncated: Bool) {
+        self.forecastedEvents = forecastedEvents
         self.wasTruncated = wasTruncated
     }
 
-    public var root: Node { nodes[0] }
-    public var reactions: ArraySlice<Node> { nodes.dropFirst() }
+    public var root: ForecastedEvent { forecastedEvents[0] }
+    public var reactions: ArraySlice<ForecastedEvent> { forecastedEvents.dropFirst() }
 }

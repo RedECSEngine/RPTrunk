@@ -33,7 +33,7 @@ public protocol RPSpace: Codable {
 
     static func timeMultiplier(for body: RPBody<Self>, statusEffect code: RPReferenceCode) -> Double
 
-    static var maximumForecastNodes: Int { get }
+    static var maximumForecastedEvents: Int { get }
 
     static func rollTriggerChance(_ percent: RPValue) -> Bool
 
@@ -93,7 +93,7 @@ public extension RPSpace {
 
     static func timeMultiplier(for body: RPBody<Self>, statusEffect code: RPReferenceCode) -> Double { 1 }
 
-    static var maximumForecastNodes: Int { 64 }
+    static var maximumForecastedEvents: Int { 64 }
 
     static func rollTriggerChance(_ percent: RPValue) -> Bool {
         percent >= RPChance.certain
@@ -265,7 +265,7 @@ extension RPSpace {
     ///
     /// The trigger is re-found by source and ability code rather than passed in,
     /// so this can be replayed later against the *real* bodies from nothing but
-    /// what a forecast node recorded. A trigger that has since gone — its status
+    /// what a forecast forecasted event recorded. A trigger that has since gone — its status
     /// expired, say — simply isn't found, and only the charge is spent.
     public mutating func spendTrigger(
         owner ownerId: RPBodyId,
@@ -288,36 +288,36 @@ extension RPSpace {
     /// chain without touching this space.
     ///
     /// The walk runs against a *copy*, so the dice thrown here are the dice that
-    /// count — a caller replays each node with `RPEvent.apply` as its animation
+    /// count — a caller replays each forecasted event with `RPEvent.apply` as its animation
     /// lands, and never resolves anything twice. Nodes come out breadth-first,
     /// which is play order: the event, then what it provoked, then what those
     /// provoked.
     ///
     /// Triggers are billed on the copy the moment they are *scheduled* rather
-    /// than when their node runs, so a trigger cannot be picked up twice by two
+    /// than when their forecasted event runs, so a trigger cannot be picked up twice by two
     /// results that resolve before its own reaction does. That billing is also
     /// what terminates the walk: a shield that has fired is on cooldown, a
     /// charge-bounded aura runs out, and `Die` empties its own targeting once
-    /// the `ko` tag lands. `maximumForecastNodes` catches the one shape none of
+    /// the `ko` tag lands. `maximumForecastedEvents` catches the one shape none of
     /// that stops — a zero-cooldown, charge-less trigger feeding itself — and
     /// says so through `wasTruncated` rather than trimming in silence.
     public func forecast(_ event: RPEvent<Self>) -> RPForecast<Self> {
         var simulated = self
-        var nodes: [RPForecast<Self>.Node] = []
+        var forecastedEvents: [RPForecast<Self>.ForecastedEvent] = []
         var pending: [(event: RPEvent<Self>, origin: RPForecast<Self>.Origin, depth: Int)] = [
             (event, .root, 0),
         ]
         var truncated = false
 
         while !pending.isEmpty {
-            guard nodes.count < Self.maximumForecastNodes else {
+            guard forecastedEvents.count < Self.maximumForecastedEvents else {
                 truncated = true
                 break
             }
 
             let (next, origin, depth) = pending.removeFirst()
             let result = next.execute(in: &simulated)
-            nodes.append(.init(event: next, result: result, origin: origin, depth: depth))
+            forecastedEvents.append(.init(event: next, result: result, origin: origin, depth: depth))
 
             let candidates = simulated.triggerCandidates(for: result)
             for candidate in candidates
@@ -344,7 +344,7 @@ extension RPSpace {
             }
         }
 
-        return RPForecast(nodes: nodes, wasTruncated: truncated)
+        return RPForecast(forecastedEvents: forecastedEvents, wasTruncated: truncated)
     }
 }
 

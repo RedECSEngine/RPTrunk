@@ -318,10 +318,10 @@ final class TriggerTests: XCTestCase {
             cooldown: 1000
         ))
 
-        let node = rpSpace.forecast(attack()).reactions.first
-        XCTAssertEqual(node?.event.targets, ["hero"], "the reaction itself is self-aimed")
+        let forecastedEvent = rpSpace.forecast(attack()).reactions.first
+        XCTAssertEqual(forecastedEvent?.event.targets, ["hero"], "the reaction itself is self-aimed")
         XCTAssertEqual(
-            node?.event.subEvents.first?.targets,
+            forecastedEvent?.event.subEvents.first?.targets,
             ["villain"],
             "its sub-ability resolves its own targeting and still sees the triggering event"
         )
