@@ -1,17 +1,18 @@
-//
-//  ParserResultType.swift
-//  
-//
-//  Created by Kyle Newsome on 2021-05-31.
-//
+public struct RPConditionContext {
+    public let body: RPBodyId
+    public let initiator: RPBodyId
+
+    public init(body: RPBodyId, initiator: RPBodyId) {
+        self.body = body
+        self.initiator = initiator
+    }
+}
 
 public enum ParserResultType<RP: RPSpace> {
-    case evaluationFunction(f: (ParserResultType, RP) -> ParserResultType)
+    case evaluationFunction(f: (ParserResultType, RPConditionContext, RP) -> ParserResultType)
     case bodyResult(body: RPBodyId)
     case statsResult(stats: RP.Stats)
     case valueResult(ParserValueType)
-//    case percentResult(value: Double)
-//    case boolResult(value: Bool)
     case nothing
 }
 
@@ -19,19 +20,19 @@ public enum ParserValueType {
     case rpValue(RPValue)
     case percent(Double)
     case bool(Bool)
-    
+
     init(_ value: RPValue) {
         self = .rpValue(value)
     }
-    
+
     init(_ value: Double) {
         self = .percent(value)
     }
-    
+
     init(_ value: Bool) {
         self = .bool(value)
     }
-    
+
     func canCompare(to otherValue: ParserValueType) -> Bool {
         switch (self, otherValue) {
         case (.rpValue, .rpValue), (.percent,.percent), (.bool, .bool):
@@ -55,5 +56,5 @@ extension ParserValueType: Comparable {
             return false
         }
     }
-    
+
 }

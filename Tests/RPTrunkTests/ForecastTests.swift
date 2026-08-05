@@ -54,7 +54,7 @@ final class ForecastTests: XCTestCase {
     private func attack() -> RPEvent<TestRPSpace> {
         RPEvent(
             initiator: "villain",
-            ability: ability("Attack", tags: ["physical"], target: RPTargeting(.singleEnemy, .always)),
+            ability: ability("Attack", tags: ["physical"], target: RPTargeting(.enemy, .always, choose: .highestThreat)),
             rpSpace: rpSpace
         )
     }

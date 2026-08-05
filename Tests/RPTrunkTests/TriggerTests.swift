@@ -55,7 +55,7 @@ final class TriggerTests: XCTestCase {
     private func attack(tags: Set<RPAbilityTag> = []) -> RPEvent<TestRPSpace> {
         RPEvent(
             initiator: "villain",
-            ability: ability("Attack", tags: tags, target: RPTargeting(.singleEnemy, .always)),
+            ability: ability("Attack", tags: tags, target: RPTargeting(.enemy, .always, choose: .highestThreat)),
             rpSpace: rpSpace
         )
     }
@@ -96,7 +96,7 @@ final class TriggerTests: XCTestCase {
 
         let heroSwing = RPEvent(
             initiator: "hero",
-            ability: ability("Swing", target: RPTargeting(.singleEnemy, .always)),
+            ability: ability("Swing", target: RPTargeting(.enemy, .always, choose: .highestThreat)),
             rpSpace: rpSpace
         )
         XCTAssertEqual(rpSpace.forecast(heroSwing).reactions.count, 1)
@@ -224,7 +224,7 @@ final class TriggerTests: XCTestCase {
     func testInitiatorTargetingHonoursItsConditional() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: try! RPTargeting<TestRPSpace>.fromString("initiator:hp < 10"),
+            targeting: try! RPTargeting<TestRPSpace>.fromString("among: initiator, when: hp < 10"),
             ability: ability("Execute"),
             cooldown: 1000
         ))
@@ -266,7 +266,7 @@ final class TriggerTests: XCTestCase {
     func testAnOverrideResolvingToNothingProducesNoNodeAndSpendsNothing() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: try! RPTargeting<TestRPSpace>.fromString("oneself:hp < 1"),
+            targeting: try! RPTargeting<TestRPSpace>.fromString("among: self, when: hp < 1"),
             ability: ability("Die"),
             cooldown: 1000
         ))
@@ -322,7 +322,7 @@ final class TriggerTests: XCTestCase {
                 statusEffects: ["status-effect.aura": .init(triggers: [
                     .init(
                         triggerType: "postEventInitiated",
-                        target: "initiator",
+                        target: "among: initiator",
                         ability: "ability.retaliate"
                     ),
                 ])]
@@ -358,7 +358,7 @@ final class TriggerTests: XCTestCase {
                 .init(
                     triggerType: "postEventTargeted",
                     abilityTags: ["physical"],
-                    target: "initiator",
+                    target: "among: initiator",
                     ability: "ability.retaliate",
                     cooldown: 1500
                 ),
@@ -369,7 +369,7 @@ final class TriggerTests: XCTestCase {
         XCTAssertEqual(aura.triggers.count, 1)
         XCTAssertEqual(aura.triggers.first?.ability.code, "ability.retaliate")
         XCTAssertEqual(aura.triggers.first?.abilityTags, ["physical"])
-        XCTAssertEqual(aura.triggers.first?.targeting?.type, .initiator)
+        XCTAssertEqual(aura.triggers.first?.targeting?.pool, .initiator)
         XCTAssertEqual(aura.triggers.first?.cooldown, 1500)
         XCTAssertEqual(aura.triggers.first?.chancePercent, RPChance.certain)
     }

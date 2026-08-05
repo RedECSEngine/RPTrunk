@@ -32,9 +32,13 @@ extension ConditionParserPrinter {
 
 // MARK: - Syntax tree
 
-/// One term in a dot-notation chain, e.g. `target`, `hp%`, `Healing?`, `40`, `10%`, `false`.
+/// One term in a dot-notation chain, e.g. `target`, `hp%`, `has`, `Healing?`, `40`, `10%`, `false`.
 public enum ConditionToken: Equatable {
     case target
+    case oneself
+    case has
+    case uses
+    case threat
     case identifier(String, usePercent: Bool)
     case status(String)
     case value(RPValue)
@@ -73,12 +77,13 @@ public struct ConditionClause: Equatable {
     }
 }
 
-/// A full condition: one or more clauses joined by `&&`.
+/// A full condition: `&&`-joined clause groups, themselves joined by `||`,
+/// with `&&` binding tighter than `||`.
 public struct ParsedCondition: Equatable {
-    public var clauses: [ConditionClause]
+    public var orGroups: [[ConditionClause]]
 
-    public init(clauses: [ConditionClause]) {
-        self.clauses = clauses
+    public init(orGroups: [[ConditionClause]]) {
+        self.orGroups = orGroups
     }
 }
 
@@ -99,7 +104,7 @@ private func consumeWhitespace(_ input: inout Substring) {
 /// Characters that terminate a token: whitespace, chain separators,
 /// conjunctions and comparison operators.
 private func isTokenTerminator(_ c: Character) -> Bool {
-    c.isWhitespace || c == "." || c == "&" || "><=!".contains(c)
+    c.isWhitespace || c == "." || c == "&" || c == "|" || c == "," || "><=!".contains(c)
 }
 
 struct ConditionTokenParser: ConditionParserPrinter {
@@ -120,6 +125,10 @@ struct ConditionTokenParser: ConditionParserPrinter {
         if body == "true" { return .bool(true) }
         if body == "false" { return .bool(false) }
         if body == "target" { return .target }
+        if body == "self" { return .oneself }
+        if body == "has" { return .has }
+        if body == "uses" { return .uses }
+        if body == "threat" { return .threat }
         if let value = RPValue(body) {
             return .value(value)
         }
@@ -143,6 +152,14 @@ struct ConditionTokenParser: ConditionParserPrinter {
         switch token {
         case .target:
             return "target"
+        case .oneself:
+            return "self"
+        case .has:
+            return "has"
+        case .uses:
+            return "uses"
+        case .threat:
+            return "threat"
         case let .identifier(name, usePercent):
             return usePercent ? "\(name)%" : name
         case let .status(name):
@@ -223,22 +240,36 @@ struct ConditionClauseParser: ConditionParserPrinter {
 
 struct ConditionParser: ConditionParserPrinter {
     func parse(_ input: inout Substring) throws -> ParsedCondition {
-        var clauses = [try ConditionClauseParser().parse(&input)]
-        while input.hasPrefix("&&") {
-            input.removeFirst(2)
-            clauses.append(try ConditionClauseParser().parse(&input))
+        var orGroups: [[ConditionClause]] = []
+        var group = [try ConditionClauseParser().parse(&input)]
+        while true {
+            if input.hasPrefix("&&") {
+                input.removeFirst(2)
+                group.append(try ConditionClauseParser().parse(&input))
+            } else if input.hasPrefix("||") {
+                input.removeFirst(2)
+                orGroups.append(group)
+                group = [try ConditionClauseParser().parse(&input)]
+            } else {
+                break
+            }
         }
-        return ParsedCondition(clauses: clauses)
+        orGroups.append(group)
+        return ParsedCondition(orGroups: orGroups)
     }
 
     func print(_ output: ParsedCondition, into input: inout Substring) throws {
-        var texts: [String] = []
-        for clause in output.clauses {
-            var clauseInput = Substring()
-            try ConditionClauseParser().print(clause, into: &clauseInput)
-            texts.append(String(clauseInput))
+        var groupTexts: [String] = []
+        for group in output.orGroups {
+            var clauseTexts: [String] = []
+            for clause in group {
+                var clauseInput = Substring()
+                try ConditionClauseParser().print(clause, into: &clauseInput)
+                clauseTexts.append(String(clauseInput))
+            }
+            groupTexts.append(clauseTexts.joined(separator: " && "))
         }
-        input.insert(contentsOf: texts.joined(separator: " && "), at: input.startIndex)
+        input.insert(contentsOf: groupTexts.joined(separator: " || "), at: input.startIndex)
     }
 }
 

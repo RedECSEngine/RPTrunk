@@ -369,6 +369,10 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     public func hasStatus(_ code: RPStatusTag) -> Bool {
         statusEffects.values.contains { $0.tags.contains(code) }
     }
+
+    public func usesAbilityTag(_ tag: RPAbilityTag) -> Bool {
+        executableAbilities.values.contains { $0.ability.tags.contains(tag) }
+    }
 }
 
 extension RPBody: CustomStringConvertible {

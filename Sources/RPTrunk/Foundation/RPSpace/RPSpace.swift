@@ -39,6 +39,8 @@ public protocol RPSpace: Codable {
 
     static func rollTriggerChance(_ percent: RPValue) -> Bool
 
+    static func rollRandomIndex(upperBound: Int) -> Int
+
     static func additionalEvents(
         after result: RPEventResult<Self>,
         in rpSpace: Self
@@ -102,6 +104,10 @@ public extension RPSpace {
     static func rollTriggerChance(_ percent: RPValue) -> Bool {
         percent >= RPChance.certain
             || Int.random(in: 0 ..< RPChance.certain) < percent
+    }
+
+    static func rollRandomIndex(upperBound: Int) -> Int {
+        Int.random(in: 0 ..< upperBound)
     }
 
     static func additionalEvents(

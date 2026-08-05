@@ -67,7 +67,7 @@ final class ThreatTests: XCTestCase {
         space.addBody(allyB)
         space.setTeams([team])
 
-        let targeting = RPTargeting<TestRPSpace>(.singleFriendly, .always)
+        let targeting = RPTargeting<TestRPSpace>(.friendly, .always, choose: .anyone)
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-a"])
     }
 
