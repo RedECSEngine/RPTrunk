@@ -112,7 +112,7 @@ public extension RPSpace {
     ) -> [RPEvent<Self>] { [] }
 
     static func createDefaultBody(cache: RPCache<Self>) -> Body {
-        Body()
+        cache.defaultBody ?? Body()
     }
     
     static func fullyResolvedStats(for rpBody: RPBody<Self>) -> Stats {

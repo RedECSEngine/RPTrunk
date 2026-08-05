@@ -4,12 +4,14 @@ public struct RPCacheJSON<RP: RPSpace>: Codable, Equatable {
         case abilities = "Abilities"
         case bodies = "Bodies"
         case items = "Items"
+        case defaultBody = "Default Body"
     }
 
     public var abilities: [String: RPAbilityJSON<RP>]?
     public var statusEffects: [String: RPStatusEffectJSON<RP>]?
     public var bodies: [String: RPBodyJSON<RP>]?
     public var items: [String: RPItemJSON<RP>]?
+    public var defaultBody: RPBodyJSON<RP>?
 }
 
 public protocol RPFragmentsContainerJSON {

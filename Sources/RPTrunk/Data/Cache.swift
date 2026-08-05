@@ -13,12 +13,17 @@ open class RPCache<RP: RPSpace> {
     public var bodies: [RPReferenceCode: RPBody<RP>] = [:]
     public var items: [RPReferenceCode: RPItem<RP>] = [:]
 
+    /// The template every cached body is built on. Loaded before `bodies` and
+    /// built without `RPSpace.createDefaultBody`, which reads it back.
+    public var defaultBody: RPBody<RP>?
+
     public init() {}
 
     public func load(_ data: RPCacheJSON<RP>) throws {
         try loadStatusEffects(data.statusEffects ?? [:])
         try loadAbilities(data.abilities ?? [:])
         try loadStatusEffectTriggers(data.statusEffects ?? [:])
+        try loadDefaultBody(data.defaultBody)
         try loadBodies(data.bodies ?? [:])
         try loadItems(data.items ?? [:])
     }
@@ -101,25 +106,42 @@ open class RPCache<RP: RPSpace> {
         )
     }
 
+    public func loadDefaultBody(_ data: RPBodyJSON<RP>?) throws {
+        guard let data else { return }
+        defaultBody = try buildBody(code: nil, from: data, startingFrom: RPBody<RP>())
+    }
+
     public func loadBodies(_ bodies: [RPReferenceCode: RPBodyJSON<RP>]) throws {
-        try bodies.forEach {(code, data) in
-            let stats = data.stats ?? .zero
-            var body = RPBody<RP>.new(cache: self)
-            body.code = code
-            body.setBaseStats(stats)
-            body.displayName = data.displayName ?? code
-            body.metadata = data.metadata
-            body.equipment.equipmentSlotCapacities = data.equipmentSlots ?? [:]
-            data.abilities?.forEach {
-                ability in
-                let conditional = RPConditional<RP>(ability.conditional)
-                if let ability = self.abilities[ability.code] {
-                    body.addExecutableAbility(ability, conditional: conditional)
-                }
-            }
-            try data.triggers?.forEach { body.addTrigger(try buildTrigger($0)) }
-            self.bodies[code] = body
+        try bodies.forEach { (code, data) in
+            self.bodies[code] = try buildBody(
+                code: code,
+                from: data,
+                startingFrom: RPBody<RP>.new(cache: self)
+            )
         }
+    }
+
+    func buildBody(
+        code: RPReferenceCode?,
+        from data: RPBodyJSON<RP>,
+        startingFrom base: RPBody<RP>
+    ) throws -> RPBody<RP> {
+        var body = base
+        body.code = code
+        body.setBaseStats(data.stats ?? .zero)
+        if let displayName = data.displayName ?? code {
+            body.displayName = displayName
+        }
+        body.metadata = data.metadata
+        body.equipment.equipmentSlotCapacities = data.equipmentSlots ?? [:]
+        data.abilities?.forEach { reference in
+            let conditional = RPConditional<RP>(reference.conditional)
+            if let ability = self.abilities[reference.code] {
+                body.addExecutableAbility(ability, conditional: conditional)
+            }
+        }
+        try data.triggers?.forEach { body.addTrigger(try buildTrigger($0)) }
+        return body
     }
 
     public func loadItems(_ items: [RPReferenceCode: RPItemJSON<RP>]) throws {
