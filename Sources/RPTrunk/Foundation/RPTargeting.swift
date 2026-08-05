@@ -59,7 +59,6 @@ public struct RPTargeting<RP: RPSpace>: Codable {
     ) -> Set<RPBodyId> {
         switch type {
         case .initiator:
-            // given by the triggering event, so no intersection with body.targets
             guard let initiator = triggeringEvent?.initiator, initiator != body.id else {
                 return []
             }

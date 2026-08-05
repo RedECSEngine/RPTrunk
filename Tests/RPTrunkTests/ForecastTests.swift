@@ -59,7 +59,6 @@ final class ForecastTests: XCTestCase {
         )
     }
 
-    /// A shield: answers a physical hit by burning whoever landed it.
     private func retaliation(cooldown: RPTimeIncrement, chancePercent: RPValue = RPChance.certain)
         -> RPTrigger<TestRPSpace>
     {
@@ -73,15 +72,12 @@ final class ForecastTests: XCTestCase {
         )
     }
 
-    /// Fixes damage so a forecast's recorded numbers are checkable by hand.
     private func useFlatDamage(_ amount: Int) {
         TestRPSpace.conflictRule = { _, _, target, _ in
             RPConflictResult(bodyId: target, .init(dict: [\.hp: -amount]))
         }
     }
 
-    /// The core guarantee: dice are thrown while forecasting and never again.
-    /// The old shape rolled once for the animation and again for the outcome.
     func testTheForecastRollsExactlyOncePerEventAndApplyReusesIt() {
         var rolls = 0
         TestRPSpace.conflictRule = { _, _, target, _ in
@@ -109,8 +105,6 @@ final class ForecastTests: XCTestCase {
         XCTAssertEqual(rpSpace.bodies["hero"]?.hp, 23)
     }
 
-    /// With every roll returning something different, applying still lands the
-    /// forecast's number — proof it is replaying rather than re-resolving.
     func testApplyReproducesExactlyWhatTheForecastRecorded() {
         var next = -1
         TestRPSpace.conflictRule = { _, _, target, _ in
@@ -130,7 +124,6 @@ final class ForecastTests: XCTestCase {
         )
     }
 
-    /// They come out in play order, flat, with depth kept for shape.
     func testTheChainIsOrderedRootFirstThenReactions() {
         useFlatDamage(1)
         rpSpace.bodies["hero"]?.addTrigger(retaliation(cooldown: 1500))
@@ -145,8 +138,6 @@ final class ForecastTests: XCTestCase {
         XCTAssertFalse(chain.wasTruncated)
     }
 
-    /// Each forecasted event remembers what produced it, which is how the real bodies get
-    /// billed later for a cooldown the simulated copy already spent.
     func testAReactionRecordsTheTriggerItCameFrom() {
         useFlatDamage(1)
         rpSpace.bodies["hero"]?.addTrigger(retaliation(cooldown: 1500))
@@ -162,8 +153,6 @@ final class ForecastTests: XCTestCase {
         XCTAssertEqual(forecastedEvent?.wasChanceGated, false)
     }
 
-    /// Luck is forecast, not avoided: the forecasted event is flagged and the chain past it
-    /// is walked normally, so a consumer can discount it rather than miss it.
     func testAChanceGatedEventIsMarkedAndItsChainStillExplored() {
         useFlatDamage(1)
         TestRPSpace.chanceRule = { _ in true }
@@ -186,7 +175,6 @@ final class ForecastTests: XCTestCase {
         XCTAssertFalse(chain.root.wasChanceGated)
     }
 
-    /// A trigger that loses its roll simply isn't in the chain.
     func testAFailedChanceRollProducesNoForecastedEvent() {
         useFlatDamage(1)
         TestRPSpace.chanceRule = { _ in false }
@@ -195,8 +183,6 @@ final class ForecastTests: XCTestCase {
         XCTAssertTrue(rpSpace.forecast(attack()).reactions.isEmpty)
     }
 
-    /// Two shields trading blows converge because each is billed the moment it
-    /// is scheduled, not when its reaction eventually plays.
     func testACooldownStopsATriggerFiringTwiceInOneChain() {
         useFlatDamage(1)
         rpSpace.bodies["hero"]?.addTrigger(retaliation(cooldown: 1500))
@@ -217,7 +203,6 @@ final class ForecastTests: XCTestCase {
         )
     }
 
-    /// The one shape nothing else stops. Bounded, and it says so.
     func testARunawayChainIsTruncatedAndReported() {
         useFlatDamage(1)
         rpSpace.bodies["hero"]?.addTrigger(RPTrigger(
@@ -232,7 +217,6 @@ final class ForecastTests: XCTestCase {
         XCTAssertEqual(chain.forecastedEvents.count, TestRPSpace.maximumForecastedEvents)
     }
 
-    /// A status-granted shield, optionally bounded by charges instead of time.
     private func aura(charges: Int?, cooldown: RPTimeIncrement) -> RPStatusEffect<TestRPSpace> {
         var effect = RPStatusEffect<TestRPSpace>(
             code: "status-effect.burning-shield",
@@ -244,7 +228,6 @@ final class ForecastTests: XCTestCase {
         return effect
     }
 
-    /// A status effect never writes timing state into the body it rides on.
     func testAStatusOwnedTriggerCooldownLivesOnTheEffectNotTheBody() {
         useFlatDamage(1)
         rpSpace.bodies["hero"]?.applyStatusEffect(aura(charges: nil, cooldown: 1500))
@@ -271,8 +254,6 @@ final class ForecastTests: XCTestCase {
         )
     }
 
-    /// Each bearer holds its own copy of the aura, so one firing doesn't put the
-    /// other's on cooldown.
     func testTwoBearersOfTheSameAuraCoolDownIndependently() {
         useFlatDamage(1)
         rpSpace.bodies["hero"]?.applyStatusEffect(aura(charges: nil, cooldown: 1500))
@@ -295,7 +276,6 @@ final class ForecastTests: XCTestCase {
         )
     }
 
-    /// Re-applying a status makes it new again, mid-cooldown triggers included.
     func testReapplyingAStatusClearsItsTriggerCooldowns() {
         useFlatDamage(1)
         let effect = aura(charges: nil, cooldown: 1500)
@@ -318,7 +298,6 @@ final class ForecastTests: XCTestCase {
         )
     }
 
-    /// 'The next two attackers burn' retires itself once it has burned two.
     func testAChargedAuraIsSpentDownAndRemoved() {
         useFlatDamage(1)
         rpSpace.bodies["hero"]?.applyStatusEffect(aura(charges: 2, cooldown: 0))
@@ -340,7 +319,6 @@ final class ForecastTests: XCTestCase {
         )
     }
 
-    /// Charges bound a chain the same way a cooldown does.
     func testAChargedAuraTerminatesItsOwnChain() {
         useFlatDamage(1)
         rpSpace.bodies["hero"]?.applyStatusEffect(aura(charges: 1, cooldown: 0))
@@ -357,8 +335,6 @@ final class ForecastTests: XCTestCase {
         XCTAssertEqual(chain.forecastedEvents.filter { $0.event.ability.code == "Shield Burn" }.count, 1)
     }
 
-    /// A body-declared trigger's cooldown actually advances — the passive it
-    /// replaced had cooldown state that was never ticked at all.
     func testBodyTriggerCooldownsTickDownAndClear() {
         rpSpace.bodies["hero"]?.addTrigger(retaliation(cooldown: 1500))
         rpSpace.spendTrigger(
@@ -378,7 +354,6 @@ final class ForecastTests: XCTestCase {
         )
     }
 
-    /// Status-owned cooldowns advance inside their effect's own tick.
     func testStatusOwnedTriggerCooldownsTickWithTheirEffect() {
         var effect = RPStatusEffect<TestRPSpace>(
             code: "status-effect.burning-shield",
@@ -403,7 +378,6 @@ final class ForecastTests: XCTestCase {
         )
     }
 
-    /// The conformance hook contributes to the chain rather than beside it.
     func testForecastingLeavesTheLiveSpaceUntouched() {
         useFlatDamage(4)
         rpSpace.bodies["hero"]?.addTrigger(retaliation(cooldown: 1500))

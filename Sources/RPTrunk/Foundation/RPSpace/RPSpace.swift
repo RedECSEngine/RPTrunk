@@ -35,8 +35,6 @@ public protocol RPSpace: Codable {
 
     static var maximumForecastedEvents: Int { get }
 
-    /// `forecast` simulates against a copy, which is free for a value type and
-    /// meaningless for a reference type. A class conformance must override this.
     func copy() -> Self
 
     static func rollTriggerChance(_ percent: RPValue) -> Bool
@@ -225,7 +223,6 @@ extension RPSpace {
                 switch event.category {
                 case .standardConflict:
                     event.resetInitiatorCooldowns(in: &self)
-                // a reaction was not a choice its owner made, so it spends no turn
                 case .periodicEffect, .itemExchangeOnly, .triggered:
                     break
                 }

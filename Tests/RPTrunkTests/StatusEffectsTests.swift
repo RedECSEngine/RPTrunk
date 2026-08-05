@@ -33,8 +33,6 @@ final class StatusEffectsTests: XCTestCase {
         )
     }
 
-    /// A three-second regen at a one-second period pulses exactly three times,
-    /// each becoming due only as its own moment arrives, and expires spent.
     func testPeriodicStatusEffectEventsAndDecay() {
         var activeSE = RPActiveStatusEffect(
             bodyId: "abcd",
@@ -64,8 +62,6 @@ final class StatusEffectsTests: XCTestCase {
         XCTAssertTrue(activeSE.isExpired, "duration elapsed and every pulse was delivered")
     }
 
-    /// A frame long enough to skip past the whole duration still owes every
-    /// pulse — dropping them would silently shorten a heal-over-time.
     func testOwedPulsesSurviveAnOvershootingFrame() {
         var activeSE = RPActiveStatusEffect(
             bodyId: "abcd",

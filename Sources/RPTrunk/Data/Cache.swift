@@ -13,8 +13,6 @@ open class RPCache<RP: RPSpace> {
     public var bodies: [RPReferenceCode: RPBody<RP>] = [:]
     public var items: [RPReferenceCode: RPItem<RP>] = [:]
 
-    /// The template every cached body is built on. Loaded before `bodies` and
-    /// built without `RPSpace.createDefaultBody`, which reads it back.
     public var defaultBody: RPBody<RP>?
 
     public init() {}

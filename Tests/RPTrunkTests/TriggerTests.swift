@@ -7,8 +7,6 @@ final class TriggerTests: XCTestCase {
     var villain: RPBody<TestRPSpace>!
     var bystander: RPBody<TestRPSpace>!
 
-    /// Two hostile teams with `bystander` on the hero's side, so `postEvent`
-    /// can be told apart from the role-scoped wake modes.
     override func setUp() {
         TestRPSpace.resetTestHooks()
 
@@ -54,7 +52,6 @@ final class TriggerTests: XCTestCase {
         )
     }
 
-    /// An attack by `villain` naming `hero` — the event every trigger here answers.
     private func attack(tags: Set<RPAbilityTag> = []) -> RPEvent<TestRPSpace> {
         RPEvent(
             initiator: "villain",
@@ -70,7 +67,6 @@ final class TriggerTests: XCTestCase {
         rpSpace.bodies[bodyId]?.addTrigger(trigger)
     }
 
-    /// `postEvent` is space-wide: a bystander reacts to a fight it isn't in.
     func testPostEventWakesForABodyWithNoPartInTheEvent() {
         addTrigger(to: "bystander", RPTrigger(
             triggerType: .postEvent,
@@ -85,7 +81,6 @@ final class TriggerTests: XCTestCase {
         XCTAssertEqual(chain.reactions.first?.event.initiator, "bystander")
     }
 
-    /// Being hit is not initiating, so the same body wakes only when it acts.
     func testPostEventInitiatedOnlyWakesForTheOwnersOwnEvent() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventInitiated,
@@ -107,7 +102,6 @@ final class TriggerTests: XCTestCase {
         XCTAssertEqual(rpSpace.forecast(heroSwing).reactions.count, 1)
     }
 
-    /// Only the body the event names reacts; an ally standing by does not.
     func testPostEventTargetedOnlyWakesWhenTheOwnerIsNamed() {
         addTrigger(to: "bystander", RPTrigger(
             triggerType: .postEventTargeted,
@@ -132,7 +126,6 @@ final class TriggerTests: XCTestCase {
         XCTAssertEqual(chain.reactions.first?.event.initiator, "hero")
     }
 
-    /// A shield answers the damage type it declares and ignores the rest.
     func testAbilityTagsFilterTheWakingEvent() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
@@ -146,8 +139,6 @@ final class TriggerTests: XCTestCase {
         XCTAssertTrue(rpSpace.forecast(attack(tags: ["magical"])).reactions.isEmpty)
     }
 
-    /// No declared tags means no filter — the empty-subset identity, pinned so a
-    /// rewrite can't quietly invert it into matching nothing.
     func testEmptyAbilityTagsMatchEveryAbilityIncludingUntaggedOnes() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
@@ -164,7 +155,6 @@ final class TriggerTests: XCTestCase {
         XCTAssertEqual(rpSpace.forecast(attack(tags: ["magical"])).reactions.count, 1)
     }
 
-    /// The whole point of the selector: retaliate against whoever swung.
     func testInitiatorTargetingAimsAtTheAttacker() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
@@ -177,8 +167,6 @@ final class TriggerTests: XCTestCase {
         XCTAssertEqual(chain.reactions.first?.event.targets, ["villain"])
     }
 
-    /// The initiator is handed over, not searched for, so a shield answers an
-    /// attacker who struck from beyond reach.
     func testInitiatorTargetingReachesABodyOutsideEngagementRange() {
         rpSpace.bodies["hero"]?.targets = []
 
@@ -196,7 +184,6 @@ final class TriggerTests: XCTestCase {
         )
     }
 
-    /// A scripted event has nobody to blame, so there is nothing to hit back at.
     func testInitiatorTargetingYieldsNothingWithoutAnInitiator() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
@@ -213,7 +200,6 @@ final class TriggerTests: XCTestCase {
         XCTAssertTrue(rpSpace.forecast(gameMasterEvent).reactions.isEmpty)
     }
 
-    /// Self-inflicted damage must not proc the bearer's own shield every pulse.
     func testInitiatorTargetingYieldsNothingWhenTheInitiatorIsTheOwner() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEvent,
@@ -235,7 +221,6 @@ final class TriggerTests: XCTestCase {
         )
     }
 
-    /// The targeting conditional filters the attacker like any other target.
     func testInitiatorTargetingHonoursItsConditional() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
@@ -253,7 +238,6 @@ final class TriggerTests: XCTestCase {
         XCTAssertEqual(rpSpace.forecast(attack()).reactions.count, 1)
     }
 
-    /// The override is what lets one ability serve a cast and a reaction.
     func testTheOverrideWinsOverTheAbilitysOwnTargeting() {
         let selfAimed = ability("Reaction", target: RPTargeting(.oneself, .always))
 
@@ -267,7 +251,6 @@ final class TriggerTests: XCTestCase {
         XCTAssertEqual(rpSpace.forecast(attack()).reactions.first?.event.targets, ["villain"])
     }
 
-    /// Without an override the ability keeps its own aim.
     func testNilOverrideFallsThroughToTheAbilitysOwnTargeting() {
         let selfAimed = ability("Reaction", target: RPTargeting(.oneself, .always))
 
@@ -280,8 +263,6 @@ final class TriggerTests: XCTestCase {
         XCTAssertEqual(rpSpace.forecast(attack()).reactions.first?.event.targets, ["hero"])
     }
 
-    /// An empty target set is the trigger's gate, and gating must cost nothing —
-    /// no cooldown, no charge, and above all no draw from the seeded stream.
     func testAnOverrideResolvingToNothingProducesNoNodeAndSpendsNothing() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
@@ -306,8 +287,6 @@ final class TriggerTests: XCTestCase {
         )
     }
 
-    /// Sub-abilities resolve their own aim but still see the triggering event,
-    /// which an explicit target set would not have carried to them.
     func testASubAbilityAlsoReachesTheAttacker() {
         var reaction = ability("Shield Burn", target: RPTargeting(.oneself, .always))
         reaction.subAbilities = [ability("Scorch", target: RPTargeting(.initiator, .always))]
@@ -336,7 +315,6 @@ final class TriggerTests: XCTestCase {
         return cache
     }
 
-    /// The one combination that could never fire fails loudly at load.
     func testLoadRejectsInitiatorTargetingOnPostEventInitiated() throws {
         XCTAssertThrowsError(
             try cache(
@@ -357,7 +335,6 @@ final class TriggerTests: XCTestCase {
         }
     }
 
-    /// A misspelled wake mode is an error, never a silently inert trigger.
     func testLoadRejectsAnUnrecognizedTriggerType() throws {
         XCTAssertThrowsError(
             try cache(
@@ -374,8 +351,6 @@ final class TriggerTests: XCTestCase {
         }
     }
 
-    /// Status effects load before abilities, so a trigger's ability is wired in a
-    /// later pass — this is that pass working.
     func testStatusEffectTriggersResolveRegardlessOfLoadOrder() throws {
         let loaded = try cache(
             abilities: ["ability.retaliate": .init(cooldown: nil)],

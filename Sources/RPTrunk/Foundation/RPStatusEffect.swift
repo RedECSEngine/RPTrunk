@@ -156,7 +156,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
     public mutating func resetCooldown() {
         currentTick = 0
         pulsesDelivered = 0
-        triggerCooldowns = [:] // re-applying makes the effect new, mid-cooldown triggers included
+        triggerCooldowns = [:]
     }
 
     public mutating func expendCharge() {
