@@ -10,6 +10,7 @@ public struct RPTargeting<RP: RPSpace>: Codable {
         case allFriendly
         case randomFriendly
         case allyTeam
+        case initiator
     }
 
     public let type: SelectionType
@@ -22,10 +23,11 @@ public struct RPTargeting<RP: RPSpace>: Codable {
 
     public func getValidTargets(
         for body: RPBodyId,
-        in rpSpace: RP
+        in rpSpace: RP,
+        reactingTo triggeringEvent: RPEvent<RP>? = nil
     ) -> Set<RPBodyId> {
         guard let body = rpSpace.bodyById(body) else { return [] }
-        let validTargets = getValidTargetSet(for: body, in: rpSpace)
+        let validTargets = getValidTargetSet(for: body, in: rpSpace, reactingTo: triggeringEvent)
             .compactMap(rpSpace.bodyById)
             .filter { (try? conditional.exec($0, rpSpace: rpSpace)) ?? false }
 
@@ -37,7 +39,7 @@ public struct RPTargeting<RP: RPSpace>: Codable {
                 return threatA != threatB ? threatA > threatB : a.id < b.id
             }
             return chosen.map { [$0.id] } ?? []
-        case .oneself, .singleFriendly:
+        case .oneself, .singleFriendly, .initiator:
             return validTargets.min { $0.id < $1.id }.map { [$0.id] } ?? []
         case .random, .randomEnemy, .randomFriendly:
             let startIndex = validTargets.startIndex
@@ -52,9 +54,15 @@ public struct RPTargeting<RP: RPSpace>: Codable {
 
     fileprivate func getValidTargetSet(
         for body: RPBody<RP>,
-        in rpSpace: RP
+        in rpSpace: RP,
+        reactingTo triggeringEvent: RPEvent<RP>?
     ) -> Set<RPBodyId> {
         switch type {
+        case .initiator:
+            guard let initiator = triggeringEvent?.initiator, initiator != body.id else {
+                return []
+            }
+            return [initiator]
         case .randomEnemy, .allEnemy, .singleEnemy:
             return rpSpace.getEnemies(of: body.id).intersection(body.targets)
         case .randomFriendly, .allFriendly, .singleFriendly:
@@ -110,6 +118,8 @@ public extension RPTargeting {
             return RPTargeting(.randomEnemy, condition)
         case "allyTeam":
             return RPTargeting(.allyTeam, condition)
+        case "initiator":
+            return RPTargeting(.initiator, condition)
         default:
             throw TargetingError.unrecognizedSelector(type)
         }

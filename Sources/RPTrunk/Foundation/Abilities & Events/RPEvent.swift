@@ -17,6 +17,7 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
         case standardConflict
         case periodicEffect(name: String)
         case itemExchangeOnly
+        case triggered
     }
 
     public var id = UUID().uuidString
@@ -31,14 +32,26 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
         initiator: RPBodyId,
         ability: RPAbility<RP>,
         targets: Set<RPBodyId>? = nil,
+        reactingTo triggeringEvent: RPEvent<RP>? = nil,
         rpSpace: RP
     ) {
         self.category = category
         self.initiator = initiator
         self.ability = ability
-        self.targets = targets ?? ability.targeting.getValidTargets(for: initiator, in: rpSpace)
+        self.targets = targets
+            ?? ability.targeting.getValidTargets(
+                for: initiator,
+                in: rpSpace,
+                reactingTo: triggeringEvent
+            )
         self.subEvents = ability.subAbilities.map {
-            RPEvent(category: category, initiator: initiator, ability: $0, rpSpace: rpSpace)
+            RPEvent(
+                category: category,
+                initiator: initiator,
+                ability: $0,
+                reactingTo: triggeringEvent,
+                rpSpace: rpSpace
+            )
         }
     }
 
@@ -152,6 +165,22 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
             declaredThreatChanges() + RP.resolveThreatChanges(for: eventResult, in: rpSpace)
         )
         eventResult.subResults = subEvents.map { $0.execute(in: &rpSpace) }
+        return eventResult
+    }
+
+    @discardableResult
+    public func apply(
+        _ resolved: RPEventResult<RP>,
+        in rpSpace: inout RP
+    ) -> RPEventResult<RP> {
+        let itemTransfers = applyResults(resolved.effects, in: &rpSpace)
+        var eventResult = RPEventResult<RP>(self, resolved.effects, itemTransfers)
+        rpSpace.applyThreatChanges(
+            declaredThreatChanges() + RP.resolveThreatChanges(for: eventResult, in: rpSpace)
+        )
+        eventResult.subResults = zip(subEvents, resolved.subResults).map {
+            $0.apply($1, in: &rpSpace)
+        }
         return eventResult
     }
 

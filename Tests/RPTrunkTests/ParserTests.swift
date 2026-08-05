@@ -231,8 +231,7 @@ final class ParserTests: XCTestCase {
 
         let statusEffect = RPStatusEffect<TestRPSpace>(
             code: "Healing",
-            tags: [],
-            fragments: [],
+            tags: ["Healing"],
             duration: 1,
             charges: 0
         )

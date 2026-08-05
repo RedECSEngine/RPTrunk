@@ -12,7 +12,7 @@ func getStatus
     {
         input, rpSpace in
         if case let .bodyResult(e) = input {
-            let found = rpSpace.bodyById(e)?.hasStatus(RPStatusCode(status)) == true
+            let found = rpSpace.bodyById(e)?.hasStatus(RPStatusTag(status)) == true
             return .valueResult(.bool(found))
         }
         return .nothing

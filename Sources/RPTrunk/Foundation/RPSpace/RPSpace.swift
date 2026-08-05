@@ -27,11 +27,22 @@ public protocol RPSpace: Codable {
 
     static var statTypes: Set<String> { get }
 
-    static var actionImpairingStatuses: Set<RPStatusCode> { get }
+    static var actionImpairingStatuses: Set<RPStatusTag> { get }
 
     static func timeMultiplier(for body: RPBody<Self>) -> Double
 
     static func timeMultiplier(for body: RPBody<Self>, statusEffect code: RPReferenceCode) -> Double
+
+    static var maximumForecastedEvents: Int { get }
+
+    func copy() -> Self
+
+    static func rollTriggerChance(_ percent: RPValue) -> Bool
+
+    static func additionalEvents(
+        after result: RPEventResult<Self>,
+        in rpSpace: Self
+    ) -> [RPEvent<Self>]
 
     static func createDefaultBody(cache: RPCache<Self>) -> Body
     
@@ -78,14 +89,28 @@ public extension RPSpace {
     
     static var statTypes: Set<String> { Set(Stats.dynamicKeys.keys) }
 
-    static var actionImpairingStatuses: Set<RPStatusCode> { [] }
+    static var actionImpairingStatuses: Set<RPStatusTag> { [] }
 
     static func timeMultiplier(for body: RPBody<Self>) -> Double { 1 }
 
     static func timeMultiplier(for body: RPBody<Self>, statusEffect code: RPReferenceCode) -> Double { 1 }
 
+    static var maximumForecastedEvents: Int { 64 }
+
+    func copy() -> Self { self }
+
+    static func rollTriggerChance(_ percent: RPValue) -> Bool {
+        percent >= RPChance.certain
+            || Int.random(in: 0 ..< RPChance.certain) < percent
+    }
+
+    static func additionalEvents(
+        after result: RPEventResult<Self>,
+        in rpSpace: Self
+    ) -> [RPEvent<Self>] { [] }
+
     static func createDefaultBody(cache: RPCache<Self>) -> Body {
-        Body()
+        cache.defaultBody ?? Body()
     }
     
     static func fullyResolvedStats(for rpBody: RPBody<Self>) -> Stats {
@@ -139,6 +164,15 @@ public extension RPSpace {
     }
 }
 
+public extension RPSpace where Self: AnyObject {
+    func copy() -> Self {
+        assertionFailure(
+            "\(Self.self) is a reference type and must override copy() — forecast() simulates against a copy and would otherwise mutate the live space"
+        )
+        return self
+    }
+}
+
 extension RPSpace {
     public func allTeamedBodyIds() -> [RPBodyId] {
         var seen: Set<RPBodyId> = []
@@ -159,15 +193,8 @@ extension RPSpace {
 
     public func getPendingEvents() -> [RPEvent<Self>] {
         allPendingGameMasterEvents() +
-        getAllPendingPassiveEvents() +
         getAllPendingStatusEffectEvents() +
         getAllPendingExecutableEvents()
-    }
-
-    public func getAllPendingPassiveEvents() -> [RPEvent<Self>] {
-        allTeamedBodyIds()
-            .compactMap(bodyById)
-            .flatMap { $0.getPendingPassiveEvents(in: self) }
     }
 
     /// Periodic events emitted by active status effects (heal/damage over time,
@@ -191,30 +218,104 @@ extension RPSpace {
             self.removeGameMasterEvent(id: event.id)
         }
 
-        let mainEventResults = events
+        return events
             .flatMap { event -> [RPEvent<Self>] in
                 switch event.category {
                 case .standardConflict:
                     event.resetInitiatorCooldowns(in: &self)
-                case .periodicEffect, .itemExchangeOnly:
+                case .periodicEffect, .itemExchangeOnly, .triggered:
                     break
                 }
                 return [event]
             }
             .map { $0.execute(in: &self) }
-        
-        let reactionEventResults = mainEventResults.flatMap {
-            eventResult -> [RPEvent<Self>] in
-            eventResult.effects.flatMap {
-                conflictResult -> [RPEvent<Self>] in
-                bodyById(conflictResult.body)?.getPendingPassiveEvents(in: self) ?? []
-            }
-        }
-        .map { $0.execute(in: &self) }
-
-        return mainEventResults + reactionEventResults
     }
 
+    public func triggerCandidates(
+        for result: RPEventResult<Self>
+    ) -> [RPTriggerCandidate<Self>] {
+        allTeamedBodyIds().sorted().flatMap { ownerId -> [RPTriggerCandidate<Self>] in
+            guard let owner = bodyById(ownerId) else { return [] }
+            return owner.allTriggers.compactMap { source, trigger in
+                guard owner.isTriggerReady(source, trigger),
+                      trigger.matches(result, owner: ownerId),
+                      let event = trigger.makeEvent(
+                        owner: ownerId,
+                        reactingTo: result.event,
+                        in: self
+                      )
+                else { return nil }
+                return RPTriggerCandidate(
+                    owner: ownerId,
+                    source: source,
+                    trigger: trigger,
+                    event: event
+                )
+            }
+        }
+    }
+
+    public mutating func spendTrigger(
+        owner ownerId: RPBodyId,
+        source: RPTriggerSource,
+        of event: RPEvent<Self>
+    ) {
+        modifyBody(id: ownerId) { body, _ in
+            if let match = body.allTriggers.first(where: {
+                $0.source == source && $0.trigger.ability.code == event.ability.code
+            }) {
+                body.startTriggerCooldown(match.source, match.trigger)
+            }
+            if case let .statusEffect(code) = source {
+                body.expendTriggerCharge(ofStatusEffect: code)
+            }
+        }
+    }
+
+    public func forecast(_ event: RPEvent<Self>) -> RPForecast<Self> {
+        var simulated = copy()
+        var forecastedEvents: [RPForecast<Self>.ForecastedEvent] = []
+        var pending: [(event: RPEvent<Self>, origin: RPForecast<Self>.Origin, depth: Int)] = [
+            (event, .root, 0),
+        ]
+        var truncated = false
+
+        while !pending.isEmpty {
+            guard forecastedEvents.count < Self.maximumForecastedEvents else {
+                truncated = true
+                break
+            }
+
+            let (next, origin, depth) = pending.removeFirst()
+            let result = next.execute(in: &simulated)
+            forecastedEvents.append(.init(event: next, result: result, origin: origin, depth: depth))
+
+            simulated.triggerCandidates(for: result).forEach { candidate in
+                guard Self.rollTriggerChance(candidate.trigger.chancePercent) else { return }
+                simulated.spendTrigger(
+                    owner: candidate.owner,
+                    source: candidate.source,
+                    of: candidate.event
+                )
+                pending.append((
+                    candidate.event,
+                    .trigger(
+                        owner: candidate.owner,
+                        source: candidate.source,
+                        code: candidate.trigger.code,
+                        chancePercent: candidate.trigger.chancePercent
+                    ),
+                    depth + 1
+                ))
+            }
+
+            for extra in Self.additionalEvents(after: result, in: simulated) {
+                pending.append((extra, .root, depth + 1))
+            }
+        }
+
+        return RPForecast(forecastedEvents: forecastedEvents, wasTruncated: truncated)
+    }
 }
 
 public struct RPItemTransfer: Codable, Equatable {

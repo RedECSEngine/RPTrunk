@@ -5,9 +5,10 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
 
     public let code: RPReferenceCode
     public let displayName: String
-    public let tags: Set<RPStatusCode>
+    public let tags: Set<RPStatusTag>
     public let persistentFragments: [RPFragment<RP>]
     public let persistentStats: RP.Stats
+    public var triggers: [RPTrigger<RP>] = []
     // both duration and charge can be used or one or the other
     let duration: RPTimeIncrement?
     let charges: Int? // the number of charges left
@@ -18,9 +19,10 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
     public init(
         code: RPReferenceCode,
         displayName: String? = nil,
-        tags: Set<RPStatusCode>,
+        tags: Set<RPStatusTag>,
         persistentFragments: [RPFragment<RP>] = [],
         periodicFragments: [RPFragment<RP>] = [],
+        triggers: [RPTrigger<RP>] = [],
         duration: Double?,
         charges: Int?,
         period: RPTimeIncrement = RPStatusEffect.defaultPeriod
@@ -30,6 +32,7 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
         self.tags = tags
         self.persistentFragments = persistentFragments
         self.persistentStats = RPFragment(flattenedFrom: persistentFragments).stats ?? .zero
+        self.triggers = triggers
         self.duration = duration
         self.charges = charges
         self.period = period
@@ -60,6 +63,7 @@ public func ==<Stats: StatsType> (lhs: RPStatusEffect<Stats>, rhs: RPStatusEffec
     lhs.code == rhs.code
         && lhs.tags == rhs.tags
         && lhs.persistentFragments == rhs.persistentFragments
+        && lhs.triggers == rhs.triggers
         && lhs.ability == rhs.ability
 }
 /**
@@ -71,6 +75,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
 
     var currentCharge: Int = 0
     public private(set) var pulsesDelivered: Int = 0
+    public internal(set) var triggerCooldowns: [RPReferenceCode: RPTimeIncrement] = [:]
 
     var level: Int? // power level of the buff, if it is stackable
 
@@ -79,7 +84,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
 
     public var code: RPReferenceCode { statusEffect.code }
     public var displayName: String { statusEffect.displayName }
-    public var tags: Set<RPStatusCode> { statusEffect.tags }
+    public var tags: Set<RPStatusTag> { statusEffect.tags }
 
     public init(
         bodyId: RPBodyId,
@@ -91,6 +96,19 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
     }
 
     public var persistentStats: RP.Stats { statusEffect.persistentStats }
+
+    public var triggers: [RPTrigger<RP>] { statusEffect.triggers }
+
+    public var usesCharges: Bool { statusEffect.charges != nil }
+
+    public func isTriggerReady(_ trigger: RPTrigger<RP>) -> Bool {
+        triggerCooldowns[trigger.code] == nil
+    }
+
+    public mutating func startTriggerCooldown(_ trigger: RPTrigger<RP>) {
+        guard trigger.cooldown > 0 else { return }
+        triggerCooldowns[trigger.code] = trigger.cooldown
+    }
 
     public var remainingPulses: Int {
         Swift.max(0, statusEffect.totalPulses - pulsesDelivered)
@@ -128,6 +146,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         }
 
         currentTick += moment.delta
+        tickTriggerCooldowns(&triggerCooldowns, by: moment.delta)
     }
 
     public mutating func didPulse() {
@@ -137,6 +156,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
     public mutating func resetCooldown() {
         currentTick = 0
         pulsesDelivered = 0
+        triggerCooldowns = [:]
     }
 
     public mutating func expendCharge() {
