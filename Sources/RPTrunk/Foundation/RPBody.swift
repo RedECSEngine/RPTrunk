@@ -159,10 +159,6 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         triggers.append(trigger)
     }
 
-    /// Every trigger this body answers to, paired with who owns it. Status-granted
-    /// ones are read from the effects being held rather than copied onto the body,
-    /// so an expiring status takes its reactions with it. Effects are walked in
-    /// code order to keep a chain built from this reproducible.
     public var allTriggers: [(source: RPTriggerSource, trigger: RPTrigger<RP>)] {
         triggers.map { (.body, $0) }
             + statusEffects
@@ -172,10 +168,6 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
                 }
     }
 
-    /// Asks whichever owner holds this trigger's clock whether it is ready. A
-    /// status keeps its own, so the body forwards rather than answering — a
-    /// status never writes timing state into its bearer. A status that has
-    /// dropped off answers false, correctly: its triggers are gone with it.
     public func isTriggerReady(_ source: RPTriggerSource, _ trigger: RPTrigger<RP>) -> Bool {
         switch source {
         case .body:
@@ -185,9 +177,6 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         }
     }
 
-    /// Starts a fired trigger's cooldown on whichever owner holds it, mirroring
-    /// `isTriggerReady`. Body-declared triggers land in the body's own map;
-    /// status-granted ones are pushed back into the effect that brought them.
     public mutating func startTriggerCooldown(_ source: RPTriggerSource, _ trigger: RPTrigger<RP>) {
         switch source {
         case .body:
@@ -198,10 +187,6 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         }
     }
 
-    /// Bills a fired trigger against the charges of the status that granted it,
-    /// dropping that status once the last is spent — how "the next three
-    /// attackers burn" retires itself. Charge-less effects are untouched.
-    /// Removing one changes what persistent stats sum to, hence the recalc.
     public mutating func expendTriggerCharge(ofStatusEffect code: RPReferenceCode) {
         guard statusEffects[code]?.usesCharges == true else { return }
         statusEffects[code]?.expendCharge()
@@ -272,11 +257,7 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
             executableAbilities[name]?.tick(ownMoment)
         }
 
-        // body-declared only; status-granted ones ticked with their effect above
-        for key in triggerCooldowns.keys {
-            let remaining = (triggerCooldowns[key] ?? 0) - ownMoment.delta
-            triggerCooldowns[key] = remaining > 0 ? remaining : nil
-        }
+        tickTriggerCooldowns(&triggerCooldowns, by: ownMoment.delta)
 
         if threatDecayPerTick > 0, !threat.isEmpty {
             let decay = RPValue((threatDecayPerTick * ownMoment.delta).rounded())

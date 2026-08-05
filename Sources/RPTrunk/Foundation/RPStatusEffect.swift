@@ -22,6 +22,7 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
         tags: Set<RPStatusTag>,
         persistentFragments: [RPFragment<RP>] = [],
         periodicFragments: [RPFragment<RP>] = [],
+        triggers: [RPTrigger<RP>] = [],
         duration: Double?,
         charges: Int?,
         period: RPTimeIncrement = RPStatusEffect.defaultPeriod
@@ -31,6 +32,7 @@ public struct RPStatusEffect<RP: RPSpace>: Codable {
         self.tags = tags
         self.persistentFragments = persistentFragments
         self.persistentStats = RPFragment(flattenedFrom: persistentFragments).stats ?? .zero
+        self.triggers = triggers
         self.duration = duration
         self.charges = charges
         self.period = period
@@ -144,12 +146,7 @@ public struct RPActiveStatusEffect<RP: RPSpace>: RPTemporal, Codable {
         }
 
         currentTick += moment.delta
-
-        // counts remaining time down; cleared at zero, so absent means ready
-        for key in triggerCooldowns.keys {
-            let remaining = (triggerCooldowns[key] ?? 0) - moment.delta
-            triggerCooldowns[key] = remaining > 0 ? remaining : nil
-        }
+        tickTriggerCooldowns(&triggerCooldowns, by: moment.delta)
     }
 
     public mutating func didPulse() {

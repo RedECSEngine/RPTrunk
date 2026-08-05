@@ -7,6 +7,35 @@ public enum RPTriggerSource: Codable, Equatable, Hashable {
     case statusEffect(RPReferenceCode)
 }
 
+public struct RPTriggerCandidate<RP: RPSpace> {
+    public let owner: RPBodyId
+    public let source: RPTriggerSource
+    public let trigger: RPTrigger<RP>
+    public let event: RPEvent<RP>
+
+    public init(
+        owner: RPBodyId,
+        source: RPTriggerSource,
+        trigger: RPTrigger<RP>,
+        event: RPEvent<RP>
+    ) {
+        self.owner = owner
+        self.source = source
+        self.trigger = trigger
+        self.event = event
+    }
+}
+
+func tickTriggerCooldowns(
+    _ cooldowns: inout [RPReferenceCode: RPTimeIncrement],
+    by delta: RPTimeIncrement
+) {
+    for code in cooldowns.keys {
+        let remaining = (cooldowns[code] ?? 0) - delta
+        cooldowns[code] = remaining > 0 ? remaining : nil
+    }
+}
+
 public struct RPTrigger<RP: RPSpace>: Codable, Equatable {
     public enum TriggerType: String, Codable {
         case postEvent
@@ -22,10 +51,6 @@ public struct RPTrigger<RP: RPSpace>: Codable, Equatable {
     public let chancePercent: RPValue
     public let cooldown: RPTimeIncrement
 
-    /// `code` keys this trigger's cooldown on whichever owner holds it. A nil
-    /// `targeting` uses the ability's own rules; supplying one overrides them,
-    /// which is what lets an ability serve both a cast and a reaction — and is
-    /// also the gate, since an empty target set yields no event.
     public init(
         code: RPReferenceCode? = nil,
         triggerType: TriggerType,
@@ -44,10 +69,6 @@ public struct RPTrigger<RP: RPSpace>: Codable, Equatable {
         self.cooldown = cooldown
     }
 
-    /// Whether a resolved event is the kind of thing this trigger answers, on
-    /// role and tags alone — cooldown, chance and targeting are gated elsewhere.
-    /// `postEvent` matches every event in the space; an empty `abilityTags` is a
-    /// subset of everything, so declaring none wakes on anything.
     public func matches(_ result: RPEventResult<RP>, owner ownerId: RPBodyId) -> Bool {
         switch triggerType {
         case .postEvent:
@@ -60,10 +81,6 @@ public struct RPTrigger<RP: RPSpace>: Codable, Equatable {
         return abilityTags.isSubset(of: result.event.ability.tags)
     }
 
-    /// Builds the reaction the owner would perform, or nil when it would hit
-    /// nobody — the ordinary outcome, not an error, and callers spend no
-    /// cooldown, charge or roll on it. The whole triggering event is threaded
-    /// through so the reaction's sub-abilities can aim at the attacker too.
     public func makeEvent(
         owner ownerId: RPBodyId,
         reactingTo triggeringEvent: RPEvent<RP>,

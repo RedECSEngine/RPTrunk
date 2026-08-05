@@ -45,7 +45,6 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
                 reactingTo: triggeringEvent
             )
         self.subEvents = ability.subAbilities.map {
-            // handed down so a sub-ability can aim at the attacker too
             RPEvent(
                 category: category,
                 initiator: initiator,
@@ -169,10 +168,6 @@ public struct RPEvent<RP: RPSpace>: Equatable, Codable {
         return eventResult
     }
 
-    /// Commits an already-resolved result — `execute` with the rolling skipped.
-    /// Randomness is reused and determinism recomputed: the `RPConflictResult`s
-    /// carry dice that must not be thrown twice, while status effects, item
-    /// exchange and threat re-run against a space that has since moved on.
     @discardableResult
     public func apply(
         _ resolved: RPEventResult<RP>,

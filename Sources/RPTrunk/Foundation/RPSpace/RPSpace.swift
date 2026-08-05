@@ -35,6 +35,10 @@ public protocol RPSpace: Codable {
 
     static var maximumForecastedEvents: Int { get }
 
+    /// `forecast` simulates against a copy, which is free for a value type and
+    /// meaningless for a reference type. A class conformance must override this.
+    func copy() -> Self
+
     static func rollTriggerChance(_ percent: RPValue) -> Bool
 
     static func additionalEvents(
@@ -94,6 +98,8 @@ public extension RPSpace {
     static func timeMultiplier(for body: RPBody<Self>, statusEffect code: RPReferenceCode) -> Double { 1 }
 
     static var maximumForecastedEvents: Int { 64 }
+
+    func copy() -> Self { self }
 
     static func rollTriggerChance(_ percent: RPValue) -> Bool {
         percent >= RPChance.certain
@@ -160,6 +166,15 @@ public extension RPSpace {
     }
 }
 
+public extension RPSpace where Self: AnyObject {
+    func copy() -> Self {
+        assertionFailure(
+            "\(Self.self) is a reference type and must override copy() — forecast() simulates against a copy and would otherwise mutate the live space"
+        )
+        return self
+    }
+}
+
 extension RPSpace {
     public func allTeamedBodyIds() -> [RPBodyId] {
         var seen: Set<RPBodyId> = []
@@ -219,32 +234,10 @@ extension RPSpace {
             .map { $0.execute(in: &self) }
     }
 
-    /// Every trigger in the space that would answer this result, already paired
-    /// with the event it would produce.
-    ///
-    /// Each candidate has passed its cooldown, its wake condition and its
-    /// targeting; what it has *not* passed is its chance roll, which is left to
-    /// the caller so no `GameRandom` draw is spent on a trigger that could never
-    /// have produced targets anyway.
-    ///
-    /// Every teamed body is swept because `postEvent` reacts to events its owner
-    /// took no part in; `matches` is what narrows that back down. The sweep is
-    /// sorted because team membership is a `Set`, and an unsorted walk would let
-    /// two shields fire in a different order from one seeded run to the next.
     public func triggerCandidates(
         for result: RPEventResult<Self>
-    ) -> [(
-        owner: RPBodyId,
-        source: RPTriggerSource,
-        trigger: RPTrigger<Self>,
-        event: RPEvent<Self>
-    )] {
-        allTeamedBodyIds().sorted().flatMap { ownerId -> [(
-            owner: RPBodyId,
-            source: RPTriggerSource,
-            trigger: RPTrigger<Self>,
-            event: RPEvent<Self>
-        )] in
+    ) -> [RPTriggerCandidate<Self>] {
+        allTeamedBodyIds().sorted().flatMap { ownerId -> [RPTriggerCandidate<Self>] in
             guard let owner = bodyById(ownerId) else { return [] }
             return owner.allTriggers.compactMap { source, trigger in
                 guard owner.isTriggerReady(source, trigger),
@@ -255,18 +248,16 @@ extension RPSpace {
                         in: self
                       )
                 else { return nil }
-                return (ownerId, source, trigger, event)
+                return RPTriggerCandidate(
+                    owner: ownerId,
+                    source: source,
+                    trigger: trigger,
+                    event: event
+                )
             }
         }
     }
 
-    /// Bills a trigger that has fired: starts its cooldown and, if a status
-    /// granted it, spends one of that status's charges.
-    ///
-    /// The trigger is re-found by source and ability code rather than passed in,
-    /// so this can be replayed later against the *real* bodies from nothing but
-    /// what a forecast forecasted event recorded. A trigger that has since gone — its status
-    /// expired, say — simply isn't found, and only the charge is spent.
     public mutating func spendTrigger(
         owner ownerId: RPBodyId,
         source: RPTriggerSource,
@@ -284,25 +275,8 @@ extension RPSpace {
         }
     }
 
-    /// Resolves an event and everything it provokes, once, and returns the whole
-    /// chain without touching this space.
-    ///
-    /// The walk runs against a *copy*, so the dice thrown here are the dice that
-    /// count — a caller replays each forecasted event with `RPEvent.apply` as its animation
-    /// lands, and never resolves anything twice. Nodes come out breadth-first,
-    /// which is play order: the event, then what it provoked, then what those
-    /// provoked.
-    ///
-    /// Triggers are billed on the copy the moment they are *scheduled* rather
-    /// than when their forecasted event runs, so a trigger cannot be picked up twice by two
-    /// results that resolve before its own reaction does. That billing is also
-    /// what terminates the walk: a shield that has fired is on cooldown, a
-    /// charge-bounded aura runs out, and `Die` empties its own targeting once
-    /// the `ko` tag lands. `maximumForecastedEvents` catches the one shape none of
-    /// that stops — a zero-cooldown, charge-less trigger feeding itself — and
-    /// says so through `wasTruncated` rather than trimming in silence.
     public func forecast(_ event: RPEvent<Self>) -> RPForecast<Self> {
-        var simulated = self
+        var simulated = copy()
         var forecastedEvents: [RPForecast<Self>.ForecastedEvent] = []
         var pending: [(event: RPEvent<Self>, origin: RPForecast<Self>.Origin, depth: Int)] = [
             (event, .root, 0),
@@ -319,9 +293,8 @@ extension RPSpace {
             let result = next.execute(in: &simulated)
             forecastedEvents.append(.init(event: next, result: result, origin: origin, depth: depth))
 
-            let candidates = simulated.triggerCandidates(for: result)
-            for candidate in candidates
-            where Self.rollTriggerChance(candidate.trigger.chancePercent) {
+            simulated.triggerCandidates(for: result).forEach { candidate in
+                guard Self.rollTriggerChance(candidate.trigger.chancePercent) else { return }
                 simulated.spendTrigger(
                     owner: candidate.owner,
                     source: candidate.source,

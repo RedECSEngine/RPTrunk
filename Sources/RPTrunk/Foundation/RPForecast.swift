@@ -15,8 +15,6 @@ public struct RPForecast<RP: RPSpace>: Equatable, Codable {
         public let origin: Origin
         public let depth: Int
 
-        /// `result` is already resolved, so replaying a forecasted event applies it rather
-        /// than rolling again. `depth` keeps the shape the flat list loses.
         public init(
             event: RPEvent<RP>,
             result: RPEventResult<RP>,

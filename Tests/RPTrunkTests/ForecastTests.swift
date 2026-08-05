@@ -130,7 +130,7 @@ final class ForecastTests: XCTestCase {
         )
     }
 
-    /// Nodes come out in play order, flat, with depth kept for shape.
+    /// They come out in play order, flat, with depth kept for shape.
     func testTheChainIsOrderedRootFirstThenReactions() {
         useFlatDamage(1)
         rpSpace.bodies["hero"]?.addTrigger(retaliation(cooldown: 1500))
@@ -164,7 +164,7 @@ final class ForecastTests: XCTestCase {
 
     /// Luck is forecast, not avoided: the forecasted event is flagged and the chain past it
     /// is walked normally, so a consumer can discount it rather than miss it.
-    func testAChanceGatedNodeIsMarkedAndItsChainStillExplored() {
+    func testAChanceGatedEventIsMarkedAndItsChainStillExplored() {
         useFlatDamage(1)
         TestRPSpace.chanceRule = { _ in true }
 
@@ -187,7 +187,7 @@ final class ForecastTests: XCTestCase {
     }
 
     /// A trigger that loses its roll simply isn't in the chain.
-    func testAFailedChanceRollProducesNoNode() {
+    func testAFailedChanceRollProducesNoForecastedEvent() {
         useFlatDamage(1)
         TestRPSpace.chanceRule = { _ in false }
         rpSpace.bodies["hero"]?.addTrigger(retaliation(cooldown: 1500, chancePercent: 3500))
@@ -404,6 +404,20 @@ final class ForecastTests: XCTestCase {
     }
 
     /// The conformance hook contributes to the chain rather than beside it.
+    func testForecastingLeavesTheLiveSpaceUntouched() {
+        useFlatDamage(4)
+        rpSpace.bodies["hero"]?.addTrigger(retaliation(cooldown: 1500))
+
+        let before = rpSpace!
+        _ = rpSpace.forecast(attack())
+
+        XCTAssertEqual(
+            rpSpace,
+            before,
+            "forecast simulates against copy(); a conformance without value semantics would have mutated the live space here"
+        )
+    }
+
     func testAdditionalEventsJoinTheChain() {
         useFlatDamage(1)
         var injected = false

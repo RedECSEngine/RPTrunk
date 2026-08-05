@@ -18,7 +18,7 @@ open class RPCache<RP: RPSpace> {
     public func load(_ data: RPCacheJSON<RP>) throws {
         try loadStatusEffects(data.statusEffects ?? [:])
         try loadAbilities(data.abilities ?? [:])
-        try loadStatusEffectTriggers(data.statusEffects ?? [:]) // needs the abilities above
+        try loadStatusEffectTriggers(data.statusEffects ?? [:])
         try loadBodies(data.bodies ?? [:])
         try loadItems(data.items ?? [:])
     }
@@ -64,9 +64,6 @@ open class RPCache<RP: RPSpace> {
         }
     }
 
-    /// The second pass over status effects, run once abilities exist so a
-    /// trigger can name one. Same exclusivity care as `loadAbilities`: resolve
-    /// into a local, then assign.
     public func loadStatusEffectTriggers(
         _ statusEffects: [RPReferenceCode: RPStatusEffectJSON<RP>]
     ) throws {
@@ -77,15 +74,6 @@ open class RPCache<RP: RPSpace> {
         }
     }
 
-    /// Resolves one authored trigger, throwing rather than degrading.
-    ///
-    /// A trigger that quietly never fires is the worst failure this system has —
-    /// it looks like a balance problem and reads like working data — so an
-    /// unrecognized `triggerType` is an error, and so is aiming at `initiator`
-    /// on `postEventInitiated`, where the initiator is by definition the
-    /// trigger's own owner and the reaction could only ever target nobody. That
-    /// check reads the *effective* targeting: the override if one is given, the
-    /// ability's own rules otherwise.
     public func buildTrigger(_ data: RPTriggerJSON<RP>) throws -> RPTrigger<RP> {
         guard let triggerType = RPTrigger<RP>.TriggerType(rawValue: data.triggerType) else {
             throw CacheError.invalidFormat("unrecognized triggerType `\(data.triggerType)`")
@@ -129,7 +117,6 @@ open class RPCache<RP: RPSpace> {
                     body.addExecutableAbility(ability, conditional: conditional)
                 }
             }
-            // unlike an ability reference, a trigger naming a missing ability throws
             try data.triggers?.forEach { body.addTrigger(try buildTrigger($0)) }
             self.bodies[code] = body
         }
