@@ -18,7 +18,7 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
             evaluators.append(.evaluationFunction(f: getInitiator()))
         case .has:
             guard index + 1 < operand.tokens.count,
-                  case let .stat(name, usePercent: false) = operand.tokens[index + 1]
+                  case let .name(name, usePercent: false) = operand.tokens[index + 1]
             else {
                 throw ConditionalInterpretationError.invalidSyntax(
                     reason: "`has.` must be followed by a status tag, e.g. `has.bleed`"
@@ -28,7 +28,7 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
             index += 1
         case .uses:
             guard index + 1 < operand.tokens.count,
-                  case let .stat(name, usePercent: false) = operand.tokens[index + 1]
+                  case let .name(name, usePercent: false) = operand.tokens[index + 1]
             else {
                 throw ConditionalInterpretationError.invalidSyntax(
                     reason: "`uses.` must be followed by an ability tag, e.g. `uses.magical`"
@@ -38,7 +38,7 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
             index += 1
         case .threat:
             evaluators.append(.evaluationFunction(f: getThreat()))
-        case let .stat(name, usePercent):
+        case let .name(name, usePercent):
             guard RP.statTypes.contains(name) else {
                 throw ConditionalInterpretationError.invalidSyntax(reason: "Unknown stat: \(name)")
             }
@@ -47,8 +47,6 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
             evaluators.append(.valueResult(.rpValue(value)))
         case let .percent(value):
             evaluators.append(.valueResult(.percent(value)))
-        case let .bool(value):
-            evaluators.append(.valueResult(.bool(value)))
         }
         index += 1
     }
@@ -59,6 +57,11 @@ func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPCondition
     let lhs: [ParserResultType<RP>] = try compileOperand(clause.lhs)
 
     if let comparison = clause.comparison {
+        guard !clause.isNegated else {
+            throw ConditionalInterpretationError.invalidSyntax(
+                reason: "`!` negates a `has.` or `uses.` tag query, not a comparison"
+            )
+        }
         let op = comparison.op
         let rhs: [ParserResultType<RP>] = try compileOperand(comparison.rhs)
         return { context, rpSpace -> Bool in
@@ -82,8 +85,9 @@ func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPCondition
             reason: "A clause without an operator must be a `has.` or `uses.` tag query"
         )
     }
+    let isNegated = clause.isNegated
     return { context, rpSpace -> Bool in
-        extractValue(context, evaluators: lhs, in: rpSpace) == .bool(true)
+        (extractValue(context, evaluators: lhs, in: rpSpace) == .bool(true)) != isNegated
     }
 }
 

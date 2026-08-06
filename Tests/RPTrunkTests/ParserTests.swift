@@ -34,13 +34,13 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(try ConditionTokenParser.classify("has"), .has)
         XCTAssertEqual(try ConditionTokenParser.classify("uses"), .uses)
         XCTAssertEqual(try ConditionTokenParser.classify("threat"), .threat)
-        XCTAssertEqual(try ConditionTokenParser.classify("hp"), .stat("hp", usePercent: false))
-        XCTAssertEqual(try ConditionTokenParser.classify("hp%"), .stat("hp", usePercent: true))
-        XCTAssertEqual(try ConditionTokenParser.classify("Healing?"), .stat("Healing?", usePercent: false))
+        XCTAssertEqual(try ConditionTokenParser.classify("hp"), .name("hp", usePercent: false))
+        XCTAssertEqual(try ConditionTokenParser.classify("hp%"), .name("hp", usePercent: true))
+        XCTAssertEqual(try ConditionTokenParser.classify("Healing?"), .name("Healing?", usePercent: false))
         XCTAssertEqual(try ConditionTokenParser.classify("40"), .value(40))
         XCTAssertEqual(try ConditionTokenParser.classify("10%"), .percent(10))
-        XCTAssertEqual(try ConditionTokenParser.classify("true"), .bool(true))
-        XCTAssertEqual(try ConditionTokenParser.classify("false"), .bool(false))
+        XCTAssertEqual(try ConditionTokenParser.classify("true"), .name("true", usePercent: false))
+        XCTAssertEqual(try ConditionTokenParser.classify("false"), .name("false", usePercent: false))
     }
 
     func testDotNotationChainParsing() throws {
@@ -49,9 +49,9 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(parsed.orGroups[0].count, 1)
 
         let clause = parsed.orGroups[0][0]
-        XCTAssertEqual(clause.lhs.tokens, [.target, .stat("hp", usePercent: false)])
+        XCTAssertEqual(clause.lhs.tokens, [.target, .name("hp", usePercent: false)])
         XCTAssertEqual(clause.comparison?.op, .Equal)
-        XCTAssertEqual(clause.comparison?.rhs.tokens, [.target, .stat("hp", usePercent: false)])
+        XCTAssertEqual(clause.comparison?.rhs.tokens, [.target, .name("hp", usePercent: false)])
     }
 
     func testWhitespaceTolerance() throws {
@@ -60,20 +60,21 @@ final class ParserTests: XCTestCase {
             parsed,
             ParsedCondition(orGroups: [[
                 ConditionClause(
-                    lhs: .init(tokens: [.stat("hp", usePercent: false)]),
-                    comparison: .init(op: .GreaterThan, rhs: .init(tokens: [.target, .stat("hp", usePercent: false)]))
+                    lhs: .init(tokens: [.name("hp", usePercent: false)]),
+                    comparison: .init(op: .GreaterThan, rhs: .init(tokens: [.target, .name("hp", usePercent: false)]))
                 ),
             ]])
         )
     }
 
     func testConjunctionParsing() throws {
-        let parsed = try parseCondition("hp > 10 && has.Healing == false")
+        let parsed = try parseCondition("hp > 10 && !has.Healing")
         XCTAssertEqual(parsed.orGroups.count, 1)
         XCTAssertEqual(parsed.orGroups[0].count, 2)
         XCTAssertEqual(parsed.orGroups[0][0].comparison?.op, .GreaterThan)
-        XCTAssertEqual(parsed.orGroups[0][1].lhs.tokens, [.has, .stat("Healing", usePercent: false)])
-        XCTAssertEqual(parsed.orGroups[0][1].comparison?.rhs.tokens, [.bool(false)])
+        XCTAssertEqual(parsed.orGroups[0][1].lhs.tokens, [.has, .name("Healing", usePercent: false)])
+        XCTAssertNil(parsed.orGroups[0][1].comparison)
+        XCTAssertTrue(parsed.orGroups[0][1].isNegated)
     }
 
     func testDisjunctionParsingAndPrecedence() throws {
@@ -109,8 +110,8 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(try printCondition(parseCondition("hp% > 10%")), "hp% > 10%")
         XCTAssertEqual(try printCondition(parseCondition("  has.Healing  ")), "has.Healing")
         XCTAssertEqual(
-            try printCondition(parseCondition("hp > 10&&has.Healing == false")),
-            "hp > 10 && has.Healing == false"
+            try printCondition(parseCondition("hp > 10&&!has.Healing")),
+            "hp > 10 && !has.Healing"
         )
     }
 
@@ -119,9 +120,9 @@ final class ParserTests: XCTestCase {
             "hp > target.hp",
             "hp% > 10%",
             "hp == 40",
-            "has.Healing == false",
+            "!has.Healing",
             "has.Dieing",
-            "hp > 10 && has.Healing == false",
+            "hp > 10 && !has.Healing",
             "hp < 5 || has.Healing && hp > 2",
             "target.hp < 5",
             "self.hp% < hp%",
@@ -199,7 +200,16 @@ final class ParserTests: XCTestCase {
             try interpretStringCondition("bleed") as RPConditional<TestRPSpace>.Predicate
         )
         XCTAssertThrowsError(
-            try interpretStringCondition("bleed == false") as RPConditional<TestRPSpace>.Predicate
+            try interpretStringCondition("!bleed") as RPConditional<TestRPSpace>.Predicate
+        )
+    }
+
+    func testNegationOnlyAppliesToTagQueries() {
+        XCTAssertThrowsError(
+            try interpretStringCondition("!hp > 5") as RPConditional<TestRPSpace>.Predicate
+        )
+        XCTAssertNoThrow(
+            try interpretStringCondition("!uses.magical") as RPConditional<TestRPSpace>.Predicate
         )
     }
 
@@ -337,9 +347,9 @@ final class ParserTests: XCTestCase {
         rpSpace.addBody(enemy)
 
         let healingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Healing   ")
-        let healingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Healing   ==   false  ")
+        let healingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("  !  has.Healing  ")
         let dyingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Dieing   ")
-        let dyingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Dieing    ==   false  ")
+        let dyingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("  !has.Dieing  ")
 
         let statusEffect = RPStatusEffect<TestRPSpace>(
             code: "Healing",

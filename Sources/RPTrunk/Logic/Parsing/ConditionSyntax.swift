@@ -32,17 +32,16 @@ extension ConditionParserPrinter {
 
 // MARK: - Syntax tree
 
-/// One term in a dot-notation chain, e.g. `target`, `hp%`, `has`, `40`, `10%`, `false`.
+/// One term in a dot-notation chain, e.g. `target`, `hp%`, `has`, `40`, `10%`.
 public enum ConditionToken: Equatable {
     case target
     case oneself
     case has
     case uses
     case threat
-    case stat(String, usePercent: Bool)
+    case name(String, usePercent: Bool)
     case value(RPValue)
     case percent(Double)
-    case bool(Bool)
 }
 
 /// A dot-notation chain, e.g. `target.hp%`.
@@ -64,15 +63,17 @@ public struct ConditionComparison: Equatable {
     }
 }
 
-/// A single clause: either a comparison (`hp > target.hp`) or a bare
-/// status query (`Healing?`).
+/// A single clause: a comparison (`hp > target.hp`) or a tag query
+/// (`has.bleed`), optionally negated (`!has.bleed`).
 public struct ConditionClause: Equatable {
     public var lhs: ConditionOperand
     public var comparison: ConditionComparison?
+    public var isNegated: Bool
 
-    public init(lhs: ConditionOperand, comparison: ConditionComparison? = nil) {
+    public init(lhs: ConditionOperand, comparison: ConditionComparison? = nil, isNegated: Bool = false) {
         self.lhs = lhs
         self.comparison = comparison
+        self.isNegated = isNegated
     }
 }
 
@@ -121,8 +122,6 @@ struct ConditionTokenParser: ConditionParserPrinter {
     }
 
     static func classify(_ body: String) throws -> ConditionToken {
-        if body == "true" { return .bool(true) }
-        if body == "false" { return .bool(false) }
         if body == "target" { return .target }
         if body == "self" { return .oneself }
         if body == "has" { return .has }
@@ -139,9 +138,9 @@ struct ConditionTokenParser: ConditionParserPrinter {
             guard !stem.isEmpty, Double(stem) == nil else {
                 throw ConditionSyntaxError.malformedPercentValue(body)
             }
-            return .stat(stem, usePercent: true)
+            return .name(stem, usePercent: true)
         }
-        return .stat(body, usePercent: false)
+        return .name(body, usePercent: false)
     }
 
     static func text(for token: ConditionToken) -> String {
@@ -156,14 +155,12 @@ struct ConditionTokenParser: ConditionParserPrinter {
             return "uses"
         case .threat:
             return "threat"
-        case let .stat(name, usePercent):
+        case let .name(name, usePercent):
             return usePercent ? "\(name)%" : name
         case let .value(value):
             return "\(value)"
         case let .percent(value):
             return "\(value.formattedAsConditionPercent)%"
-        case let .bool(value):
-            return "\(value)"
         }
     }
 }
@@ -204,6 +201,12 @@ struct ConditionOperatorParser: ConditionParserPrinter {
 struct ConditionClauseParser: ConditionParserPrinter {
     func parse(_ input: inout Substring) throws -> ConditionClause {
         consumeWhitespace(&input)
+        var isNegated = false
+        if input.first == "!", input.dropFirst().first != "=" {
+            input.removeFirst()
+            consumeWhitespace(&input)
+            isNegated = true
+        }
         let lhs = try ConditionOperandParser().parse(&input)
         consumeWhitespace(&input)
 
@@ -212,14 +215,14 @@ struct ConditionClauseParser: ConditionParserPrinter {
             consumeWhitespace(&input)
             let rhs = try ConditionOperandParser().parse(&input)
             consumeWhitespace(&input)
-            return ConditionClause(lhs: lhs, comparison: .init(op: op, rhs: rhs))
+            return ConditionClause(lhs: lhs, comparison: .init(op: op, rhs: rhs), isNegated: isNegated)
         }
         input = checkpoint
-        return ConditionClause(lhs: lhs, comparison: nil)
+        return ConditionClause(lhs: lhs, comparison: nil, isNegated: isNegated)
     }
 
     func print(_ output: ConditionClause, into input: inout Substring) throws {
-        var text = ""
+        var text = output.isNegated ? "!" : ""
         var lhsInput = Substring()
         try ConditionOperandParser().print(output.lhs, into: &lhsInput)
         text += lhsInput

@@ -141,7 +141,7 @@ public extension RPTargeting {
         for rawSegment in query.split(separator: ",", omittingEmptySubsequences: false) {
             let segment = trimmed(rawSegment)
             if let colon = segment.firstIndex(of: ":"),
-               ["among", "when", "choose"].contains(String(trimmed(segment[..<colon])))
+               ["among", "when", "sort"].contains(String(trimmed(segment[..<colon])))
             {
                 clauses.append((
                     key: String(trimmed(segment[..<colon])),
@@ -168,8 +168,8 @@ public extension RPTargeting {
             case "when":
                 guard when == nil else { throw TargetingError.duplicateClause("when") }
                 when = RPConditional(clause.value)
-            case "choose":
-                guard sort == nil else { throw TargetingError.duplicateClause("choose") }
+            case "sort":
+                guard sort == nil else { throw TargetingError.duplicateClause("sort") }
                 sort = try RPTargetingSort.parse(clause.value)
             default:
                 throw TargetingError.unrecognizedClause(clause.key)
@@ -187,7 +187,7 @@ public extension RPTargeting {
             parts.append("when: \(when.toString())")
         }
         if let sort {
-            parts.append("choose: \(sort.toString())")
+            parts.append("sort: \(sort.toString())")
         }
         return parts.joined(separator: ", ")
     }
