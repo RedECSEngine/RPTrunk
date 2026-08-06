@@ -18,7 +18,7 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
             evaluators.append(.evaluationFunction(f: getInitiator()))
         case .has:
             guard index + 1 < operand.tokens.count,
-                  case let .name(name, usePercent: false) = operand.tokens[index + 1]
+                  case let .keyword(name, usePercent: false) = operand.tokens[index + 1]
             else {
                 throw ConditionalInterpretationError.invalidSyntax(
                     reason: "`has.` must be followed by a status tag, e.g. `has.bleed`"
@@ -28,7 +28,7 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
             index += 1
         case .uses:
             guard index + 1 < operand.tokens.count,
-                  case let .name(name, usePercent: false) = operand.tokens[index + 1]
+                  case let .keyword(name, usePercent: false) = operand.tokens[index + 1]
             else {
                 throw ConditionalInterpretationError.invalidSyntax(
                     reason: "`uses.` must be followed by an ability tag, e.g. `uses.magical`"
@@ -38,7 +38,7 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
             index += 1
         case .threat:
             evaluators.append(.evaluationFunction(f: getThreat()))
-        case let .name(name, usePercent):
+        case let .keyword(name, usePercent):
             guard RP.statTypes.contains(name) else {
                 throw ConditionalInterpretationError.invalidSyntax(reason: "Unknown stat: \(name)")
             }

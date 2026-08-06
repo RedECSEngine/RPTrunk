@@ -39,7 +39,7 @@ public enum ConditionToken: Equatable {
     case has
     case uses
     case threat
-    case name(String, usePercent: Bool)
+    case keyword(String, usePercent: Bool)
     case value(RPValue)
     case percent(Double)
 }
@@ -138,9 +138,9 @@ struct ConditionTokenParser: ConditionParserPrinter {
             guard !stem.isEmpty, Double(stem) == nil else {
                 throw ConditionSyntaxError.malformedPercentValue(body)
             }
-            return .name(stem, usePercent: true)
+            return .keyword(stem, usePercent: true)
         }
-        return .name(body, usePercent: false)
+        return .keyword(body, usePercent: false)
     }
 
     static func text(for token: ConditionToken) -> String {
@@ -155,7 +155,7 @@ struct ConditionTokenParser: ConditionParserPrinter {
             return "uses"
         case .threat:
             return "threat"
-        case let .name(name, usePercent):
+        case let .keyword(name, usePercent):
             return usePercent ? "\(name)%" : name
         case let .value(value):
             return "\(value)"

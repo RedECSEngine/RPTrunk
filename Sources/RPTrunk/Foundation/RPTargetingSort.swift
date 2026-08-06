@@ -30,7 +30,7 @@ public struct RPTargetingSortDescriptor<RP: RPSpace> {
             throw RPTargetingSortError.malformedDescriptor(source)
         }
         guard parsed.tokens.count >= 2,
-              case let .name(directionName, usePercent: false)? = parsed.tokens.last,
+              case let .keyword(directionName, usePercent: false)? = parsed.tokens.last,
               let parsedDirection = RPTargetingSortDirection(rawValue: directionName)
         else {
             throw RPTargetingSortError.malformedDescriptor(source)
