@@ -7,16 +7,16 @@ final class TargetingLanguageTests: XCTestCase {
 
     func testRoundTripsCanonicalStrings() throws {
         let strings = [
-            "pick: enemy, sort: threat.highest",
-            "pick: friendly, when: hp% < 100%, sort: hp%.lowest",
-            "pick: self, when: hp < 1 && !has.ko",
-            "pick: friendly, when: has.poison, sort: hp.lowest",
-            "pick: friendly, sort: any",
-            "pick: all, sort: random",
+            "pick: enemy sort: threat.highest",
+            "pick: friendly when: hp% < 100% sort: hp%.lowest",
+            "pick: self when: hp < 1 && !has.ko",
+            "pick: friendly when: has.poison sort: hp.lowest",
+            "pick: friendly sort: any",
+            "pick: all sort: random",
             "pick: initiator",
             "pick: allyTeam",
-            "pick: friendly, when: self.hp% < hp%",
-            "pick: friendly, when: uses.magical, sort: hp%.lowest, threat.highest",
+            "pick: friendly when: self.hp% < hp%",
+            "pick: friendly when: uses.magical sort: hp%.lowest, threat.highest",
         ]
         for string in strings {
             let parsed = try Targeting.fromString(string)
@@ -28,9 +28,11 @@ final class TargetingLanguageTests: XCTestCase {
     func testParsingRejectsMalformedStrings() {
         XCTAssertThrowsError(try Targeting.fromString("singleFriendly:hp% < 100%"))
         XCTAssertThrowsError(try Targeting.fromString("pick: sideways"))
-        XCTAssertThrowsError(try Targeting.fromString("pick: enemy, pick: friendly"))
-        XCTAssertThrowsError(try Targeting.fromString("pick: enemy, sort: hp%.sideways"))
-        XCTAssertThrowsError(try Targeting.fromString("pick: enemy, sort: random, hp%.lowest"))
+        XCTAssertThrowsError(try Targeting.fromString("pick: enemy pick: friendly"))
+        XCTAssertThrowsError(try Targeting.fromString("pick: enemy, when: hp < 1"))
+        XCTAssertThrowsError(try Targeting.fromString("pick: enemy foo: bar"))
+        XCTAssertThrowsError(try Targeting.fromString("pick: enemy sort: hp%.sideways"))
+        XCTAssertThrowsError(try Targeting.fromString("pick: enemy sort: random, hp%.lowest"))
     }
 
     func testEveryClauseIsOptional() throws {
@@ -66,13 +68,13 @@ final class TargetingLanguageTests: XCTestCase {
 
     func testChooseLowestHPPercentPicksTheMostWounded() throws {
         let space = makeTeam(hp: ["healer": 10, "ally-scratched": 8, "ally-hurt": 3])
-        let targeting = try Targeting.fromString("pick: friendly, when: hp% < 100%, sort: hp%.lowest")
+        let targeting = try Targeting.fromString("pick: friendly when: hp% < 100% sort: hp%.lowest")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-hurt"])
     }
 
     func testChooseFallsThroughEqualValuesToTheIdTiebreak() throws {
         let space = makeTeam(hp: ["healer": 10, "b-ally": 4, "a-ally": 4])
-        let targeting = try Targeting.fromString("pick: friendly, sort: hp.lowest")
+        let targeting = try Targeting.fromString("pick: friendly sort: hp.lowest")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["a-ally"])
     }
 
@@ -81,13 +83,13 @@ final class TargetingLanguageTests: XCTestCase {
         space.modifyBody(id: "healer") { body, _ in
             body.addThreat(toward: "b-ally", amount: 5)
         }
-        let targeting = try Targeting.fromString("pick: friendly, sort: hp.lowest, threat.highest")
+        let targeting = try Targeting.fromString("pick: friendly sort: hp.lowest, threat.highest")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["b-ally"])
     }
 
     func testAbsentChooseReturnsTheWholeFilteredPool() throws {
         let space = makeTeam(hp: ["healer": 10, "ally-scratched": 8, "ally-hurt": 3])
-        let targeting = try Targeting.fromString("pick: friendly, when: hp% < 100%")
+        let targeting = try Targeting.fromString("pick: friendly when: hp% < 100%")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-scratched", "ally-hurt"])
     }
 
@@ -126,20 +128,20 @@ final class TargetingLanguageTests: XCTestCase {
         space.addBody(loner)
         space.setTeams([team])
 
-        let targeting = try Targeting.fromString("pick: friendly, when: hp < 0, sort: random")
+        let targeting = try Targeting.fromString("pick: friendly when: hp < 0 sort: random")
         XCTAssertEqual(targeting.getValidTargets(for: "loner", in: space), [])
     }
 
     func testChooseRandomPicksExactlyOneCandidate() throws {
         let space = makeTeam(hp: ["healer": 10, "ally-a": 10, "ally-b": 10])
-        let targeting = try Targeting.fromString("pick: friendly, sort: random")
+        let targeting = try Targeting.fromString("pick: friendly sort: random")
         let targets = targeting.getValidTargets(for: "healer", in: space)
         XCTAssertEqual(targets.count, 1)
     }
 
     func testSelfPrefixComparesInitiatorAgainstCandidate() throws {
         let space = makeTeam(hp: ["healer": 3, "ally-strong": 8, "ally-weak": 1])
-        let targeting = try Targeting.fromString("pick: friendly, when: hp < self.hp")
+        let targeting = try Targeting.fromString("pick: friendly when: hp < self.hp")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-weak"])
     }
 
@@ -153,7 +155,7 @@ final class TargetingLanguageTests: XCTestCase {
                 charges: nil
             ))
         }
-        let targeting = try Targeting.fromString("pick: friendly, when: has.poison, sort: hp.lowest")
+        let targeting = try Targeting.fromString("pick: friendly when: has.poison sort: hp.lowest")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-poisoned"])
     }
 
@@ -165,7 +167,7 @@ final class TargetingLanguageTests: XCTestCase {
                 conditional: .always
             )
         }
-        let targeting = try Targeting.fromString("pick: friendly, when: uses.magical")
+        let targeting = try Targeting.fromString("pick: friendly when: uses.magical")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-caster"])
     }
 }

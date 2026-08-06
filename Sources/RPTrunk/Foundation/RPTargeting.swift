@@ -134,45 +134,50 @@ public extension RPTargeting {
     }
 
     static func fromString(_ query: String) throws -> RPTargeting {
-        guard !trimmed(Substring(query)).isEmpty else {
+        let text = trimmed(Substring(query))
+        guard !text.isEmpty else {
             return RPTargeting(.all)
         }
-        var clauses: [(key: String, value: String)] = []
-        for rawSegment in query.split(separator: ",", omittingEmptySubsequences: false) {
-            let segment = trimmed(rawSegment)
-            if let colon = segment.firstIndex(of: ":"),
-               ["pick", "when", "sort"].contains(String(trimmed(segment[..<colon])))
-            {
-                clauses.append((
-                    key: String(trimmed(segment[..<colon])),
-                    value: String(trimmed(segment[segment.index(after: colon)...]))
-                ))
-            } else if clauses.isEmpty {
-                throw TargetingError.malformedClause(query)
-            } else {
-                clauses[clauses.count - 1].value += ", " + segment
+
+        var markers: [(key: String, keyStart: Substring.Index, valueStart: Substring.Index)] = []
+        var index = text.startIndex
+        var atWordBoundary = true
+        while index < text.endIndex {
+            if atWordBoundary, let marker = clauseMarker(in: text, at: index) {
+                markers.append((marker.key, index, marker.valueStart))
+                index = marker.valueStart
+                atWordBoundary = true
+                continue
             }
+            atWordBoundary = text[index].isWhitespace
+            index = text.index(after: index)
+        }
+
+        guard let firstMarker = markers.first, trimmed(text[..<firstMarker.keyStart]).isEmpty else {
+            throw TargetingError.malformedClause(query)
         }
 
         var pool: Pool?
         var when: RPConditional<RP>?
         var sort: RPTargetingSort<RP>?
-        for clause in clauses {
-            switch clause.key {
+        for (offset, marker) in markers.enumerated() {
+            let valueEnd = offset + 1 < markers.count ? markers[offset + 1].keyStart : text.endIndex
+            let value = String(trimmed(text[marker.valueStart ..< valueEnd]))
+            switch marker.key {
             case "pick":
                 guard pool == nil else { throw TargetingError.duplicateClause("pick") }
-                guard let parsed = Pool(rawValue: clause.value) else {
-                    throw TargetingError.unrecognizedPool(clause.value)
+                guard let parsed = Pool(rawValue: value) else {
+                    throw TargetingError.unrecognizedPool(value)
                 }
                 pool = parsed
             case "when":
                 guard when == nil else { throw TargetingError.duplicateClause("when") }
-                when = RPConditional(clause.value)
+                when = RPConditional(value)
             case "sort":
                 guard sort == nil else { throw TargetingError.duplicateClause("sort") }
-                sort = try RPTargetingSort.parse(clause.value)
+                sort = try RPTargetingSort.parse(value)
             default:
-                throw TargetingError.unrecognizedClause(clause.key)
+                throw TargetingError.unrecognizedClause(marker.key)
             }
         }
         return RPTargeting(pool ?? .all, when ?? .always, sort: sort)
@@ -189,7 +194,21 @@ public extension RPTargeting {
         if let sort {
             parts.append("sort: \(sort.toString())")
         }
-        return parts.joined(separator: ", ")
+        return parts.joined(separator: " ")
+    }
+
+    private static func clauseMarker(
+        in text: Substring,
+        at index: Substring.Index
+    ) -> (key: String, valueStart: Substring.Index)? {
+        var cursor = index
+        while cursor < text.endIndex, text[cursor].isLetter {
+            cursor = text.index(after: cursor)
+        }
+        guard cursor > index, cursor < text.endIndex, text[cursor] == ":" else {
+            return nil
+        }
+        return (String(text[index ..< cursor]), text.index(after: cursor))
     }
 
     private static func trimmed(_ segment: Substring) -> Substring {

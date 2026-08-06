@@ -224,7 +224,7 @@ final class TriggerTests: XCTestCase {
     func testInitiatorTargetingHonoursItsConditional() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: try! RPTargeting<TestRPSpace>.fromString("pick: initiator, when: hp < 10"),
+            targeting: try! RPTargeting<TestRPSpace>.fromString("pick: initiator when: hp < 10"),
             ability: ability("Execute"),
             cooldown: 1000
         ))
@@ -266,7 +266,7 @@ final class TriggerTests: XCTestCase {
     func testAnOverrideResolvingToNothingProducesNoNodeAndSpendsNothing() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: try! RPTargeting<TestRPSpace>.fromString("pick: self, when: hp < 1"),
+            targeting: try! RPTargeting<TestRPSpace>.fromString("pick: self when: hp < 1"),
             ability: ability("Die"),
             cooldown: 1000
         ))
