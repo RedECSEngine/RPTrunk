@@ -101,11 +101,6 @@ extension RPConditional: ExpressibleByStringLiteral {
     }
 }
 
-enum ConditionalInterpretationError: Error {
-    case invalidSyntax(reason: String)
-    case cantCompareValues
-}
-
 func buildConditionalFromString<RP: RPSpace>(_ conditionString: String) throws -> RPConditional<RP> {
     // `&&` conjunctions are handled by the grammar itself.
     .custom(conditionString, try interpretStringCondition(conditionString))
