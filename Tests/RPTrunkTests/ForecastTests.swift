@@ -54,7 +54,7 @@ final class ForecastTests: XCTestCase {
     private func attack() -> RPEvent<TestRPSpace> {
         RPEvent(
             initiator: "villain",
-            ability: ability("Attack", tags: ["physical"], target: RPTargeting(.singleEnemy, .always)),
+            ability: ability("Attack", tags: ["physical"], target: RPTargeting(.enemy, sort: .highestThreat)),
             rpSpace: rpSpace
         )
     }
@@ -65,7 +65,7 @@ final class ForecastTests: XCTestCase {
         RPTrigger(
             triggerType: .postEventTargeted,
             abilityTags: ["physical"],
-            targeting: RPTargeting(.initiator, .always),
+            targeting: RPTargeting(.initiator),
             ability: ability("Shield Burn"),
             chancePercent: chancePercent,
             cooldown: cooldown
@@ -162,7 +162,7 @@ final class ForecastTests: XCTestCase {
         )
         rpSpace.bodies["villain"]?.addTrigger(RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: RPTargeting(.oneself, .always),
+            targeting: RPTargeting(.oneself),
             ability: ability("Wince"),
             cooldown: 1500
         ))
@@ -188,7 +188,7 @@ final class ForecastTests: XCTestCase {
         rpSpace.bodies["hero"]?.addTrigger(retaliation(cooldown: 1500))
         rpSpace.bodies["villain"]?.addTrigger(RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: RPTargeting(.initiator, .always),
+            targeting: RPTargeting(.initiator),
             ability: ability("Riposte", tags: ["physical"]),
             cooldown: 1500
         ))
@@ -207,7 +207,7 @@ final class ForecastTests: XCTestCase {
         useFlatDamage(1)
         rpSpace.bodies["hero"]?.addTrigger(RPTrigger(
             triggerType: .postEvent,
-            targeting: RPTargeting(.oneself, .always),
+            targeting: RPTargeting(.oneself),
             ability: ability("Echo")
         ))
 
@@ -324,7 +324,7 @@ final class ForecastTests: XCTestCase {
         rpSpace.bodies["hero"]?.applyStatusEffect(aura(charges: 1, cooldown: 0))
         rpSpace.bodies["villain"]?.addTrigger(RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: RPTargeting(.initiator, .always),
+            targeting: RPTargeting(.initiator),
             ability: ability("Riposte", tags: ["physical"]),
             cooldown: 1500
         ))
@@ -400,7 +400,7 @@ final class ForecastTests: XCTestCase {
             injected = true
             return [RPEvent(
                 initiator: "villain",
-                ability: self.ability("Aftershock", target: RPTargeting(.oneself, .always)),
+                ability: self.ability("Aftershock", target: RPTargeting(.oneself)),
                 rpSpace: space
             )]
         }

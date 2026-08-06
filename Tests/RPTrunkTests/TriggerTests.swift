@@ -55,7 +55,7 @@ final class TriggerTests: XCTestCase {
     private func attack(tags: Set<RPAbilityTag> = []) -> RPEvent<TestRPSpace> {
         RPEvent(
             initiator: "villain",
-            ability: ability("Attack", tags: tags, target: RPTargeting(.singleEnemy, .always)),
+            ability: ability("Attack", tags: tags, target: RPTargeting(.enemy, sort: .highestThreat)),
             rpSpace: rpSpace
         )
     }
@@ -70,7 +70,7 @@ final class TriggerTests: XCTestCase {
     func testPostEventWakesForABodyWithNoPartInTheEvent() {
         addTrigger(to: "bystander", RPTrigger(
             triggerType: .postEvent,
-            targeting: RPTargeting(.oneself, .always),
+            targeting: RPTargeting(.oneself),
             ability: ability("Notice"),
             cooldown: 1000
         ))
@@ -84,7 +84,7 @@ final class TriggerTests: XCTestCase {
     func testPostEventInitiatedOnlyWakesForTheOwnersOwnEvent() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventInitiated,
-            targeting: RPTargeting(.oneself, .always),
+            targeting: RPTargeting(.oneself),
             ability: ability("Follow Up"),
             cooldown: 1000
         ))
@@ -96,7 +96,7 @@ final class TriggerTests: XCTestCase {
 
         let heroSwing = RPEvent(
             initiator: "hero",
-            ability: ability("Swing", target: RPTargeting(.singleEnemy, .always)),
+            ability: ability("Swing", target: RPTargeting(.enemy, sort: .highestThreat)),
             rpSpace: rpSpace
         )
         XCTAssertEqual(rpSpace.forecast(heroSwing).reactions.count, 1)
@@ -105,7 +105,7 @@ final class TriggerTests: XCTestCase {
     func testPostEventTargetedOnlyWakesWhenTheOwnerIsNamed() {
         addTrigger(to: "bystander", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: RPTargeting(.oneself, .always),
+            targeting: RPTargeting(.oneself),
             ability: ability("Flinch"),
             cooldown: 1000
         ))
@@ -117,7 +117,7 @@ final class TriggerTests: XCTestCase {
 
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: RPTargeting(.oneself, .always),
+            targeting: RPTargeting(.oneself),
             ability: ability("Brace"),
             cooldown: 1000
         ))
@@ -130,7 +130,7 @@ final class TriggerTests: XCTestCase {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
             abilityTags: ["physical"],
-            targeting: RPTargeting(.oneself, .always),
+            targeting: RPTargeting(.oneself),
             ability: ability("Retaliate"),
             cooldown: 1000
         ))
@@ -142,7 +142,7 @@ final class TriggerTests: XCTestCase {
     func testEmptyAbilityTagsMatchEveryAbilityIncludingUntaggedOnes() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: RPTargeting(.oneself, .always),
+            targeting: RPTargeting(.oneself),
             ability: ability("Retaliate"),
             cooldown: 1000
         ))
@@ -158,7 +158,7 @@ final class TriggerTests: XCTestCase {
     func testInitiatorTargetingAimsAtTheAttacker() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: RPTargeting(.initiator, .always),
+            targeting: RPTargeting(.initiator),
             ability: ability("Shield Burn"),
             cooldown: 1000
         ))
@@ -172,7 +172,7 @@ final class TriggerTests: XCTestCase {
 
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: RPTargeting(.initiator, .always),
+            targeting: RPTargeting(.initiator),
             ability: ability("Shield Burn"),
             cooldown: 1000
         ))
@@ -187,7 +187,7 @@ final class TriggerTests: XCTestCase {
     func testInitiatorTargetingYieldsNothingWithoutAnInitiator() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: RPTargeting(.initiator, .always),
+            targeting: RPTargeting(.initiator),
             ability: ability("Shield Burn"),
             cooldown: 1000
         ))
@@ -203,7 +203,7 @@ final class TriggerTests: XCTestCase {
     func testInitiatorTargetingYieldsNothingWhenTheInitiatorIsTheOwner() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEvent,
-            targeting: RPTargeting(.initiator, .always),
+            targeting: RPTargeting(.initiator),
             ability: ability("Shield Burn"),
             cooldown: 1000
         ))
@@ -211,7 +211,7 @@ final class TriggerTests: XCTestCase {
         let selfInflicted = RPEvent(
             category: .periodicEffect(name: "Bleed"),
             initiator: "hero",
-            ability: ability("Bleed", target: RPTargeting(.oneself, .always)),
+            ability: ability("Bleed", target: RPTargeting(.oneself)),
             rpSpace: rpSpace
         )
 
@@ -224,7 +224,7 @@ final class TriggerTests: XCTestCase {
     func testInitiatorTargetingHonoursItsConditional() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: try! RPTargeting<TestRPSpace>.fromString("initiator:hp < 10"),
+            targeting: try! RPTargeting<TestRPSpace>.fromString("initiator when: hp < 10"),
             ability: ability("Execute"),
             cooldown: 1000
         ))
@@ -239,11 +239,11 @@ final class TriggerTests: XCTestCase {
     }
 
     func testTheOverrideWinsOverTheAbilitysOwnTargeting() {
-        let selfAimed = ability("Reaction", target: RPTargeting(.oneself, .always))
+        let selfAimed = ability("Reaction", target: RPTargeting(.oneself))
 
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: RPTargeting(.initiator, .always),
+            targeting: RPTargeting(.initiator),
             ability: selfAimed,
             cooldown: 1000
         ))
@@ -252,7 +252,7 @@ final class TriggerTests: XCTestCase {
     }
 
     func testNilOverrideFallsThroughToTheAbilitysOwnTargeting() {
-        let selfAimed = ability("Reaction", target: RPTargeting(.oneself, .always))
+        let selfAimed = ability("Reaction", target: RPTargeting(.oneself))
 
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
@@ -266,7 +266,7 @@ final class TriggerTests: XCTestCase {
     func testAnOverrideResolvingToNothingProducesNoNodeAndSpendsNothing() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: try! RPTargeting<TestRPSpace>.fromString("oneself:hp < 1"),
+            targeting: try! RPTargeting<TestRPSpace>.fromString("self when: hp < 1"),
             ability: ability("Die"),
             cooldown: 1000
         ))
@@ -288,8 +288,8 @@ final class TriggerTests: XCTestCase {
     }
 
     func testASubAbilityAlsoReachesTheAttacker() {
-        var reaction = ability("Shield Burn", target: RPTargeting(.oneself, .always))
-        reaction.subAbilities = [ability("Scorch", target: RPTargeting(.initiator, .always))]
+        var reaction = ability("Shield Burn", target: RPTargeting(.oneself))
+        reaction.subAbilities = [ability("Scorch", target: RPTargeting(.initiator))]
 
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
@@ -369,7 +369,7 @@ final class TriggerTests: XCTestCase {
         XCTAssertEqual(aura.triggers.count, 1)
         XCTAssertEqual(aura.triggers.first?.ability.code, "ability.retaliate")
         XCTAssertEqual(aura.triggers.first?.abilityTags, ["physical"])
-        XCTAssertEqual(aura.triggers.first?.targeting?.type, .initiator)
+        XCTAssertEqual(aura.triggers.first?.targeting?.pool, .initiator)
         XCTAssertEqual(aura.triggers.first?.cooldown, 1500)
         XCTAssertEqual(aura.triggers.first?.chancePercent, RPChance.certain)
     }

@@ -1,73 +1,80 @@
 public struct RPTargeting<RP: RPSpace>: Codable {
-    public enum SelectionType: String, Codable {
-        case oneself
-        case random
+    public enum Pool: String, CaseIterable {
+        case enemy
+        case friendly
         case all
-        case singleEnemy
-        case allEnemy
-        case randomEnemy
-        case singleFriendly
-        case allFriendly
-        case randomFriendly
-        case allyTeam
+        case oneself = "self"
         case initiator
+        case allyTeam
     }
 
-    public let type: SelectionType
-    public let conditional: RPConditional<RP>
+    public let pool: Pool
+    public let when: RPConditional<RP>
+    public let sort: RPTargetingSort<RP>?
 
-    public init(_ type: SelectionType, _ conditional: RPConditional<RP>) {
-        self.type = type
-        self.conditional = conditional
+    public init(_ pool: Pool, _ when: RPConditional<RP> = .always, sort: RPTargetingSort<RP>? = nil) {
+        self.pool = pool
+        self.when = when
+        self.sort = sort
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case rawValue
+    }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self = try RPTargeting.fromString(try values.decode(String.self, forKey: .rawValue))
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(toString(), forKey: .rawValue)
     }
 
     public func getValidTargets(
-        for body: RPBodyId,
+        for bodyId: RPBodyId,
         in rpSpace: RP,
         reactingTo triggeringEvent: RPEvent<RP>? = nil
     ) -> Set<RPBodyId> {
-        guard let body = rpSpace.bodyById(body) else { return [] }
-        let validTargets = getValidTargetSet(for: body, in: rpSpace, reactingTo: triggeringEvent)
+        guard let body = rpSpace.bodyById(bodyId) else { return [] }
+        let candidates = candidatePool(for: body, in: rpSpace, reactingTo: triggeringEvent)
             .compactMap(rpSpace.bodyById)
-            .filter { (try? conditional.exec($0, rpSpace: rpSpace)) ?? false }
-
-        switch type {
-        case .singleEnemy:
-            let chosen = validTargets.min { a, b in
-                let threatA = body.threat[a.id] ?? 0
-                let threatB = body.threat[b.id] ?? 0
-                return threatA != threatB ? threatA > threatB : a.id < b.id
+            .filter { candidate in
+                (try? when.exec(candidate, initiator: bodyId, rpSpace: rpSpace)) ?? false
             }
-            return chosen.map { [$0.id] } ?? []
-        case .oneself, .singleFriendly, .initiator:
-            return validTargets.min { $0.id < $1.id }.map { [$0.id] } ?? []
-        case .random, .randomEnemy, .randomFriendly:
-            let startIndex = validTargets.startIndex
-            let randomInt = Int.random(in: 0..<validTargets.count)
-            let randomIndex = validTargets.index(startIndex, offsetBy: randomInt)
-            let body = validTargets[randomIndex]
-            return Set([body.id])
-        default:
-            return Set(validTargets.map { $0.id })
+
+        guard let sort else {
+            return Set(candidates.map { $0.id })
+        }
+
+        switch sort {
+        case .random:
+            guard !candidates.isEmpty else { return [] }
+            let ids = candidates.map { $0.id }.sorted()
+            return [ids[RP.rollRandom(upperBound: ids.count)]]
+        case let .by(descriptors):
+            return pick(from: candidates, by: descriptors, initiator: bodyId, in: rpSpace)
+                .map { [$0] } ?? []
         }
     }
 
-    fileprivate func getValidTargetSet(
+    private func candidatePool(
         for body: RPBody<RP>,
         in rpSpace: RP,
         reactingTo triggeringEvent: RPEvent<RP>?
     ) -> Set<RPBodyId> {
-        switch type {
+        switch pool {
         case .initiator:
             guard let initiator = triggeringEvent?.initiator, initiator != body.id else {
                 return []
             }
             return [initiator]
-        case .randomEnemy, .allEnemy, .singleEnemy:
+        case .enemy:
             return rpSpace.getEnemies(of: body.id).intersection(body.targets)
-        case .randomFriendly, .allFriendly, .singleFriendly:
+        case .friendly:
             return rpSpace.getFriends(of: body.id).intersection(body.targets)
-        case .all, .random:
+        case .all:
             return Set(rpSpace.allBodies()).intersection(body.targets)
         case .oneself:
             return [body.id]
@@ -82,54 +89,140 @@ public struct RPTargeting<RP: RPSpace>: Codable {
             return []
         }
     }
+
+    private func pick(
+        from candidates: [RPBody<RP>],
+        by descriptors: [RPTargetingSortDescriptor<RP>],
+        initiator: RPBodyId,
+        in rpSpace: RP
+    ) -> RPBodyId? {
+        candidates.min { a, b in
+            for descriptor in descriptors {
+                let valueA = extractValue(
+                    RPConditionContext(body: a.id, initiator: initiator),
+                    evaluators: descriptor.evaluators,
+                    in: rpSpace
+                )
+                let valueB = extractValue(
+                    RPConditionContext(body: b.id, initiator: initiator),
+                    evaluators: descriptor.evaluators,
+                    in: rpSpace
+                )
+                switch (valueA, valueB) {
+                case (nil, nil):
+                    continue
+                case (nil, _):
+                    return false
+                case (_, nil):
+                    return true
+                case let (lhs?, rhs?):
+                    if lhs == rhs { continue }
+                    return descriptor.direction == .lowest ? lhs < rhs : rhs < lhs
+                }
+            }
+            return a.id < b.id
+        }?.id
+    }
 }
 
 public extension RPTargeting {
     enum TargetingError: Error {
-        case unrecognizedSelector(String)
+        case duplicateClause(String)
+        case unrecognizedClause(String)
+        case unrecognizedPool(String)
     }
 
     static func fromString(_ query: String) throws -> RPTargeting {
-        let parts = query.split(separator: ":", omittingEmptySubsequences: false)
-        guard let type = parts.first.map(String.init) else {
-            throw TargetingError.unrecognizedSelector(query)
+        let text = trimmed(Substring(query))
+        guard !text.isEmpty else {
+            return RPTargeting(.oneself)
         }
 
-        let condition: RPConditional<RP> = parts.count > 1 ? RPConditional(String(parts[1])) : .always
-
-        switch type {
-        case "self", "oneself":
-            return RPTargeting(.oneself, condition)
-        case "enemy", "singleEnemy":
-            return RPTargeting(.singleEnemy, condition)
-        case "all":
-            return RPTargeting(.all, condition)
-        case "random":
-            return RPTargeting(.random, condition)
-        case "allFriendlies", "allFriendly":
-            return RPTargeting(.allFriendly, condition)
-        case "allEnemies", "allEnemy":
-            return RPTargeting(.allEnemy, condition)
-        case "ally", "singleFriendly":
-            return RPTargeting(.singleFriendly, condition)
-        case "randomFriendly":
-            return RPTargeting(.randomFriendly, condition)
-        case "randomEnemy":
-            return RPTargeting(.randomEnemy, condition)
-        case "allyTeam":
-            return RPTargeting(.allyTeam, condition)
-        case "initiator":
-            return RPTargeting(.initiator, condition)
-        default:
-            throw TargetingError.unrecognizedSelector(type)
+        var markers: [(key: String, keyStart: Substring.Index, valueStart: Substring.Index)] = []
+        var index = text.startIndex
+        var atWordBoundary = true
+        while index < text.endIndex {
+            if atWordBoundary, let marker = clauseMarker(in: text, at: index) {
+                markers.append((marker.key, index, marker.valueStart))
+                index = marker.valueStart
+                atWordBoundary = true
+                continue
+            }
+            atWordBoundary = text[index].isWhitespace
+            index = text.index(after: index)
         }
+
+        let poolText = trimmed(text[..<(markers.first?.keyStart ?? text.endIndex)])
+        var pool = Pool.oneself
+        if !poolText.isEmpty {
+            guard let parsed = Pool(rawValue: String(poolText)) else {
+                throw TargetingError.unrecognizedPool(String(poolText))
+            }
+            pool = parsed
+        }
+
+        var when: RPConditional<RP>?
+        var sort: RPTargetingSort<RP>?
+        for (offset, marker) in markers.enumerated() {
+            let valueEnd = offset + 1 < markers.count ? markers[offset + 1].keyStart : text.endIndex
+            let value = String(trimmed(text[marker.valueStart ..< valueEnd]))
+            switch marker.key {
+            case "when":
+                guard when == nil else { throw TargetingError.duplicateClause("when") }
+                when = RPConditional(value)
+            case "sort":
+                guard sort == nil else { throw TargetingError.duplicateClause("sort") }
+                sort = try RPTargetingSort.parse(value)
+            default:
+                throw TargetingError.unrecognizedClause(marker.key)
+            }
+        }
+        return RPTargeting(pool, when ?? .always, sort: sort)
+    }
+
+    func toString() -> String {
+        var parts: [String] = []
+        if pool != .oneself {
+            parts.append(pool.rawValue)
+        }
+        switch when {
+        case .always:
+            break
+        case .never, .custom:
+            parts.append("when: \(when.toString())")
+        }
+        if let sort {
+            parts.append("sort: \(sort.toString())")
+        }
+        return parts.joined(separator: " ")
+    }
+
+    private static func clauseMarker(
+        in text: Substring,
+        at index: Substring.Index
+    ) -> (key: String, valueStart: Substring.Index)? {
+        var cursor = index
+        while cursor < text.endIndex, text[cursor].isLetter {
+            cursor = text.index(after: cursor)
+        }
+        guard cursor > index, cursor < text.endIndex, text[cursor] == ":" else {
+            return nil
+        }
+        return (String(text[index ..< cursor]), text.index(after: cursor))
+    }
+
+    private static func trimmed(_ segment: Substring) -> Substring {
+        var segment = segment
+        while segment.first?.isWhitespace == true { segment.removeFirst() }
+        while segment.last?.isWhitespace == true { segment.removeLast() }
+        return segment
     }
 }
 
 extension RPTargeting: Equatable {}
 
 public func == <RP: RPSpace>(lhs: RPTargeting<RP>, rhs: RPTargeting<RP>) -> Bool {
-    lhs.type == rhs.type && lhs.conditional == rhs.conditional
+    lhs.pool == rhs.pool && lhs.when == rhs.when && lhs.sort == rhs.sort
 }
 
 extension RPTargeting {

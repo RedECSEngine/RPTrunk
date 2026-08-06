@@ -51,7 +51,7 @@ public extension RPFragmentContainer {
                 return t
             }
         }
-        return RPTargeting(.singleEnemy, .always)
+        return RPTargeting(.oneself)
     }
 
     var statusEffects: [RPStatusEffect<RP>] {

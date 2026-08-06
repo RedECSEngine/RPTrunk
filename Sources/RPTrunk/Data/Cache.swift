@@ -86,10 +86,10 @@ open class RPCache<RP: RPSpace> {
         let targeting = try data.target.map { try RPTargeting<RP>.fromString($0) }
 
         guard !(triggerType == .postEventInitiated
-                && (targeting ?? ability.targeting).type == .initiator)
+                && (targeting ?? ability.targeting).pool == .initiator)
         else {
             throw CacheError.invalidFormat(
-                "trigger `\(data.ability)` targets `initiator` on `postEventInitiated`, where the initiator is the trigger's own owner — use `target: oneself`"
+                "trigger `\(data.ability)` targets `initiator` on `postEventInitiated`, where the initiator is the trigger's own owner — use `self`"
             )
         }
 

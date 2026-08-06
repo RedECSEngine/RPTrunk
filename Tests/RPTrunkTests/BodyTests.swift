@@ -54,7 +54,7 @@ final class BodyTests: XCTestCase {
     func test_triggers_should_react_to_event_occurrences() {
         let ability = RPAbility<TestRPSpace>(
             code: "Test",
-            fragments: [RPFragment(targetType: RPTargeting(.oneself, .always))]
+            fragments: [RPFragment(targetType: RPTargeting(.oneself))]
         )
         rpSpace.bodies[body.id]?.addTrigger(
             RPTrigger(triggerType: .postEvent, ability: ability, cooldown: 1000)
@@ -72,7 +72,7 @@ final class BodyTests: XCTestCase {
     func test_global_cooldown_gates_actions_even_when_the_ability_is_ready() {
         let ability = RPAbility<TestRPSpace>(
             code: "Strike",
-            fragments: [RPFragment(targetType: RPTargeting(.oneself, .always))]
+            fragments: [RPFragment(targetType: RPTargeting(.oneself))]
         )
         rpSpace.bodies[body.id]?.addExecutableAbility(ability, conditional: .always)
 

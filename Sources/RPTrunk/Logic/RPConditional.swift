@@ -4,7 +4,7 @@ public enum RPConditional<RP: RPSpace>: Codable {
         case rawValue
     }
 
-    public typealias Predicate = (RPBodyId, RP) throws -> Bool
+    public typealias Predicate = (RPConditionContext, RP) throws -> Bool
 
     case always
     case never
@@ -13,6 +13,9 @@ public enum RPConditional<RP: RPSpace>: Codable {
     public static func fromString(_ condition: String) -> Self {
         guard condition != "always" else {
             return .always
+        }
+        guard condition != "never" else {
+            return .never
         }
 
         do {
@@ -36,7 +39,7 @@ public enum RPConditional<RP: RPSpace>: Codable {
     public func toString() -> String {
         switch self {
         case .always: return "always"
-        case .never: return ""
+        case .never: return "never"
         case let .custom(predicateAsString, _):
             return predicateAsString
         }
@@ -47,14 +50,14 @@ public enum RPConditional<RP: RPSpace>: Codable {
         try container.encode(toString(), forKey: .rawValue)
     }
 
-    public func exec(_ e: RPBody<RP>, rpSpace: RP) throws -> Bool {
+    public func exec(_ e: RPBody<RP>, initiator: RPBodyId? = nil, rpSpace: RP) throws -> Bool {
         switch self {
         case .always:
             return true
         case .never:
             return false
         case let .custom(_, query):
-            return try query(e.id, rpSpace)
+            return try query(RPConditionContext(body: e.id, initiator: initiator ?? e.id), rpSpace)
         }
     }
 }
@@ -96,11 +99,6 @@ extension RPConditional: ExpressibleByStringLiteral {
     public init(stringLiteral value: StringLiteralType) {
         self.init(value)
     }
-}
-
-enum ConditionalInterpretationError: Error {
-    case invalidSyntax(reason: String)
-    case cantCompareValues
 }
 
 func buildConditionalFromString<RP: RPSpace>(_ conditionString: String) throws -> RPConditional<RP> {

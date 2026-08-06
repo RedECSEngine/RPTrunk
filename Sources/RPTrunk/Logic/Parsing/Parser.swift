@@ -5,36 +5,68 @@
 // tokens into the evaluation chain executed against live game state.
 
 func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserResultType<RP>] {
-    try operand.tokens.map { token -> ParserResultType<RP> in
-        switch token {
+    var evaluators: [ParserResultType<RP>] = []
+    var index = 0
+    while index < operand.tokens.count {
+        switch operand.tokens[index] {
         case .target:
-            return .evaluationFunction(f: getTarget)
-        case let .identifier(name, usePercent):
+            evaluators.append(.evaluationFunction(f: getTarget))
+        case .oneself:
+            guard index == 0 else {
+                throw ConditionalInterpretationError.invalidSyntax(reason: "`self` can only start a chain")
+            }
+            evaluators.append(.evaluationFunction(f: getInitiator()))
+        case .has:
+            guard index + 1 < operand.tokens.count,
+                  case let .keyword(name, usePercent: false) = operand.tokens[index + 1]
+            else {
+                throw ConditionalInterpretationError.invalidSyntax(
+                    reason: "`has.` must be followed by a status tag, e.g. `has.bleed`"
+                )
+            }
+            evaluators.append(.evaluationFunction(f: getStatus(name)))
+            index += 1
+        case .uses:
+            guard index + 1 < operand.tokens.count,
+                  case let .keyword(name, usePercent: false) = operand.tokens[index + 1]
+            else {
+                throw ConditionalInterpretationError.invalidSyntax(
+                    reason: "`uses.` must be followed by an ability tag, e.g. `uses.magical`"
+                )
+            }
+            evaluators.append(.evaluationFunction(f: getUsesAbilityTag(name)))
+            index += 1
+        case .threat:
+            evaluators.append(.evaluationFunction(f: getThreat()))
+        case let .keyword(name, usePercent):
             guard RP.statTypes.contains(name) else {
                 throw ConditionalInterpretationError.invalidSyntax(reason: "Unknown stat: \(name)")
             }
-            return .evaluationFunction(f: getStat(name, usePercent: usePercent))
-        case let .status(name):
-            return .evaluationFunction(f: getStatus(name))
+            evaluators.append(.evaluationFunction(f: getStat(name, usePercent: usePercent)))
         case let .value(value):
-            return .valueResult(.rpValue(value))
+            evaluators.append(.valueResult(.value(value)))
         case let .percent(value):
-            return .valueResult(.percent(value))
-        case let .bool(value):
-            return .valueResult(.bool(value))
+            evaluators.append(.valueResult(.percent(value)))
         }
+        index += 1
     }
+    return evaluators
 }
 
 func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPConditional<RP>.Predicate {
     let lhs: [ParserResultType<RP>] = try compileOperand(clause.lhs)
 
     if let comparison = clause.comparison {
+        guard !clause.isNegated else {
+            throw ConditionalInterpretationError.invalidSyntax(
+                reason: "`!` negates a `has.` or `uses.` tag query, not a comparison"
+            )
+        }
         let op = comparison.op
         let rhs: [ParserResultType<RP>] = try compileOperand(comparison.rhs)
-        return { body, rpSpace -> Bool in
-            let lhsResult = extractValue(body, evaluators: lhs, in: rpSpace)
-            let rhsResult = extractValue(body, evaluators: rhs, in: rpSpace)
+        return { context, rpSpace -> Bool in
+            let lhsResult = extractValue(context, evaluators: lhs, in: rpSpace)
+            let rhsResult = extractValue(context, evaluators: rhs, in: rpSpace)
             guard let l = lhsResult, let r = rhsResult else {
                 return false
             }
@@ -45,27 +77,31 @@ func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPCondition
         }
     }
 
-    // A clause without a comparison must be a bare status query, e.g. "Healing?"
-    guard clause.lhs.tokens.count == 1, case .status = clause.lhs.tokens[0] else {
+    switch (clause.lhs.tokens.first, clause.lhs.tokens.count) {
+    case (.has, 2), (.uses, 2):
+        break
+    default:
         throw ConditionalInterpretationError.invalidSyntax(
-            reason: "A clause without an operator must be a status query"
+            reason: "A clause without an operator must be a `has.` or `uses.` tag query"
         )
     }
-    return { body, rpSpace -> Bool in
-        extractValue(body, evaluators: lhs, in: rpSpace) == .bool(true)
+    let isNegated = clause.isNegated
+    return { context, rpSpace -> Bool in
+        (extractValue(context, evaluators: lhs, in: rpSpace) == .bool(true)) != isNegated
     }
 }
 
 func compileCondition<RP: RPSpace>(_ condition: ParsedCondition) throws -> RPConditional<RP>.Predicate {
-    let predicates: [RPConditional<RP>.Predicate] = try condition.clauses.map(compileClause)
-    if predicates.count == 1 {
-        return predicates[0]
+    let groups: [[RPConditional<RP>.Predicate]] = try condition.orGroups.map { group in
+        try group.map(compileClause)
     }
-    return { body, rpSpace in
-        // all clauses must hold
-        try predicates.contains(where: { predicate -> Bool in
-            try !predicate(body, rpSpace)
-        }) == false
+    if groups.count == 1, groups[0].count == 1 {
+        return groups[0][0]
+    }
+    return { context, rpSpace in
+        try groups.contains { group in
+            try group.allSatisfy { try $0(context, rpSpace) }
+        }
     }
 }
 
@@ -82,17 +118,17 @@ func interpretStringCondition<RP: RPSpace>(_ condition: String) throws -> RPCond
 // MARK: - Value extraction
 
 func extractValue<RP: RPSpace>(
-    _ body: RPBodyId,
+    _ context: RPConditionContext,
     evaluators: [ParserResultType<RP>],
     in rpSpace: RP
 ) -> ParserValueType? {
-    let initial = ParserResultType<RP>.bodyResult(body: body)
+    let initial = ParserResultType<RP>.bodyResult(body: context.body)
 
     let final = evaluators.reduce(initial, {
         prev, current -> ParserResultType<RP> in
 
         if case let .evaluationFunction(f) = current {
-            return f(prev, rpSpace)
+            return f(prev, context, rpSpace)
         }
 
         return current
@@ -107,7 +143,7 @@ func extractValue<RP: RPSpace>(
 }
 
 public func extractValue<RP: RPSpace>(
-    _ body: RPBodyId,
+    _ context: RPConditionContext,
     evaluate evaluationString: String,
     in rpSpace: RP
 ) -> ParserValueType? {
@@ -120,5 +156,5 @@ public func extractValue<RP: RPSpace>(
     else {
         return nil
     }
-    return extractValue(body, evaluators: evaluators, in: rpSpace)
+    return extractValue(context, evaluators: evaluators, in: rpSpace)
 }
