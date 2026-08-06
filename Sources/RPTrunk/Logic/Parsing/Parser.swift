@@ -44,7 +44,7 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
             }
             evaluators.append(.evaluationFunction(f: getStat(name, usePercent: usePercent)))
         case let .value(value):
-            evaluators.append(.valueResult(.rpValue(value)))
+            evaluators.append(.valueResult(.value(value)))
         case let .percent(value):
             evaluators.append(.valueResult(.percent(value)))
         }

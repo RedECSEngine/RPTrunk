@@ -1,4 +1,4 @@
-enum ConditionalInterpretationError: Error {
+enum ConditionalInterpretationError: Error, Equatable {
     case invalidSyntax(reason: String)
     case cantCompareValues
 }

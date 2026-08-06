@@ -50,7 +50,7 @@ final class ParserTests: XCTestCase {
 
         let clause = parsed.orGroups[0][0]
         XCTAssertEqual(clause.lhs.tokens, [.target, .keyword("hp", usePercent: false)])
-        XCTAssertEqual(clause.comparison?.op, .Equal)
+        XCTAssertEqual(clause.comparison?.op, .equal)
         XCTAssertEqual(clause.comparison?.rhs.tokens, [.target, .keyword("hp", usePercent: false)])
     }
 
@@ -61,7 +61,7 @@ final class ParserTests: XCTestCase {
             ParsedCondition(orGroups: [[
                 ConditionClause(
                     lhs: .init(tokens: [.keyword("hp", usePercent: false)]),
-                    comparison: .init(op: .GreaterThan, rhs: .init(tokens: [.target, .keyword("hp", usePercent: false)]))
+                    comparison: .init(op: .greaterThan, rhs: .init(tokens: [.target, .keyword("hp", usePercent: false)]))
                 ),
             ]])
         )
@@ -71,7 +71,7 @@ final class ParserTests: XCTestCase {
         let parsed = try parseCondition("hp > 10 && !has.Healing")
         XCTAssertEqual(parsed.orGroups.count, 1)
         XCTAssertEqual(parsed.orGroups[0].count, 2)
-        XCTAssertEqual(parsed.orGroups[0][0].comparison?.op, .GreaterThan)
+        XCTAssertEqual(parsed.orGroups[0][0].comparison?.op, .greaterThan)
         XCTAssertEqual(parsed.orGroups[0][1].lhs.tokens, [.has, .keyword("Healing", usePercent: false)])
         XCTAssertNil(parsed.orGroups[0][1].comparison)
         XCTAssertTrue(parsed.orGroups[0][1].isNegated)
@@ -89,18 +89,39 @@ final class ParserTests: XCTestCase {
     }
 
     func testOperatorParsing() throws {
-        XCTAssertEqual(try parseCondition("hp > 1").orGroups[0][0].comparison?.op, .GreaterThan)
-        XCTAssertEqual(try parseCondition("hp < 1").orGroups[0][0].comparison?.op, .LessThan)
-        XCTAssertEqual(try parseCondition("hp == 1").orGroups[0][0].comparison?.op, .Equal)
-        XCTAssertEqual(try parseCondition("hp != 1").orGroups[0][0].comparison?.op, .NotEqual)
+        XCTAssertEqual(try parseCondition("hp > 1").orGroups[0][0].comparison?.op, .greaterThan)
+        XCTAssertEqual(try parseCondition("hp < 1").orGroups[0][0].comparison?.op, .lessThan)
+        XCTAssertEqual(try parseCondition("hp >= 1").orGroups[0][0].comparison?.op, .greaterThanOrEqual)
+        XCTAssertEqual(try parseCondition("hp <= 1").orGroups[0][0].comparison?.op, .lessThanOrEqual)
+        XCTAssertEqual(try parseCondition("hp == 1").orGroups[0][0].comparison?.op, .equal)
+        XCTAssertEqual(try parseCondition("hp != 1").orGroups[0][0].comparison?.op, .notEqual)
     }
 
-    func testUnparseableConditionsThrow() {
-        XCTAssertThrowsError(try parseCondition(""))
-        XCTAssertThrowsError(try parseCondition("hp >"))
-        XCTAssertThrowsError(try parseCondition("hp > 10 &&"))
-        XCTAssertThrowsError(try parseCondition("hp > 10 ||"))
-        XCTAssertThrowsError(try parseCondition("hp ~ 10"))
+    private func assertParseFails(
+        _ input: String,
+        with expected: ConditionSyntaxError,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertThrowsError(try parseCondition(input), file: file, line: line) { error in
+            XCTAssertEqual(error as? ConditionSyntaxError, expected, file: file, line: line)
+        }
+    }
+
+    func testUnparseableConditionsThrowPreciseErrors() {
+        assertParseFails("", with: .expectedToken)
+        assertParseFails("   ", with: .expectedToken)
+        assertParseFails("hp >", with: .expectedToken)
+        assertParseFails("> 10", with: .expectedToken)
+        assertParseFails("hp > 10 &&", with: .expectedToken)
+        assertParseFails("hp > 10 ||", with: .expectedToken)
+        assertParseFails("hp && hp > 1 ||", with: .expectedToken)
+        assertParseFails("hp ~ 10", with: .unexpectedTrailingCharacters("~ 10"))
+        assertParseFails("hp == 10 extra", with: .unexpectedTrailingCharacters("extra"))
+        assertParseFails("hp >< 10", with: .unexpectedTrailingCharacters(">< 10"))
+        assertParseFails("hp > 10 | hp < 5", with: .unexpectedTrailingCharacters("| hp < 5"))
+        assertParseFails("%", with: .malformedPercentValue("%"))
+        assertParseFails("hp > %", with: .malformedPercentValue("%"))
     }
 
     // MARK: - Printing
@@ -124,6 +145,8 @@ final class ParserTests: XCTestCase {
             "has.Dieing",
             "hp > 10 && !has.Healing",
             "hp < 5 || has.Healing && hp > 2",
+            "hp >= 5 && hp <= 100",
+            "!has.Healing && !has.Dieing",
             "target.hp < 5",
             "self.hp% < hp%",
             "has.bleed",
@@ -175,18 +198,28 @@ final class ParserTests: XCTestCase {
         }
     }
 
-    func testUnknownStatFailsCompilation() {
+    private func assertCompileFails(
+        _ input: String,
+        with expected: ConditionalInterpretationError,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
         XCTAssertThrowsError(
-            try interpretStringCondition("wisdom > 10") as RPConditional<TestRPSpace>.Predicate
+            try interpretStringCondition(input) as RPConditional<TestRPSpace>.Predicate,
+            file: file,
+            line: line
         ) { error in
-            XCTAssertEqual(error is ConditionalInterpretationError, true)
+            XCTAssertEqual(error as? ConditionalInterpretationError, expected, file: file, line: line)
         }
     }
 
+    func testUnknownStatFailsCompilation() {
+        assertCompileFails("wisdom > 10", with: .invalidSyntax(reason: "Unknown stat: wisdom"))
+        assertCompileFails("hp > mana.wisdom", with: .invalidSyntax(reason: "Unknown stat: wisdom"))
+    }
+
     func testSelfMustStartAChain() {
-        XCTAssertThrowsError(
-            try interpretStringCondition("hp.self > 1") as RPConditional<TestRPSpace>.Predicate
-        )
+        assertCompileFails("hp.self > 1", with: .invalidSyntax(reason: "`self` can only start a chain"))
         XCTAssertNoThrow(
             try interpretStringCondition("self.hp > hp") as RPConditional<TestRPSpace>.Predicate
         )
@@ -196,17 +229,22 @@ final class ParserTests: XCTestCase {
     }
 
     func testStatusQueriesRequireTheHasPrefix() {
-        XCTAssertThrowsError(
-            try interpretStringCondition("bleed") as RPConditional<TestRPSpace>.Predicate
+        assertCompileFails("bleed", with: .invalidSyntax(reason: "Unknown stat: bleed"))
+        assertCompileFails("!bleed", with: .invalidSyntax(reason: "Unknown stat: bleed"))
+        assertCompileFails(
+            "has",
+            with: .invalidSyntax(reason: "`has.` must be followed by a status tag, e.g. `has.bleed`")
         )
-        XCTAssertThrowsError(
-            try interpretStringCondition("!bleed") as RPConditional<TestRPSpace>.Predicate
+        assertCompileFails(
+            "hp",
+            with: .invalidSyntax(reason: "A clause without an operator must be a `has.` or `uses.` tag query")
         )
     }
 
     func testNegationOnlyAppliesToTagQueries() {
-        XCTAssertThrowsError(
-            try interpretStringCondition("!hp > 5") as RPConditional<TestRPSpace>.Predicate
+        assertCompileFails(
+            "!hp > 5",
+            with: .invalidSyntax(reason: "`!` negates a `has.` or `uses.` tag query, not a comparison")
         )
         XCTAssertNoThrow(
             try interpretStringCondition("!uses.magical") as RPConditional<TestRPSpace>.Predicate
@@ -214,17 +252,14 @@ final class ParserTests: XCTestCase {
     }
 
     func testPrefixesMustPairWithATagQuery() {
-        XCTAssertThrowsError(
-            try interpretStringCondition("has") as RPConditional<TestRPSpace>.Predicate
+        let hasPairing = ConditionalInterpretationError.invalidSyntax(
+            reason: "`has.` must be followed by a status tag, e.g. `has.bleed`"
         )
-        XCTAssertThrowsError(
-            try interpretStringCondition("has.hp% > 1") as RPConditional<TestRPSpace>.Predicate
-        )
-        XCTAssertThrowsError(
-            try interpretStringCondition("has.40 > 1") as RPConditional<TestRPSpace>.Predicate
-        )
-        XCTAssertThrowsError(
-            try interpretStringCondition("uses.hp% > 1") as RPConditional<TestRPSpace>.Predicate
+        assertCompileFails("has.hp% > 1", with: hasPairing)
+        assertCompileFails("has.40 > 1", with: hasPairing)
+        assertCompileFails(
+            "uses.hp% > 1",
+            with: .invalidSyntax(reason: "`uses.` must be followed by an ability tag, e.g. `uses.magical`")
         )
     }
 
@@ -237,10 +272,10 @@ final class ParserTests: XCTestCase {
         rpSpace.addBody(enemy)
 
         let result = extractValue(context(body.id), evaluate: "hp", in: rpSpace)
-        XCTAssertEqual(result, .rpValue(40))
+        XCTAssertEqual(result, .value(40))
 
         let result2 = extractValue(context(body.id), evaluate: "target.hp", in: rpSpace)
-        XCTAssertEqual(result2, .rpValue(20))
+        XCTAssertEqual(result2, .value(20))
     }
 
     func testSelfPrefixReadsTheInitiator() throws {
@@ -252,7 +287,7 @@ final class ParserTests: XCTestCase {
         rpSpace.addBody(enemy)
 
         let result = extractValue(context(enemy.id, initiator: body.id), evaluate: "self.hp", in: rpSpace)
-        XCTAssertEqual(result, .rpValue(40))
+        XCTAssertEqual(result, .value(40))
 
         let predicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("hp < self.hp")
         XCTAssertEqual(try predicate(context(enemy.id, initiator: body.id), rpSpace), true)
@@ -269,10 +304,10 @@ final class ParserTests: XCTestCase {
         rpSpace.addBody(enemy)
 
         let result = extractValue(context(enemy.id, initiator: body.id), evaluate: "threat", in: rpSpace)
-        XCTAssertEqual(result, .rpValue(7))
+        XCTAssertEqual(result, .value(7))
 
         let none = extractValue(context(body.id, initiator: enemy.id), evaluate: "threat", in: rpSpace)
-        XCTAssertEqual(none, .rpValue(0))
+        XCTAssertEqual(none, .value(0))
     }
 
     func testStatsAndLogicComparison() throws {
@@ -334,8 +369,26 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(try predicate(context(body.id), rpSpace), true)
         XCTAssertEqual(try predicate(context(enemy.id), rpSpace), true)
 
-        let neither: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("hp > 100 || hp < 5")
-        XCTAssertEqual(try neither(context(body.id), rpSpace), false)
+        let bothSidesFalse: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("hp > 100 || hp < 5")
+        XCTAssertEqual(try bothSidesFalse(context(body.id), rpSpace), false)
+    }
+
+    func testNeitherNorIsExpressedByInvertingEachClause() throws {
+        var body = RPBody<TestRPSpace>(["hp": 40])
+        let enemy = RPBody<TestRPSpace>(["hp": 20])
+        body.targets = [enemy.id]
+
+        rpSpace.addBody(body)
+        rpSpace.addBody(enemy)
+
+        let neitherTooHighNorTooLow: RPConditional<TestRPSpace>.Predicate =
+            try interpretStringCondition("hp <= 100 && hp >= 30")
+        XCTAssertEqual(try neitherTooHighNorTooLow(context(body.id), rpSpace), true)
+        XCTAssertEqual(try neitherTooHighNorTooLow(context(enemy.id), rpSpace), false)
+
+        let neitherHealingNorDieing: RPConditional<TestRPSpace>.Predicate =
+            try interpretStringCondition("!has.Healing && !has.Dieing")
+        XCTAssertEqual(try neitherHealingNorDieing(context(body.id), rpSpace), true)
     }
 
     func testStatsAndLogicStatusEffectExistence() throws {

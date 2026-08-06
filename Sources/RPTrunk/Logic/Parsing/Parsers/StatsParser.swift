@@ -15,7 +15,7 @@ func getStat<RP: RPSpace>(_ stat: String, usePercent: Bool) -> (ParserResultType
                 let percent: Double = (Double(currentValue) / Double(RP.fullyResolvedStats(for: rpBody)[stat]) * 100).rounded()
                 return .valueResult(.percent(percent))
             }
-            return .valueResult(.rpValue(currentValue))
+            return .valueResult(.value(currentValue))
         }
         return .nothing
     }

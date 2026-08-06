@@ -1,4 +1,4 @@
-enum ConditionSyntaxError: Error {
+enum ConditionSyntaxError: Error, Equatable {
     case expectedToken
     case expectedOperator
     case malformedPercentValue(String)

@@ -12,7 +12,7 @@ public struct RPTargeting<RP: RPSpace>: Codable {
     public let when: RPConditional<RP>
     public let sort: RPTargetingSort<RP>?
 
-    public init(_ pool: Pool, _ when: RPConditional<RP>, sort: RPTargetingSort<RP>? = nil) {
+    public init(_ pool: Pool, _ when: RPConditional<RP> = .always, sort: RPTargetingSort<RP>? = nil) {
         self.pool = pool
         self.when = when
         self.sort = sort
@@ -135,13 +135,13 @@ public extension RPTargeting {
 
     static func fromString(_ query: String) throws -> RPTargeting {
         guard !trimmed(Substring(query)).isEmpty else {
-            return RPTargeting(.all, .always)
+            return RPTargeting(.all)
         }
         var clauses: [(key: String, value: String)] = []
         for rawSegment in query.split(separator: ",", omittingEmptySubsequences: false) {
             let segment = trimmed(rawSegment)
             if let colon = segment.firstIndex(of: ":"),
-               ["among", "when", "sort"].contains(String(trimmed(segment[..<colon])))
+               ["pick", "when", "sort"].contains(String(trimmed(segment[..<colon])))
             {
                 clauses.append((
                     key: String(trimmed(segment[..<colon])),
@@ -159,8 +159,8 @@ public extension RPTargeting {
         var sort: RPTargetingSort<RP>?
         for clause in clauses {
             switch clause.key {
-            case "among":
-                guard pool == nil else { throw TargetingError.duplicateClause("among") }
+            case "pick":
+                guard pool == nil else { throw TargetingError.duplicateClause("pick") }
                 guard let parsed = Pool(rawValue: clause.value) else {
                     throw TargetingError.unrecognizedPool(clause.value)
                 }
@@ -179,7 +179,7 @@ public extension RPTargeting {
     }
 
     func toString() -> String {
-        var parts = ["among: \(pool.rawValue)"]
+        var parts = ["pick: \(pool.rawValue)"]
         switch when {
         case .always:
             break

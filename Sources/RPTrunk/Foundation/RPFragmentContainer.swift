@@ -51,7 +51,7 @@ public extension RPFragmentContainer {
                 return t
             }
         }
-        return RPTargeting(.all, .always)
+        return RPTargeting(.all)
     }
 
     var statusEffects: [RPStatusEffect<RP>] {

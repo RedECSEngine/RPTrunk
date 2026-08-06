@@ -1,10 +1,10 @@
 public enum ParserValueType {
-    case rpValue(RPValue)
+    case value(RPValue)
     case percent(Double)
     case bool(Bool)
 
     init(_ value: RPValue) {
-        self = .rpValue(value)
+        self = .value(value)
     }
 
     init(_ value: Double) {
@@ -17,7 +17,7 @@ public enum ParserValueType {
 
     func canCompare(to otherValue: ParserValueType) -> Bool {
         switch (self, otherValue) {
-        case (.rpValue, .rpValue), (.percent, .percent), (.bool, .bool):
+        case (.value, .value), (.percent, .percent), (.bool, .bool):
             return true
         default:
             return false
@@ -28,7 +28,7 @@ public enum ParserValueType {
 extension ParserValueType: Comparable {
     public static func < (lhs: ParserValueType, rhs: ParserValueType) -> Bool {
         switch (lhs, rhs) {
-        case let (.rpValue(lv), .rpValue(rv)):
+        case let (.value(lv), .value(rv)):
             return lv < rv
         case let (.percent(lv), .percent(rv)):
             return lv < rv
