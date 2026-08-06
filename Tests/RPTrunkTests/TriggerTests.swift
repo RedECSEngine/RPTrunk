@@ -224,7 +224,7 @@ final class TriggerTests: XCTestCase {
     func testInitiatorTargetingHonoursItsConditional() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: try! RPTargeting<TestRPSpace>.fromString("pick: initiator when: hp < 10"),
+            targeting: try! RPTargeting<TestRPSpace>.fromString("initiator when: hp < 10"),
             ability: ability("Execute"),
             cooldown: 1000
         ))
@@ -266,7 +266,7 @@ final class TriggerTests: XCTestCase {
     func testAnOverrideResolvingToNothingProducesNoNodeAndSpendsNothing() {
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
-            targeting: try! RPTargeting<TestRPSpace>.fromString("pick: self when: hp < 1"),
+            targeting: try! RPTargeting<TestRPSpace>.fromString("self when: hp < 1"),
             ability: ability("Die"),
             cooldown: 1000
         ))
@@ -322,7 +322,7 @@ final class TriggerTests: XCTestCase {
                 statusEffects: ["status-effect.aura": .init(triggers: [
                     .init(
                         triggerType: "postEventInitiated",
-                        target: "pick: initiator",
+                        target: "initiator",
                         ability: "ability.retaliate"
                     ),
                 ])]
@@ -358,7 +358,7 @@ final class TriggerTests: XCTestCase {
                 .init(
                     triggerType: "postEventTargeted",
                     abilityTags: ["physical"],
-                    target: "pick: initiator",
+                    target: "initiator",
                     ability: "ability.retaliate",
                     cooldown: 1500
                 ),

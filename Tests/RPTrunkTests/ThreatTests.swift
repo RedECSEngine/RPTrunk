@@ -162,7 +162,10 @@ final class ThreatTests: XCTestCase {
     func makeAttack() -> RPAbility<TestRPSpace> {
         var stats = TestStats()
         stats.damage = 4
-        return RPAbility(code: "Attack", fragments: [RPFragment(stats: stats)])
+        return RPAbility(code: "Attack", fragments: [
+            RPFragment(stats: stats),
+            RPFragment(targetType: RPTargeting(.enemy, sort: .highestThreat)),
+        ])
     }
 
     func testEventsProduceNoThreatByDefault() {

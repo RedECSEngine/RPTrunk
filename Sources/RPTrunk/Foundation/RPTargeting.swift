@@ -52,7 +52,7 @@ public struct RPTargeting<RP: RPSpace>: Codable {
         case .random:
             guard !candidates.isEmpty else { return [] }
             let ids = candidates.map { $0.id }.sorted()
-            return [ids[RP.rollRandomIndex(upperBound: ids.count)]]
+            return [ids[RP.rollRandom(upperBound: ids.count)]]
         case let .by(descriptors):
             return pick(from: candidates, by: descriptors, initiator: bodyId, in: rpSpace)
                 .map { [$0] } ?? []
@@ -127,7 +127,6 @@ public struct RPTargeting<RP: RPSpace>: Codable {
 
 public extension RPTargeting {
     enum TargetingError: Error {
-        case malformedClause(String)
         case duplicateClause(String)
         case unrecognizedClause(String)
         case unrecognizedPool(String)
@@ -136,7 +135,7 @@ public extension RPTargeting {
     static func fromString(_ query: String) throws -> RPTargeting {
         let text = trimmed(Substring(query))
         guard !text.isEmpty else {
-            return RPTargeting(.all)
+            return RPTargeting(.oneself)
         }
 
         var markers: [(key: String, keyStart: Substring.Index, valueStart: Substring.Index)] = []
@@ -153,23 +152,21 @@ public extension RPTargeting {
             index = text.index(after: index)
         }
 
-        guard let firstMarker = markers.first, trimmed(text[..<firstMarker.keyStart]).isEmpty else {
-            throw TargetingError.malformedClause(query)
+        let poolText = trimmed(text[..<(markers.first?.keyStart ?? text.endIndex)])
+        var pool = Pool.oneself
+        if !poolText.isEmpty {
+            guard let parsed = Pool(rawValue: String(poolText)) else {
+                throw TargetingError.unrecognizedPool(String(poolText))
+            }
+            pool = parsed
         }
 
-        var pool: Pool?
         var when: RPConditional<RP>?
         var sort: RPTargetingSort<RP>?
         for (offset, marker) in markers.enumerated() {
             let valueEnd = offset + 1 < markers.count ? markers[offset + 1].keyStart : text.endIndex
             let value = String(trimmed(text[marker.valueStart ..< valueEnd]))
             switch marker.key {
-            case "pick":
-                guard pool == nil else { throw TargetingError.duplicateClause("pick") }
-                guard let parsed = Pool(rawValue: value) else {
-                    throw TargetingError.unrecognizedPool(value)
-                }
-                pool = parsed
             case "when":
                 guard when == nil else { throw TargetingError.duplicateClause("when") }
                 when = RPConditional(value)
@@ -180,11 +177,14 @@ public extension RPTargeting {
                 throw TargetingError.unrecognizedClause(marker.key)
             }
         }
-        return RPTargeting(pool ?? .all, when ?? .always, sort: sort)
+        return RPTargeting(pool, when ?? .always, sort: sort)
     }
 
     func toString() -> String {
-        var parts = ["pick: \(pool.rawValue)"]
+        var parts: [String] = []
+        if pool != .oneself {
+            parts.append(pool.rawValue)
+        }
         switch when {
         case .always:
             break
