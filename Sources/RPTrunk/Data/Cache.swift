@@ -89,7 +89,7 @@ open class RPCache<RP: RPSpace> {
                 && (targeting ?? ability.targeting).pool == .initiator)
         else {
             throw CacheError.invalidFormat(
-                "trigger `\(data.ability)` targets `initiator` on `postEventInitiated`, where the initiator is the trigger's own owner — use `target: among: self`"
+                "trigger `\(data.ability)` targets `initiator` on `postEventInitiated`, where the initiator is the trigger's own owner — use `among: self`"
             )
         }
 

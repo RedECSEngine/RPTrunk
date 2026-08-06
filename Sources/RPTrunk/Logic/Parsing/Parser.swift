@@ -18,35 +18,31 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
             evaluators.append(.evaluationFunction(f: getInitiator()))
         case .has:
             guard index + 1 < operand.tokens.count,
-                  case let .status(name) = operand.tokens[index + 1]
+                  case let .stat(name, usePercent: false) = operand.tokens[index + 1]
             else {
                 throw ConditionalInterpretationError.invalidSyntax(
-                    reason: "`has.` must be followed by a status tag query, e.g. `has.bleed?`"
+                    reason: "`has.` must be followed by a status tag, e.g. `has.bleed`"
                 )
             }
             evaluators.append(.evaluationFunction(f: getStatus(name)))
             index += 1
         case .uses:
             guard index + 1 < operand.tokens.count,
-                  case let .status(name) = operand.tokens[index + 1]
+                  case let .stat(name, usePercent: false) = operand.tokens[index + 1]
             else {
                 throw ConditionalInterpretationError.invalidSyntax(
-                    reason: "`uses.` must be followed by an ability tag query, e.g. `uses.magical?`"
+                    reason: "`uses.` must be followed by an ability tag, e.g. `uses.magical`"
                 )
             }
             evaluators.append(.evaluationFunction(f: getUsesAbilityTag(name)))
             index += 1
         case .threat:
             evaluators.append(.evaluationFunction(f: getThreat()))
-        case let .identifier(name, usePercent):
+        case let .stat(name, usePercent):
             guard RP.statTypes.contains(name) else {
                 throw ConditionalInterpretationError.invalidSyntax(reason: "Unknown stat: \(name)")
             }
             evaluators.append(.evaluationFunction(f: getStat(name, usePercent: usePercent)))
-        case .status:
-            throw ConditionalInterpretationError.invalidSyntax(
-                reason: "Status tag queries need the `has.` prefix, e.g. `has.bleed?`"
-            )
         case let .value(value):
             evaluators.append(.valueResult(.rpValue(value)))
         case let .percent(value):

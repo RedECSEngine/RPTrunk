@@ -32,15 +32,14 @@ extension ConditionParserPrinter {
 
 // MARK: - Syntax tree
 
-/// One term in a dot-notation chain, e.g. `target`, `hp%`, `has`, `Healing?`, `40`, `10%`, `false`.
+/// One term in a dot-notation chain, e.g. `target`, `hp%`, `has`, `40`, `10%`, `false`.
 public enum ConditionToken: Equatable {
     case target
     case oneself
     case has
     case uses
     case threat
-    case identifier(String, usePercent: Bool)
-    case status(String)
+    case stat(String, usePercent: Bool)
     case value(RPValue)
     case percent(Double)
     case bool(Bool)
@@ -104,7 +103,7 @@ private func consumeWhitespace(_ input: inout Substring) {
 /// Characters that terminate a token: whitespace, chain separators,
 /// conjunctions and comparison operators.
 private func isTokenTerminator(_ c: Character) -> Bool {
-    c.isWhitespace || c == "." || c == "&" || c == "|" || c == "," || "><=!".contains(c)
+    c.isWhitespace || ".&|,><=!".contains(c)
 }
 
 struct ConditionTokenParser: ConditionParserPrinter {
@@ -132,9 +131,6 @@ struct ConditionTokenParser: ConditionParserPrinter {
         if let value = RPValue(body) {
             return .value(value)
         }
-        if body.hasSuffix("?") {
-            return .status(String(body.dropLast()))
-        }
         if body.hasSuffix("%") {
             let stem = String(body.dropLast())
             if let percent = Double(stem) {
@@ -143,9 +139,9 @@ struct ConditionTokenParser: ConditionParserPrinter {
             guard !stem.isEmpty, Double(stem) == nil else {
                 throw ConditionSyntaxError.malformedPercentValue(body)
             }
-            return .identifier(stem, usePercent: true)
+            return .stat(stem, usePercent: true)
         }
-        return .identifier(body, usePercent: false)
+        return .stat(body, usePercent: false)
     }
 
     static func text(for token: ConditionToken) -> String {
@@ -160,10 +156,8 @@ struct ConditionTokenParser: ConditionParserPrinter {
             return "uses"
         case .threat:
             return "threat"
-        case let .identifier(name, usePercent):
+        case let .stat(name, usePercent):
             return usePercent ? "\(name)%" : name
-        case let .status(name):
-            return "\(name)?"
         case let .value(value):
             return "\(value)"
         case let .percent(value):

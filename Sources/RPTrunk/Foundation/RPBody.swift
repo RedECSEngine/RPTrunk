@@ -370,7 +370,7 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         statusEffects.values.contains { $0.tags.contains(code) }
     }
 
-    public func usesAbilityTag(_ tag: RPAbilityTag) -> Bool {
+    public func usesAnyAbility(tagged tag: RPAbilityTag) -> Bool {
         executableAbilities.values.contains { $0.ability.tags.contains(tag) }
     }
 }

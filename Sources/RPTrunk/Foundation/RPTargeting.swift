@@ -10,12 +10,12 @@ public struct RPTargeting<RP: RPSpace>: Codable {
 
     public let pool: Pool
     public let when: RPConditional<RP>
-    public let choose: RPChoose<RP>?
+    public let sort: RPTargetingSort<RP>?
 
-    public init(_ pool: Pool, _ when: RPConditional<RP>, choose: RPChoose<RP>? = nil) {
+    public init(_ pool: Pool, _ when: RPConditional<RP>, sort: RPTargetingSort<RP>? = nil) {
         self.pool = pool
         self.when = when
-        self.choose = choose
+        self.sort = sort
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -44,11 +44,11 @@ public struct RPTargeting<RP: RPSpace>: Codable {
                 (try? when.exec(candidate, initiator: bodyId, rpSpace: rpSpace)) ?? false
             }
 
-        guard let choose else {
+        guard let sort else {
             return Set(candidates.map { $0.id })
         }
 
-        switch choose {
+        switch sort {
         case .random:
             guard !candidates.isEmpty else { return [] }
             let ids = candidates.map { $0.id }.sorted()
@@ -92,7 +92,7 @@ public struct RPTargeting<RP: RPSpace>: Codable {
 
     private func pick(
         from candidates: [RPBody<RP>],
-        by descriptors: [RPChooseDescriptor<RP>],
+        by descriptors: [RPTargetingSortDescriptor<RP>],
         initiator: RPBodyId,
         in rpSpace: RP
     ) -> RPBodyId? {
@@ -156,7 +156,7 @@ public extension RPTargeting {
 
         var pool: Pool?
         var when: RPConditional<RP>?
-        var choose: RPChoose<RP>?
+        var sort: RPTargetingSort<RP>?
         for clause in clauses {
             switch clause.key {
             case "among":
@@ -169,13 +169,13 @@ public extension RPTargeting {
                 guard when == nil else { throw TargetingError.duplicateClause("when") }
                 when = RPConditional(clause.value)
             case "choose":
-                guard choose == nil else { throw TargetingError.duplicateClause("choose") }
-                choose = try RPChoose.parse(clause.value)
+                guard sort == nil else { throw TargetingError.duplicateClause("choose") }
+                sort = try RPTargetingSort.parse(clause.value)
             default:
                 throw TargetingError.unrecognizedClause(clause.key)
             }
         }
-        return RPTargeting(pool ?? .all, when ?? .always, choose: choose)
+        return RPTargeting(pool ?? .all, when ?? .always, sort: sort)
     }
 
     func toString() -> String {
@@ -186,8 +186,8 @@ public extension RPTargeting {
         case .never, .custom:
             parts.append("when: \(when.toString())")
         }
-        if let choose {
-            parts.append("choose: \(choose.toString())")
+        if let sort {
+            parts.append("choose: \(sort.toString())")
         }
         return parts.joined(separator: ", ")
     }
@@ -203,7 +203,7 @@ public extension RPTargeting {
 extension RPTargeting: Equatable {}
 
 public func == <RP: RPSpace>(lhs: RPTargeting<RP>, rhs: RPTargeting<RP>) -> Bool {
-    lhs.pool == rhs.pool && lhs.when == rhs.when && lhs.choose == rhs.choose
+    lhs.pool == rhs.pool && lhs.when == rhs.when && lhs.sort == rhs.sort
 }
 
 extension RPTargeting {

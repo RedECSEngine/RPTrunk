@@ -103,7 +103,7 @@ public extension RPSpace {
 
     static func rollTriggerChance(_ percent: RPValue) -> Bool {
         percent >= RPChance.certain
-            || Int.random(in: 0 ..< RPChance.certain) < percent
+            || rollRandomIndex(upperBound: RPChance.certain) < percent
     }
 
     static func rollRandomIndex(upperBound: Int) -> Int {

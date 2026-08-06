@@ -9,14 +9,14 @@ final class TargetingLanguageTests: XCTestCase {
         let strings = [
             "among: enemy, choose: threat.highest",
             "among: friendly, when: hp% < 100%, choose: hp%.lowest",
-            "among: self, when: hp < 1 && has.ko? == false",
-            "among: friendly, when: has.poison?, choose: hp.lowest",
+            "among: self, when: hp < 1 && has.ko == false",
+            "among: friendly, when: has.poison, choose: hp.lowest",
             "among: friendly, choose: any",
             "among: all, choose: random",
             "among: initiator",
             "among: allyTeam",
             "among: friendly, when: self.hp% < hp%",
-            "among: friendly, when: uses.magical?, choose: hp%.lowest, threat.highest",
+            "among: friendly, when: uses.magical, choose: hp%.lowest, threat.highest",
         ]
         for string in strings {
             let parsed = try Targeting.fromString(string)
@@ -42,7 +42,7 @@ final class TargetingLanguageTests: XCTestCase {
         )
         XCTAssertEqual(
             try Targeting.fromString("choose: hp%.lowest"),
-            Targeting(.all, .always, choose: try RPChoose.parse("hp%.lowest"))
+            Targeting(.all, .always, sort: try RPTargetingSort.parse("hp%.lowest"))
         )
         XCTAssertEqual(try Targeting.fromString("among: friendly"), Targeting(.friendly, .always))
     }
@@ -113,7 +113,7 @@ final class TargetingLanguageTests: XCTestCase {
         space.addBody(foeB)
         space.setTeams([attackers, defenders])
 
-        let targeting = RPTargeting<TestRPSpace>(.enemy, .always, choose: .highestThreat)
+        let targeting = RPTargeting<TestRPSpace>(.enemy, .always, sort: .highestThreat)
         XCTAssertEqual(targeting.getValidTargets(for: "hero", in: space), ["foe-b"])
     }
 
@@ -153,7 +153,7 @@ final class TargetingLanguageTests: XCTestCase {
                 charges: nil
             ))
         }
-        let targeting = try Targeting.fromString("among: friendly, when: has.poison?, choose: hp.lowest")
+        let targeting = try Targeting.fromString("among: friendly, when: has.poison, choose: hp.lowest")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-poisoned"])
     }
 
@@ -165,7 +165,7 @@ final class TargetingLanguageTests: XCTestCase {
                 conditional: .always
             )
         }
-        let targeting = try Targeting.fromString("among: friendly, when: uses.magical?")
+        let targeting = try Targeting.fromString("among: friendly, when: uses.magical")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-caster"])
     }
 }

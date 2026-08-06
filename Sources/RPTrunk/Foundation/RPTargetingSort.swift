@@ -1,19 +1,19 @@
-public enum RPChooseDirection: String {
+public enum RPTargetingSortDirection: String {
     case lowest
     case highest
 }
 
-public enum RPChooseError: Error {
+public enum RPTargetingSortError: Error {
     case malformedDescriptor(String)
     case mixedSelection(String)
 }
 
-public struct RPChooseDescriptor<RP: RPSpace> {
+public struct RPTargetingSortDescriptor<RP: RPSpace> {
     public let operand: ConditionOperand
-    public let direction: RPChooseDirection
+    public let direction: RPTargetingSortDirection
     let evaluators: [ParserResultType<RP>]
 
-    public init(tokens: [ConditionToken], direction: RPChooseDirection) throws {
+    public init(tokens: [ConditionToken], direction: RPTargetingSortDirection) throws {
         operand = ConditionOperand(tokens: tokens)
         self.direction = direction
         evaluators = try compileOperand(operand)
@@ -27,13 +27,13 @@ public struct RPChooseDescriptor<RP: RPSpace> {
         do {
             parsed = try ConditionOperandParser().parse(trimmed)
         } catch {
-            throw RPChooseError.malformedDescriptor(source)
+            throw RPTargetingSortError.malformedDescriptor(source)
         }
         guard parsed.tokens.count >= 2,
-              case let .identifier(directionName, usePercent: false)? = parsed.tokens.last,
-              let parsedDirection = RPChooseDirection(rawValue: directionName)
+              case let .stat(directionName, usePercent: false)? = parsed.tokens.last,
+              let parsedDirection = RPTargetingSortDirection(rawValue: directionName)
         else {
-            throw RPChooseError.malformedDescriptor(source)
+            throw RPTargetingSortError.malformedDescriptor(source)
         }
         try self.init(tokens: Array(parsed.tokens.dropLast()), direction: parsedDirection)
     }
@@ -46,23 +46,23 @@ public struct RPChooseDescriptor<RP: RPSpace> {
     }
 }
 
-extension RPChooseDescriptor: Equatable {
-    public static func == (lhs: RPChooseDescriptor, rhs: RPChooseDescriptor) -> Bool {
+extension RPTargetingSortDescriptor: Equatable {
+    public static func == (lhs: RPTargetingSortDescriptor, rhs: RPTargetingSortDescriptor) -> Bool {
         lhs.operand == rhs.operand && lhs.direction == rhs.direction
     }
 }
 
-public enum RPChoose<RP: RPSpace>: Equatable {
+public enum RPTargetingSort<RP: RPSpace>: Equatable {
     case random
-    case by([RPChooseDescriptor<RP>])
+    case by([RPTargetingSortDescriptor<RP>])
 
-    public static var anyone: RPChoose { .by([]) }
+    public static var anyone: RPTargetingSort { .by([]) }
 
-    public static var highestThreat: RPChoose {
-        (try? RPChoose.parse("threat.highest")) ?? .by([])
+    public static var highestThreat: RPTargetingSort {
+        (try? RPTargetingSort.parse("threat.highest")) ?? .by([])
     }
 
-    public static func parse(_ source: String) throws -> RPChoose {
+    public static func parse(_ source: String) throws -> RPTargetingSort {
         let parts = source
             .split(separator: ",", omittingEmptySubsequences: false)
             .map { part -> String in
@@ -78,9 +78,9 @@ public enum RPChoose<RP: RPSpace>: Equatable {
             return .by([])
         }
         guard !parts.contains("random"), !parts.contains("any") else {
-            throw RPChooseError.mixedSelection(source)
+            throw RPTargetingSortError.mixedSelection(source)
         }
-        return .by(try parts.map { try RPChooseDescriptor($0) })
+        return .by(try parts.map { try RPTargetingSortDescriptor($0) })
     }
 
     public func toString() -> String {

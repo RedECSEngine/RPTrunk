@@ -34,9 +34,9 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(try ConditionTokenParser.classify("has"), .has)
         XCTAssertEqual(try ConditionTokenParser.classify("uses"), .uses)
         XCTAssertEqual(try ConditionTokenParser.classify("threat"), .threat)
-        XCTAssertEqual(try ConditionTokenParser.classify("hp"), .identifier("hp", usePercent: false))
-        XCTAssertEqual(try ConditionTokenParser.classify("hp%"), .identifier("hp", usePercent: true))
-        XCTAssertEqual(try ConditionTokenParser.classify("Healing?"), .status("Healing"))
+        XCTAssertEqual(try ConditionTokenParser.classify("hp"), .stat("hp", usePercent: false))
+        XCTAssertEqual(try ConditionTokenParser.classify("hp%"), .stat("hp", usePercent: true))
+        XCTAssertEqual(try ConditionTokenParser.classify("Healing?"), .stat("Healing?", usePercent: false))
         XCTAssertEqual(try ConditionTokenParser.classify("40"), .value(40))
         XCTAssertEqual(try ConditionTokenParser.classify("10%"), .percent(10))
         XCTAssertEqual(try ConditionTokenParser.classify("true"), .bool(true))
@@ -49,9 +49,9 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(parsed.orGroups[0].count, 1)
 
         let clause = parsed.orGroups[0][0]
-        XCTAssertEqual(clause.lhs.tokens, [.target, .identifier("hp", usePercent: false)])
+        XCTAssertEqual(clause.lhs.tokens, [.target, .stat("hp", usePercent: false)])
         XCTAssertEqual(clause.comparison?.op, .Equal)
-        XCTAssertEqual(clause.comparison?.rhs.tokens, [.target, .identifier("hp", usePercent: false)])
+        XCTAssertEqual(clause.comparison?.rhs.tokens, [.target, .stat("hp", usePercent: false)])
     }
 
     func testWhitespaceTolerance() throws {
@@ -60,28 +60,28 @@ final class ParserTests: XCTestCase {
             parsed,
             ParsedCondition(orGroups: [[
                 ConditionClause(
-                    lhs: .init(tokens: [.identifier("hp", usePercent: false)]),
-                    comparison: .init(op: .GreaterThan, rhs: .init(tokens: [.target, .identifier("hp", usePercent: false)]))
+                    lhs: .init(tokens: [.stat("hp", usePercent: false)]),
+                    comparison: .init(op: .GreaterThan, rhs: .init(tokens: [.target, .stat("hp", usePercent: false)]))
                 ),
             ]])
         )
     }
 
     func testConjunctionParsing() throws {
-        let parsed = try parseCondition("hp > 10 && has.Healing? == false")
+        let parsed = try parseCondition("hp > 10 && has.Healing == false")
         XCTAssertEqual(parsed.orGroups.count, 1)
         XCTAssertEqual(parsed.orGroups[0].count, 2)
         XCTAssertEqual(parsed.orGroups[0][0].comparison?.op, .GreaterThan)
-        XCTAssertEqual(parsed.orGroups[0][1].lhs.tokens, [.has, .status("Healing")])
+        XCTAssertEqual(parsed.orGroups[0][1].lhs.tokens, [.has, .stat("Healing", usePercent: false)])
         XCTAssertEqual(parsed.orGroups[0][1].comparison?.rhs.tokens, [.bool(false)])
     }
 
     func testDisjunctionParsingAndPrecedence() throws {
         XCTAssertEqual(
-            try printCondition(parseCondition("hp < 5||has.Healing? && hp > 2")),
-            "hp < 5 || has.Healing? && hp > 2"
+            try printCondition(parseCondition("hp < 5||has.Healing && hp > 2")),
+            "hp < 5 || has.Healing && hp > 2"
         )
-        let parsed = try parseCondition("hp < 5 || has.Healing? && hp > 2")
+        let parsed = try parseCondition("hp < 5 || has.Healing && hp > 2")
         XCTAssertEqual(parsed.orGroups.count, 2)
         XCTAssertEqual(parsed.orGroups[0].count, 1)
         XCTAssertEqual(parsed.orGroups[1].count, 2)
@@ -107,10 +107,10 @@ final class ParserTests: XCTestCase {
     func testPrintingIsCanonical() throws {
         XCTAssertEqual(try printCondition(parseCondition("  hp    >    target.hp  ")), "hp > target.hp")
         XCTAssertEqual(try printCondition(parseCondition("hp% > 10%")), "hp% > 10%")
-        XCTAssertEqual(try printCondition(parseCondition("  has.Healing?  ")), "has.Healing?")
+        XCTAssertEqual(try printCondition(parseCondition("  has.Healing  ")), "has.Healing")
         XCTAssertEqual(
-            try printCondition(parseCondition("hp > 10&&has.Healing? == false")),
-            "hp > 10 && has.Healing? == false"
+            try printCondition(parseCondition("hp > 10&&has.Healing == false")),
+            "hp > 10 && has.Healing == false"
         )
     }
 
@@ -119,14 +119,14 @@ final class ParserTests: XCTestCase {
             "hp > target.hp",
             "hp% > 10%",
             "hp == 40",
-            "has.Healing? == false",
-            "has.Dieing?",
-            "hp > 10 && has.Healing? == false",
-            "hp < 5 || has.Healing? && hp > 2",
+            "has.Healing == false",
+            "has.Dieing",
+            "hp > 10 && has.Healing == false",
+            "hp < 5 || has.Healing && hp > 2",
             "target.hp < 5",
             "self.hp% < hp%",
-            "has.bleed?",
-            "uses.magical?",
+            "has.bleed",
+            "uses.magical",
             "threat > 0",
             "target.threat == 0",
         ]
@@ -196,19 +196,25 @@ final class ParserTests: XCTestCase {
 
     func testStatusQueriesRequireTheHasPrefix() {
         XCTAssertThrowsError(
-            try interpretStringCondition("bleed?") as RPConditional<TestRPSpace>.Predicate
+            try interpretStringCondition("bleed") as RPConditional<TestRPSpace>.Predicate
         )
         XCTAssertThrowsError(
-            try interpretStringCondition("bleed? == false") as RPConditional<TestRPSpace>.Predicate
+            try interpretStringCondition("bleed == false") as RPConditional<TestRPSpace>.Predicate
         )
     }
 
     func testPrefixesMustPairWithATagQuery() {
         XCTAssertThrowsError(
-            try interpretStringCondition("has.hp > 1") as RPConditional<TestRPSpace>.Predicate
+            try interpretStringCondition("has") as RPConditional<TestRPSpace>.Predicate
         )
         XCTAssertThrowsError(
-            try interpretStringCondition("uses.hp > 1") as RPConditional<TestRPSpace>.Predicate
+            try interpretStringCondition("has.hp% > 1") as RPConditional<TestRPSpace>.Predicate
+        )
+        XCTAssertThrowsError(
+            try interpretStringCondition("has.40 > 1") as RPConditional<TestRPSpace>.Predicate
+        )
+        XCTAssertThrowsError(
+            try interpretStringCondition("uses.hp% > 1") as RPConditional<TestRPSpace>.Predicate
         )
     }
 
@@ -330,10 +336,10 @@ final class ParserTests: XCTestCase {
         rpSpace.addBody(body)
         rpSpace.addBody(enemy)
 
-        let healingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Healing?   ")
-        let healingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Healing?   ==   false  ")
-        let dyingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Dieing?   ")
-        let dyingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Dieing?    ==   false  ")
+        let healingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Healing   ")
+        let healingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Healing   ==   false  ")
+        let dyingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Dieing   ")
+        let dyingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   has.Dieing    ==   false  ")
 
         let statusEffect = RPStatusEffect<TestRPSpace>(
             code: "Healing",
@@ -358,7 +364,7 @@ final class ParserTests: XCTestCase {
         )
         rpSpace.addBody(caster)
 
-        let predicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("uses.magical?")
+        let predicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("uses.magical")
         XCTAssertEqual(try predicate(context(caster.id), rpSpace), true)
         XCTAssertEqual(try predicate(context(enemy.id), rpSpace), false)
     }

@@ -55,7 +55,7 @@ final class TriggerTests: XCTestCase {
     private func attack(tags: Set<RPAbilityTag> = []) -> RPEvent<TestRPSpace> {
         RPEvent(
             initiator: "villain",
-            ability: ability("Attack", tags: tags, target: RPTargeting(.enemy, .always, choose: .highestThreat)),
+            ability: ability("Attack", tags: tags, target: RPTargeting(.enemy, .always, sort: .highestThreat)),
             rpSpace: rpSpace
         )
     }
@@ -96,7 +96,7 @@ final class TriggerTests: XCTestCase {
 
         let heroSwing = RPEvent(
             initiator: "hero",
-            ability: ability("Swing", target: RPTargeting(.enemy, .always, choose: .highestThreat)),
+            ability: ability("Swing", target: RPTargeting(.enemy, .always, sort: .highestThreat)),
             rpSpace: rpSpace
         )
         XCTAssertEqual(rpSpace.forecast(heroSwing).reactions.count, 1)
