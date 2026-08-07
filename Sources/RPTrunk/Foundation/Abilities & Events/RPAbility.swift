@@ -5,6 +5,7 @@ public struct RPAbility<RP: RPSpace>: RPFragmentContainer, Codable {
     public var tags: Set<RPAbilityTag> = []
     public var fragments: [RPFragment<RP>]
     public var cooldown: RPTimeIncrement
+    public var executionRange: Double?
     public var repeats: Int = 1
     public var subAbilities: [RPAbility<RP>] = []
     public var metadata: RP.AbilityMetadata?

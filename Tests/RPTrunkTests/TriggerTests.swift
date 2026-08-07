@@ -32,8 +32,7 @@ final class TriggerTests: XCTestCase {
         rpSpace.addBody(bystander)
         rpSpace.setTeams([heroTeam, villainTeam])
 
-        rpSpace.bodies["hero"]?.targets = ["villain"]
-        rpSpace.bodies["villain"]?.targets = ["hero"]
+        rpSpace.bodies["villain"]?.addThreat(toward: "hero", amount: 1)
     }
 
     override func tearDown() {
@@ -168,7 +167,8 @@ final class TriggerTests: XCTestCase {
     }
 
     func testInitiatorTargetingReachesABodyOutsideEngagementRange() {
-        rpSpace.bodies["hero"]?.targets = []
+        rpSpace.bodies["villain"]?.clearThreat(toward: "hero")
+        rpSpace.positions["villain"] = .init(x: 100, y: 0)
 
         addTrigger(to: "hero", RPTrigger(
             triggerType: .postEventTargeted,
@@ -177,10 +177,17 @@ final class TriggerTests: XCTestCase {
             cooldown: 1000
         ))
 
+        let attackFromAfar = RPEvent<TestRPSpace>(
+            initiator: "villain",
+            ability: ability("Attack", target: RPTargeting(.enemy, sort: .highestThreat)),
+            targets: ["hero"],
+            rpSpace: rpSpace
+        )
+
         XCTAssertEqual(
-            rpSpace.forecast(attack()).reactions.first?.event.targets,
+            rpSpace.forecast(attackFromAfar).reactions.first?.event.targets,
             ["villain"],
-            "the initiator is given, not searched for within body.targets"
+            "the initiator is given, not searched for within perception range"
         )
     }
 

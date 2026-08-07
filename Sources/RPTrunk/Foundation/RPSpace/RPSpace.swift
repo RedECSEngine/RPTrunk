@@ -73,6 +73,12 @@ public protocol RPSpace: Codable {
         in rpSpace: Self
     ) -> [RPThreatChange]
 
+    func position(forBodyId id: RPBodyId) -> (x: Double, y: Double)
+
+    func shouldCheckBodyIsValidTarget(_ id: RPBodyId, forOtherBodyId otherBodyId: RPBodyId) -> Bool
+
+    func willTargetBody(_ id: RPBodyId, forOtherBodyId otherBodyId: RPBodyId) -> Bool
+
     func bodyById(_ id: RPBodyId) -> Body?
     func teamById(_ id: RPTeamId) -> Team?
 
@@ -126,6 +132,33 @@ public extension RPSpace {
         fullyResolvedStats(for: rpBody.cumulativeStats())
     }
     
+    func position(forBodyId id: RPBodyId) -> (x: Double, y: Double) { (0, 0) }
+
+    func shouldCheckBodyIsValidTarget(_ id: RPBodyId, forOtherBodyId otherBodyId: RPBodyId) -> Bool { true }
+
+    func willTargetBody(_ id: RPBodyId, forOtherBodyId otherBodyId: RPBodyId) -> Bool { true }
+
+    func perceivedBodies(by bodyId: RPBodyId) -> Set<RPBodyId> {
+        guard let body = bodyById(bodyId) else { return [] }
+        let origin = position(forBodyId: bodyId)
+        let rangeSquared = body.targetingRange * body.targetingRange
+        var perceived: Set<RPBodyId> = [bodyId]
+        for id in allBodies() where id != bodyId {
+            guard let candidate = bodyById(id) else { continue }
+            if candidate.holdsThreat(toward: bodyId) {
+                perceived.insert(id)
+                continue
+            }
+            let point = position(forBodyId: id)
+            let dx = point.x - origin.x
+            let dy = point.y - origin.y
+            if dx * dx + dy * dy <= rangeSquared {
+                perceived.insert(id)
+            }
+        }
+        return perceived
+    }
+
     func getEnemies(of bodyId: RPBodyId) -> Set<RPBodyId> {
         guard let body = bodyById(bodyId),
               let teamId = body.teamId,

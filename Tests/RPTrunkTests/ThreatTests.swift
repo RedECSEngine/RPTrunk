@@ -15,15 +15,13 @@ final class ThreatTests: XCTestCase {
 
     // MARK: - Target selection
 
-    func testGetTargetIsDeterministicWithoutThreat() {
-        var body = RPBody<TestRPSpace>(["hp": 10])
-        body.targets = ["c", "a", "b"]
-        XCTAssertEqual(body.getTarget(), "a", "no threat: lowest id wins, always")
+    func testGetTargetIsNilWithoutThreat() {
+        let body = RPBody<TestRPSpace>(["hp": 10])
+        XCTAssertNil(body.getTarget(), "no threat: no target")
     }
 
     func testGetTargetPrefersHighestThreat() {
         var body = RPBody<TestRPSpace>(["hp": 10])
-        body.targets = ["a", "b", "c"]
         body.addThreat(toward: "b", amount: 10)
         body.addThreat(toward: "c", amount: 5)
         XCTAssertEqual(body.getTarget(), "b")
@@ -31,17 +29,9 @@ final class ThreatTests: XCTestCase {
 
     func testGetTargetBreaksThreatTiesById() {
         var body = RPBody<TestRPSpace>(["hp": 10])
-        body.targets = ["b", "c"]
         body.addThreat(toward: "b", amount: 10)
         body.addThreat(toward: "c", amount: 10)
         XCTAssertEqual(body.getTarget(), "b")
-    }
-
-    func testGetTargetIgnoresThreatOutsidePerception() {
-        var body = RPBody<TestRPSpace>(["hp": 10])
-        body.targets = ["a"]
-        body.addThreat(toward: "z", amount: 100) // no longer a valid target
-        XCTAssertEqual(body.getTarget(), "a")
     }
 
     func testFriendlyTargetingIgnoresThreat() {
@@ -57,7 +47,6 @@ final class ThreatTests: XCTestCase {
         team.add(&allyA)
         team.add(&allyB)
 
-        healer.targets = ["ally-a", "ally-b"]
         // threat toward an ally (however it got there) must not steer heals
         healer.addThreat(toward: "ally-b", amount: 100)
 
@@ -144,7 +133,6 @@ final class ThreatTests: XCTestCase {
         attacker.id = "attacker"
         var target = RPBody<TestRPSpace>(["hp": 30])
         target.id = "target"
-        attacker.targets = [target.id]
 
         var space = TestRPSpace()
         var attackerTeam = RPTeam<TestRPSpace>()

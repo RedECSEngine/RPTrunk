@@ -9,7 +9,7 @@ final class ParserTests: XCTestCase {
     override func setUp() {
         body = RPBody(["hp": 30])
         enemy = RPBody(["hp": 30])
-        body.targets = [enemy!.id]
+        body.addThreat(toward: enemy.id, amount: 1)
         rpSpace = TestRPSpace()
 
         var bodyTeam = RPTeam<TestRPSpace>()
@@ -266,7 +266,7 @@ final class ParserTests: XCTestCase {
     func testStatsAndLogicCanReadSelfAndTargetHP() {
         var body = RPBody<TestRPSpace>(["hp": 40])
         let enemy = RPBody<TestRPSpace>(["hp": 20])
-        body.targets = [enemy.id]
+        body.addThreat(toward: enemy.id, amount: 1)
 
         rpSpace.addBody(body)
         rpSpace.addBody(enemy)
@@ -281,7 +281,6 @@ final class ParserTests: XCTestCase {
     func testSelfPrefixReadsTheInitiator() throws {
         var body = RPBody<TestRPSpace>(["hp": 40])
         let enemy = RPBody<TestRPSpace>(["hp": 20])
-        body.targets = [enemy.id]
 
         rpSpace.addBody(body)
         rpSpace.addBody(enemy)
@@ -297,7 +296,6 @@ final class ParserTests: XCTestCase {
     func testThreatTokenReadsInitiatorThreatTowardTheChainBody() throws {
         var body = RPBody<TestRPSpace>(["hp": 40])
         let enemy = RPBody<TestRPSpace>(["hp": 20])
-        body.targets = [enemy.id]
         body.addThreat(toward: enemy.id, amount: 7)
 
         rpSpace.addBody(body)
@@ -313,7 +311,7 @@ final class ParserTests: XCTestCase {
     func testStatsAndLogicComparison() throws {
         var body = RPBody<TestRPSpace>(["hp": 40])
         let enemy = RPBody<TestRPSpace>(["hp": 20])
-        body.targets = [enemy.id]
+        body.addThreat(toward: enemy.id, amount: 1)
 
         rpSpace.addBody(body)
         rpSpace.addBody(enemy)
@@ -347,7 +345,7 @@ final class ParserTests: XCTestCase {
     func testConjunctionPredicate() throws {
         var body = RPBody<TestRPSpace>(["hp": 40])
         let enemy = RPBody<TestRPSpace>(["hp": 20])
-        body.targets = [enemy.id]
+        body.addThreat(toward: enemy.id, amount: 1)
 
         rpSpace.addBody(body)
         rpSpace.addBody(enemy)
@@ -360,7 +358,6 @@ final class ParserTests: XCTestCase {
     func testDisjunctionPredicate() throws {
         var body = RPBody<TestRPSpace>(["hp": 40])
         let enemy = RPBody<TestRPSpace>(["hp": 20])
-        body.targets = [enemy.id]
 
         rpSpace.addBody(body)
         rpSpace.addBody(enemy)
@@ -376,7 +373,6 @@ final class ParserTests: XCTestCase {
     func testNeitherNorIsExpressedByInvertingEachClause() throws {
         var body = RPBody<TestRPSpace>(["hp": 40])
         let enemy = RPBody<TestRPSpace>(["hp": 20])
-        body.targets = [enemy.id]
 
         rpSpace.addBody(body)
         rpSpace.addBody(enemy)
@@ -394,7 +390,6 @@ final class ParserTests: XCTestCase {
     func testStatsAndLogicStatusEffectExistence() throws {
         var body = RPBody<TestRPSpace>(["hp": 40])
         let enemy = RPBody<TestRPSpace>(["hp": 20])
-        body.targets = [enemy.id]
 
         rpSpace.addBody(body)
         rpSpace.addBody(enemy)

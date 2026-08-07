@@ -59,7 +59,6 @@ final class TargetingLanguageTests: XCTestCase {
             body.id = id
             team.add(&body)
             body.setCurrentStats(.init(dict: ["hp": currentHP]))
-            body.targets = Set(hp.keys)
             bodies.append(body)
         }
         bodies.forEach { space.addBody($0) }
@@ -109,7 +108,6 @@ final class TargetingLanguageTests: XCTestCase {
         defenders.add(&foeB)
         attackers.enemies = [defenders.id]
         defenders.enemies = [attackers.id]
-        hero.targets = ["foe-a", "foe-b"]
         hero.addThreat(toward: "foe-b", amount: 50)
         space.addBody(hero)
         space.addBody(foeA)
