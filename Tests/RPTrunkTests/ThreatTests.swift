@@ -15,25 +15,6 @@ final class ThreatTests: XCTestCase {
 
     // MARK: - Target selection
 
-    func testGetTargetIsNilWithoutThreat() {
-        let body = RPBody<TestRPSpace>(["hp": 10])
-        XCTAssertNil(body.getTarget(), "no threat: no target")
-    }
-
-    func testGetTargetPrefersHighestThreat() {
-        var body = RPBody<TestRPSpace>(["hp": 10])
-        body.addThreat(toward: "b", amount: 10)
-        body.addThreat(toward: "c", amount: 5)
-        XCTAssertEqual(body.getTarget(), "b")
-    }
-
-    func testGetTargetBreaksThreatTiesById() {
-        var body = RPBody<TestRPSpace>(["hp": 10])
-        body.addThreat(toward: "b", amount: 10)
-        body.addThreat(toward: "c", amount: 10)
-        XCTAssertEqual(body.getTarget(), "b")
-    }
-
     func testFriendlyTargetingIgnoresThreat() {
         var healer = RPBody<TestRPSpace>(["hp": 10])
         healer.id = "healer"

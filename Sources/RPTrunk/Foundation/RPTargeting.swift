@@ -50,11 +50,7 @@ public struct RPTargeting<RP: RPSpace>: Codable {
                 (try? when.exec(candidate, initiator: bodyId, rpSpace: rpSpace)) ?? false
             }
 
-        func willTarget(_ candidate: RPBody<RP>) -> Bool {
-            !needsValidityChecks
-                || candidate.id == bodyId
-                || rpSpace.willTargetBody(candidate.id, forOtherBodyId: bodyId)
-        }
+        let willTarget = willTargetCheck(needsValidityChecks, for: bodyId, in: rpSpace)
 
         guard let sort else {
             return Set(candidates.filter(willTarget).map { $0.id })
@@ -69,6 +65,18 @@ public struct RPTargeting<RP: RPSpace>: Codable {
             return ranked(candidates, by: descriptors, initiator: bodyId, in: rpSpace)
                 .first(where: willTarget)
                 .map { [$0.id] } ?? []
+        }
+    }
+
+    private func willTargetCheck(
+        _ needsValidityChecks: Bool,
+        for bodyId: RPBodyId,
+        in rpSpace: RP
+    ) -> (RPBody<RP>) -> Bool {
+        { candidate in
+            !needsValidityChecks
+                || candidate.id == bodyId
+                || rpSpace.willTargetBody(candidate.id, forOtherBodyId: bodyId)
         }
     }
 

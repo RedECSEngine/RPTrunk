@@ -96,10 +96,6 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
             .filter { $0.canExecute(in: rpSpace) }
     }
 
-    public func getTarget() -> RPBodyId? {
-        threatList.first?.bodyId
-    }
-
     // MARK: - Threat
 
     /// Threat entries from highest to lowest, ties broken by id.
