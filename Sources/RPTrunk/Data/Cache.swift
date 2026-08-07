@@ -36,6 +36,7 @@ open class RPCache<RP: RPSpace> {
                 fragments: fragments,
                 cooldown: data.cooldown
             )
+            ability.executionRange = data.executionRange
             ability.metadata = data.metadata
             self.abilities[code] = ability
         }
@@ -131,6 +132,9 @@ open class RPCache<RP: RPSpace> {
             body.displayName = displayName
         }
         body.metadata = data.metadata
+        if let targetingRange = data.targetingRange {
+            body.targetingRange = targetingRange
+        }
         body.equipment.equipmentSlotCapacities = data.equipmentSlots ?? [:]
         data.abilities?.forEach { reference in
             let conditional = RPConditional<RP>(reference.conditional)

@@ -38,24 +38,45 @@ public struct RPTargeting<RP: RPSpace>: Codable {
         reactingTo triggeringEvent: RPEvent<RP>? = nil
     ) -> Set<RPBodyId> {
         guard let body = rpSpace.bodyById(bodyId) else { return [] }
+        let needsValidityChecks = pool != .oneself && pool != .initiator
         let candidates = candidatePool(for: body, in: rpSpace, reactingTo: triggeringEvent)
             .compactMap(rpSpace.bodyById)
+            .filter { candidate in
+                !needsValidityChecks
+                    || candidate.id == bodyId
+                    || rpSpace.shouldCheckBodyIsValidTarget(candidate.id, forOtherBodyId: bodyId)
+            }
             .filter { candidate in
                 (try? when.exec(candidate, initiator: bodyId, rpSpace: rpSpace)) ?? false
             }
 
+        let willTarget = willTargetCheck(needsValidityChecks, for: bodyId, in: rpSpace)
+
         guard let sort else {
-            return Set(candidates.map { $0.id })
+            return Set(candidates.filter(willTarget).map { $0.id })
         }
 
         switch sort {
         case .random:
-            guard !candidates.isEmpty else { return [] }
-            let ids = candidates.map { $0.id }.sorted()
+            let ids = candidates.filter(willTarget).map { $0.id }.sorted()
+            guard !ids.isEmpty else { return [] }
             return [ids[RP.rollRandom(upperBound: ids.count)]]
         case let .by(descriptors):
-            return pick(from: candidates, by: descriptors, initiator: bodyId, in: rpSpace)
-                .map { [$0] } ?? []
+            return ranked(candidates, by: descriptors, initiator: bodyId, in: rpSpace)
+                .first(where: willTarget)
+                .map { [$0.id] } ?? []
+        }
+    }
+
+    private func willTargetCheck(
+        _ needsValidityChecks: Bool,
+        for bodyId: RPBodyId,
+        in rpSpace: RP
+    ) -> (RPBody<RP>) -> Bool {
+        { candidate in
+            !needsValidityChecks
+                || candidate.id == bodyId
+                || rpSpace.willTargetBody(candidate.id, forOtherBodyId: bodyId)
         }
     }
 
@@ -71,16 +92,16 @@ public struct RPTargeting<RP: RPSpace>: Codable {
             }
             return [initiator]
         case .enemy:
-            return rpSpace.getEnemies(of: body.id).intersection(body.targets)
+            return rpSpace.getEnemies(of: body.id).intersection(rpSpace.perceivedBodies(by: body.id))
         case .friendly:
-            return rpSpace.getFriends(of: body.id).intersection(body.targets)
+            return rpSpace.getFriends(of: body.id).intersection(rpSpace.perceivedBodies(by: body.id))
         case .all:
-            return Set(rpSpace.allBodies()).intersection(body.targets)
+            return Set(rpSpace.allBodies()).intersection(rpSpace.perceivedBodies(by: body.id))
         case .oneself:
             return [body.id]
         case .allyTeam:
             let allies = rpSpace.getAllies(of: body.id)
-            if let nearbyAlly = allies.intersection(body.targets).first,
+            if let nearbyAlly = allies.intersection(rpSpace.perceivedBodies(by: body.id)).first,
                let teamId = rpSpace.bodyById(nearbyAlly)?.teamId,
                let teamBodies = rpSpace.teamById(teamId)?.bodies
             {
@@ -90,13 +111,13 @@ public struct RPTargeting<RP: RPSpace>: Codable {
         }
     }
 
-    private func pick(
-        from candidates: [RPBody<RP>],
+    private func ranked(
+        _ candidates: [RPBody<RP>],
         by descriptors: [RPTargetingSortDescriptor<RP>],
         initiator: RPBodyId,
         in rpSpace: RP
-    ) -> RPBodyId? {
-        candidates.min { a, b in
+    ) -> [RPBody<RP>] {
+        candidates.sorted { a, b in
             for descriptor in descriptors {
                 let valueA = extractValue(
                     RPConditionContext(body: a.id, initiator: initiator),
@@ -121,7 +142,7 @@ public struct RPTargeting<RP: RPSpace>: Codable {
                 }
             }
             return a.id < b.id
-        }?.id
+        }
     }
 }
 

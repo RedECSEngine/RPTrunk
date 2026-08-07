@@ -4,11 +4,35 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
     
     public typealias Stats = TestStats
     
+    public struct TestPosition: Codable, Equatable {
+        public var x: Double
+        public var y: Double
+
+        public init(x: Double, y: Double) {
+            self.x = x
+            self.y = y
+        }
+    }
+
     public var bodies: [RPBodyId: RPBody<Self>] = [:]
     public var teams: [RPTeamId: RPTeam<Self>] = [:]
     public var pendingGameMasterEvents: [RPEvent<TestRPSpace>] = []
+    public var positions: [RPBodyId: TestPosition] = [:]
 
     public init() {}
+
+    public func position(forBodyId id: RPBodyId) -> (x: Double, y: Double) {
+        guard let position = positions[id] else { return (0, 0) }
+        return (position.x, position.y)
+    }
+
+    public func shouldCheckBodyIsValidTarget(_ id: RPBodyId, forOtherBodyId otherBodyId: RPBodyId) -> Bool {
+        Self.shouldCheckRule?(id, otherBodyId) ?? true
+    }
+
+    public func willTargetBody(_ id: RPBodyId, forOtherBodyId otherBodyId: RPBodyId) -> Bool {
+        Self.willTargetRule?(id, otherBodyId) ?? true
+    }
 
     public static func fullyResolvedStats(for stats: TestStats) -> TestStats {
         stats
@@ -27,11 +51,17 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
         (RPEventResult<TestRPSpace>, TestRPSpace) -> [RPEvent<TestRPSpace>]
     )?
 
+    nonisolated(unsafe) static var shouldCheckRule: ((RPBodyId, RPBodyId) -> Bool)?
+
+    nonisolated(unsafe) static var willTargetRule: ((RPBodyId, RPBodyId) -> Bool)?
+
     public static func resetTestHooks() {
         threatRule = nil
         conflictRule = nil
         chanceRule = nil
         additionalEventsRule = nil
+        shouldCheckRule = nil
+        willTargetRule = nil
     }
 
     public static func resolveThreatChanges(

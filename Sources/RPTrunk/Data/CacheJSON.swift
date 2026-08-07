@@ -81,6 +81,8 @@ public struct RPBodyJSON<RP: RPSpace>: Codable, Equatable {
 
     public var triggers: [RPTriggerJSON<RP>]?
 
+    public var targetingRange: Double?
+
     public var metadata: RP.BodyMetadata?
 }
 
@@ -101,6 +103,8 @@ public struct RPAbilityJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContain
     public var subAbilities: [String]?
 
     public let cooldown: RPTimeIncrement?
+
+    public var executionRange: Double?
 
     public var metadata: RP.AbilityMetadata?
 }

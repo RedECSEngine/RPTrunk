@@ -27,7 +27,7 @@ Nothing is final.
 - Experience and levelling up
 
 ### Positional
-- Position for attack/cast radius
+- Position for attack/cast radius — done: `RPSpace.position(forBodyId:)`, `RPBody.targetingRange`, `RPAbility.executionRange`, and the `shouldCheckBodyIsValidTarget`/`willTargetBody` hooks
 - Abilities w/ area of effect
 
 ### Debug

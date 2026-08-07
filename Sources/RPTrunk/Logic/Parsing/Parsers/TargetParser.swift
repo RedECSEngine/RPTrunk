@@ -11,7 +11,7 @@ func getTarget<RP: RPSpace>(
     _ context: RPConditionContext,
     in rpSpace: RP
 ) -> ParserResultType<RP> {
-    if case let .bodyResult(e) = input, let target = rpSpace.bodyById(e)?.getTarget() {
+    if case let .bodyResult(e) = input, let target = rpSpace.bodyById(e)?.threatList.first?.bodyId {
         return .bodyResult(body: target)
     }
     return .nothing

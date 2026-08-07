@@ -27,8 +27,6 @@ final class ForecastTests: XCTestCase {
         rpSpace.addBody(villain)
         rpSpace.setTeams([heroTeam, villainTeam])
 
-        rpSpace.bodies["hero"]?.targets = ["villain"]
-        rpSpace.bodies["villain"]?.targets = ["hero"]
     }
 
     override func tearDown() {

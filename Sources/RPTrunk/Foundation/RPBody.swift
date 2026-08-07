@@ -20,6 +20,8 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     public var globalCooldown: RPTimeIncrement = 2500
     public var maximumTick: RPTimeIncrement { globalCooldown }
 
+    public var targetingRange: Double = 1
+
     public private(set) var baseStats: Stats = .zero
     public private(set) var currentStats: Stats = .zero
     public var equipment = RPEquipment<RP>()
@@ -30,8 +32,6 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     public internal(set) var statusEffects: [String: RPActiveStatusEffect<RP>] = [:]
     public internal(set) var triggers: [RPTrigger<RP>] = []
     public internal(set) var triggerCooldowns: [RPReferenceCode: RPTimeIncrement] = [:]
-
-    public var targets: Set<RPBodyId> = []
 
     public internal(set) var threat: [RPBodyId: RPValue] = [:]
 
@@ -94,29 +94,6 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
 
         return executableAbilities.values
             .filter { $0.canExecute(in: rpSpace) }
-    }
-
-    public func getPossibleTargets() -> Set<RPBodyId>? {
-        if targets.count > 0 {
-            return targets
-        }
-
-        return nil
-    }
-
-    public func getTarget() -> RPBodyId? {
-        var highestThreat = RPValue.min
-        var candidates: [RPBodyId] = []
-        for id in targets {
-            let value = threat[id] ?? 0
-            if value > highestThreat {
-                highestThreat = value
-                candidates = [id]
-            } else if value == highestThreat {
-                candidates.append(id)
-            }
-        }
-        return candidates.min()
     }
 
     // MARK: - Threat
@@ -226,7 +203,6 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     public mutating func leaveEncounter() {
         teamId = nil
         currentTick = 0
-        targets = []
         threat = [:]
     }
 
