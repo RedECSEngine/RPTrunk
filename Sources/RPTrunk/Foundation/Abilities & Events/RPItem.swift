@@ -1,6 +1,7 @@
 public struct RPItem<RP: RPSpace>: RPFragmentContainer, Codable, Equatable {
     public var code: RPReferenceCode
     public var displayName: String
+    public var tags: Set<RPItemTag> = []
     public var maximumStack: Int?
     public var fragments: [RPFragment<RP>]
     public var ability: RPAbility<RP>?
@@ -14,6 +15,7 @@ public struct RPItem<RP: RPSpace>: RPFragmentContainer, Codable, Equatable {
     public init(
         code: RPReferenceCode,
         displayName: String? = nil,
+        tags: Set<RPItemTag> = [],
         maximumStack: Int? = nil,
         fragments: [RPFragment<RP>] = [],
         ability: RPAbility<RP>? = nil,
@@ -22,6 +24,7 @@ public struct RPItem<RP: RPSpace>: RPFragmentContainer, Codable, Equatable {
     ) {
         self.code = code
         self.displayName = displayName ?? code
+        self.tags = tags
         self.maximumStack = maximumStack
         self.fragments = fragments
         self.ability = ability
@@ -40,6 +43,7 @@ public struct RPActiveItem<RP: RPSpace>: RPTemporal, Codable, Equatable {
 
     public var code: RPReferenceCode { item.code }
     public var displayName: String { item.displayName }
+    public var tags: Set<RPItemTag> { item.tags }
     public var stats: RP.Stats { item.stats }
     public var equipmentSlotCode: RPEquipmentSlotCode? { item.equipmentSlotCode }
     public var isEquippable: Bool { item.equipmentSlotCode != nil }

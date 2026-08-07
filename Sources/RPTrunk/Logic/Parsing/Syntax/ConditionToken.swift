@@ -4,6 +4,7 @@ public enum ConditionToken: Equatable {
     case oneself
     case has
     case uses
+    case holds
     case threat
     case keyword(String, usePercent: Bool)
     case value(RPValue)

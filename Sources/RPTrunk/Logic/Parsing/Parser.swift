@@ -36,6 +36,16 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
             }
             evaluators.append(.evaluationFunction(f: getUsesAbilityTag(name)))
             index += 1
+        case .holds:
+            guard index + 1 < operand.tokens.count,
+                  case let .keyword(name, usePercent: false) = operand.tokens[index + 1]
+            else {
+                throw ConditionalInterpretationError.invalidSyntax(
+                    reason: "`holds.` must be followed by an item tag, e.g. `holds.key`"
+                )
+            }
+            evaluators.append(.evaluationFunction(f: getHoldsItemTag(name)))
+            index += 1
         case .threat:
             evaluators.append(.evaluationFunction(f: getThreat()))
         case let .keyword(name, usePercent):
@@ -59,7 +69,7 @@ func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPCondition
     if let comparison = clause.comparison {
         guard !clause.isNegated else {
             throw ConditionalInterpretationError.invalidSyntax(
-                reason: "`!` negates a `has.` or `uses.` tag query, not a comparison"
+                reason: "`!` negates a `has.`, `uses.` or `holds.` tag query, not a comparison"
             )
         }
         let op = comparison.op
@@ -78,11 +88,11 @@ func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPCondition
     }
 
     switch (clause.lhs.tokens.first, clause.lhs.tokens.count) {
-    case (.has, 2), (.uses, 2):
+    case (.has, 2), (.uses, 2), (.holds, 2):
         break
     default:
         throw ConditionalInterpretationError.invalidSyntax(
-            reason: "A clause without an operator must be a `has.` or `uses.` tag query"
+            reason: "A clause without an operator must be a `has.`, `uses.` or `holds.` tag query"
         )
     }
     let isNegated = clause.isNegated

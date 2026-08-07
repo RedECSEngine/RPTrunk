@@ -111,6 +111,7 @@ public struct RPAbilityJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContain
 
 public struct RPItemJSON<RP: RPSpace>: Codable, Equatable, RPFragmentsContainerJSON {
     public var displayName: String?
+    public var tags: [RPItemTag]?
     public var stats: RP.Stats?
     public var statsCost: RP.Stats?
     public var requiredStats: RP.Stats?

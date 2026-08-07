@@ -23,6 +23,7 @@ struct ConditionTokenParser: ConditionParserPrinter {
         if body == "self" { return .oneself }
         if body == "has" { return .has }
         if body == "uses" { return .uses }
+        if body == "holds" { return .holds }
         if body == "threat" { return .threat }
         if let value = RPValue(body) {
             return .value(value)
@@ -50,6 +51,8 @@ struct ConditionTokenParser: ConditionParserPrinter {
             return "has"
         case .uses:
             return "uses"
+        case .holds:
+            return "holds"
         case .threat:
             return "threat"
         case let .keyword(name, usePercent):

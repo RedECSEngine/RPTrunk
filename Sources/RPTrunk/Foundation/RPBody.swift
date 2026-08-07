@@ -349,6 +349,10 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     public func usesAnyAbility(tagged tag: RPAbilityTag) -> Bool {
         executableAbilities.values.contains { $0.ability.tags.contains(tag) }
     }
+
+    public func holdsAnyItem(tagged tag: RPItemTag) -> Bool {
+        (inventory + equipment.wornItems).contains { $0.tags.contains(tag) }
+    }
 }
 
 extension RPBody: CustomStringConvertible {

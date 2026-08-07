@@ -151,6 +151,8 @@ final class ParserTests: XCTestCase {
             "self.hp% < hp%",
             "has.bleed",
             "uses.magical",
+            "holds.key",
+            "!holds.key",
             "threat > 0",
             "target.threat == 0",
         ]
@@ -237,17 +239,20 @@ final class ParserTests: XCTestCase {
         )
         assertCompileFails(
             "hp",
-            with: .invalidSyntax(reason: "A clause without an operator must be a `has.` or `uses.` tag query")
+            with: .invalidSyntax(reason: "A clause without an operator must be a `has.`, `uses.` or `holds.` tag query")
         )
     }
 
     func testNegationOnlyAppliesToTagQueries() {
         assertCompileFails(
             "!hp > 5",
-            with: .invalidSyntax(reason: "`!` negates a `has.` or `uses.` tag query, not a comparison")
+            with: .invalidSyntax(reason: "`!` negates a `has.`, `uses.` or `holds.` tag query, not a comparison")
         )
         XCTAssertNoThrow(
             try interpretStringCondition("!uses.magical") as RPConditional<TestRPSpace>.Predicate
+        )
+        XCTAssertNoThrow(
+            try interpretStringCondition("!holds.key") as RPConditional<TestRPSpace>.Predicate
         )
     }
 
@@ -260,6 +265,14 @@ final class ParserTests: XCTestCase {
         assertCompileFails(
             "uses.hp% > 1",
             with: .invalidSyntax(reason: "`uses.` must be followed by an ability tag, e.g. `uses.magical`")
+        )
+        assertCompileFails(
+            "holds.hp% > 1",
+            with: .invalidSyntax(reason: "`holds.` must be followed by an item tag, e.g. `holds.key`")
+        )
+        assertCompileFails(
+            "holds",
+            with: .invalidSyntax(reason: "`holds.` must be followed by an item tag, e.g. `holds.key`")
         )
     }
 
@@ -425,5 +438,38 @@ final class ParserTests: XCTestCase {
         let predicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("uses.magical")
         XCTAssertEqual(try predicate(context(caster.id), rpSpace), true)
         XCTAssertEqual(try predicate(context(enemy.id), rpSpace), false)
+    }
+
+    func testHoldsPrefixQueriesInventoryItemTags() throws {
+        var carrier = RPBody<TestRPSpace>(["hp": 40])
+        carrier.inventory.append(
+            RPActiveItem(item: RPItem<TestRPSpace>(code: "gold-key", tags: [RPItemTag("key")]))
+        )
+        rpSpace.addBody(carrier)
+
+        let predicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("holds.key")
+        XCTAssertEqual(try predicate(context(carrier.id), rpSpace), true)
+        XCTAssertEqual(try predicate(context(enemy.id), rpSpace), false)
+
+        let negated: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("!holds.key")
+        XCTAssertEqual(try negated(context(carrier.id), rpSpace), false)
+        XCTAssertEqual(try negated(context(enemy.id), rpSpace), true)
+    }
+
+    func testHoldsPrefixQueriesWornItemTags() throws {
+        var wearer = RPBody<TestRPSpace>(["hp": 40])
+        wearer.equipment.equip(
+            RPActiveItem(
+                item: RPItem<TestRPSpace>(
+                    code: "iron-shield",
+                    tags: [RPItemTag("shield")],
+                    equipmentSlotCode: RPEquipmentSlotCode("offhand")
+                )
+            )
+        )
+        rpSpace.addBody(wearer)
+
+        let predicate: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("holds.shield")
+        XCTAssertEqual(try predicate(context(wearer.id), rpSpace), true)
     }
 }
