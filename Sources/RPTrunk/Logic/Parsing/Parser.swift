@@ -66,7 +66,7 @@ func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPCondition
 
     guard case .tagQuery = clause.lhs.tokens.last else {
         throw ConditionalInterpretationError.invalidSyntax(
-            reason: "A clause without an operator must end in a tag query such as `hasAny(bleed)`"
+            reason: "A clause without an operator must end in a tag query such as `statusAny(bleed)`"
         )
     }
     let isNegated = clause.isNegated

@@ -28,12 +28,12 @@ struct ConditionTokenParser: ConditionParserPrinter {
     }
 
     static let tagQueryKeywords: [String: (ConditionToken.TagDomain, ConditionToken.TagMode)] = [
-        "hasAny": (.has, .any),
-        "hasAll": (.has, .all),
+        "statusAny": (.status, .any),
+        "status": (.status, .all),
         "usesAny": (.uses, .any),
-        "usesAll": (.uses, .all),
+        "uses": (.uses, .all),
         "holdsAny": (.holds, .any),
-        "holdsAll": (.holds, .all),
+        "holds": (.holds, .all),
     ]
 
     static func parseTagList(_ input: inout Substring) throws -> [String] {

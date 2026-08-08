@@ -8,13 +8,13 @@ public enum ConditionToken: Equatable {
     case percent(Double)
 
     public enum TagDomain: String, Equatable {
-        case has
+        case status
         case uses
         case holds
     }
 
     public enum TagMode: String, Equatable {
         case any = "Any"
-        case all = "All"
+        case all = ""
     }
 }

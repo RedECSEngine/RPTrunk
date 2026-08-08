@@ -9,9 +9,9 @@ final class TargetingLanguageTests: XCTestCase {
         let strings = [
             "enemy sort: threat.highest",
             "friendly when: hp% < 100% sort: hp%.lowest",
-            "when: hp < 1 && !hasAny(ko)",
-            "friendly when: hasAny(poison) sort: hp.lowest",
-            "friendly when: hasAll(poison, bleed) sort: hp.lowest",
+            "when: hp < 1 && !statusAny(ko)",
+            "friendly when: statusAny(poison) sort: hp.lowest",
+            "friendly when: status(poison, bleed) sort: hp.lowest",
             "friendly sort: any",
             "all sort: random",
             "initiator",
@@ -145,7 +145,7 @@ final class TargetingLanguageTests: XCTestCase {
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-weak"])
     }
 
-    func testHasQueryFiltersByStatusTag() throws {
+    func testStatusAnyFiltersCandidatesByStatusTag() throws {
         var space = makeTeam(hp: ["healer": 10, "ally-clean": 10, "ally-poisoned": 10])
         space.modifyBody(id: "ally-poisoned") { body, _ in
             body.applyStatusEffect(RPStatusEffect<TestRPSpace>(
@@ -155,11 +155,11 @@ final class TargetingLanguageTests: XCTestCase {
                 charges: nil
             ))
         }
-        let targeting = try Targeting.fromString("friendly when: hasAny(poison) sort: hp.lowest")
+        let targeting = try Targeting.fromString("friendly when: statusAny(poison) sort: hp.lowest")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-poisoned"])
     }
 
-    func testUsesQueryQueriesExecutableAbilityTags() throws {
+    func testUsesAnyFiltersCandidatesByExecutableAbilityTag() throws {
         var space = makeTeam(hp: ["healer": 10, "ally-caster": 10, "ally-brute": 10])
         space.modifyBody(id: "ally-caster") { body, _ in
             body.addExecutableAbility(

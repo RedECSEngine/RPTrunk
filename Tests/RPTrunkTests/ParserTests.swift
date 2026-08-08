@@ -32,8 +32,7 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(try ConditionTokenParser.classify("target"), .target)
         XCTAssertEqual(try ConditionTokenParser.classify("self"), .oneself)
         XCTAssertEqual(try ConditionTokenParser.classify("has"), .keyword("has", usePercent: false))
-        XCTAssertEqual(try ConditionTokenParser.classify("uses"), .keyword("uses", usePercent: false))
-        XCTAssertEqual(try ConditionTokenParser.classify("holds"), .keyword("holds", usePercent: false))
+        XCTAssertEqual(try ConditionTokenParser.classify("hasAny"), .keyword("hasAny", usePercent: false))
         XCTAssertEqual(try ConditionTokenParser.classify("threat"), .threat)
         XCTAssertEqual(try ConditionTokenParser.classify("hp"), .keyword("hp", usePercent: false))
         XCTAssertEqual(try ConditionTokenParser.classify("hp%"), .keyword("hp", usePercent: true))
@@ -69,21 +68,21 @@ final class ParserTests: XCTestCase {
     }
 
     func testConjunctionParsing() throws {
-        let parsed = try parseCondition("hp > 10 && !hasAny(Healing)")
+        let parsed = try parseCondition("hp > 10 && !statusAny(Healing)")
         XCTAssertEqual(parsed.orGroups.count, 1)
         XCTAssertEqual(parsed.orGroups[0].count, 2)
         XCTAssertEqual(parsed.orGroups[0][0].comparison?.op, .greaterThan)
-        XCTAssertEqual(parsed.orGroups[0][1].lhs.tokens, [.tagQuery(.has, .any, ["Healing"])])
+        XCTAssertEqual(parsed.orGroups[0][1].lhs.tokens, [.tagQuery(.status, .any, ["Healing"])])
         XCTAssertNil(parsed.orGroups[0][1].comparison)
         XCTAssertTrue(parsed.orGroups[0][1].isNegated)
     }
 
     func testDisjunctionParsingAndPrecedence() throws {
         XCTAssertEqual(
-            try printCondition(parseCondition("hp < 5||hasAny(Healing) && hp > 2")),
-            "hp < 5 || hasAny(Healing) && hp > 2"
+            try printCondition(parseCondition("hp < 5||statusAny(Healing) && hp > 2")),
+            "hp < 5 || statusAny(Healing) && hp > 2"
         )
-        let parsed = try parseCondition("hp < 5 || hasAny(Healing) && hp > 2")
+        let parsed = try parseCondition("hp < 5 || statusAny(Healing) && hp > 2")
         XCTAssertEqual(parsed.orGroups.count, 2)
         XCTAssertEqual(parsed.orGroups[0].count, 1)
         XCTAssertEqual(parsed.orGroups[1].count, 2)
@@ -91,7 +90,7 @@ final class ParserTests: XCTestCase {
 
     func testTagListParsing() throws {
         XCTAssertEqual(
-            try parseCondition("usesAll(some.ability, some.other-ability)").orGroups[0][0].lhs.tokens,
+            try parseCondition("uses(some.ability, some.other-ability)").orGroups[0][0].lhs.tokens,
             [.tagQuery(.uses, .all, ["some.ability", "some.other-ability"])]
         )
         XCTAssertEqual(
@@ -99,8 +98,8 @@ final class ParserTests: XCTestCase {
             [.tagQuery(.holds, .any, ["magic.fire", "magic.ice"])]
         )
         XCTAssertEqual(
-            try parseCondition("hasAll(target, self, threat, 40, 10%)").orGroups[0][0].lhs.tokens,
-            [.tagQuery(.has, .all, ["target", "self", "threat", "40", "10%"])]
+            try parseCondition("status(target, self, threat, 40, 10%)").orGroups[0][0].lhs.tokens,
+            [.tagQuery(.status, .all, ["target", "self", "threat", "40", "10%"])]
         )
     }
 
@@ -141,16 +140,21 @@ final class ParserTests: XCTestCase {
     }
 
     func testTagListParseFailures() {
-        assertParseFails("hasAny", with: .expectedTagList("hasAny"))
-        assertParseFails("hasAny.bleed", with: .expectedTagList("hasAny"))
-        assertParseFails("hasAny(bleed", with: .unterminatedTagList)
-        assertParseFails("hasAny()", with: .malformedTag(""))
-        assertParseFails("hasAny(bleed, )", with: .malformedTag(" "))
-        assertParseFails("hasAny(some tag)", with: .malformedTag("some tag"))
-        assertParseFails("hasAny(a(b))", with: .unterminatedTagList)
+        assertParseFails("statusAny", with: .expectedTagList("statusAny"))
+        assertParseFails("statusAny.bleed", with: .expectedTagList("statusAny"))
+        assertParseFails("status", with: .expectedTagList("status"))
+        assertParseFails("uses", with: .expectedTagList("uses"))
+        assertParseFails("holds.key", with: .expectedTagList("holds"))
+        assertParseFails("statusAny(bleed", with: .unterminatedTagList)
+        assertParseFails("statusAny()", with: .malformedTag(""))
+        assertParseFails("statusAny(bleed, )", with: .malformedTag(" "))
+        assertParseFails("statusAny(some tag)", with: .malformedTag("some tag"))
+        assertParseFails("statusAny(a(b))", with: .unterminatedTagList)
         assertParseFails("has(bleed)", with: .unknownTagQueryKeyword("has"))
-        assertParseFails("uses(magical)", with: .unknownTagQueryKeyword("uses"))
-        assertParseFails("holds(key)", with: .unknownTagQueryKeyword("holds"))
+        assertParseFails("hasAny(bleed)", with: .unknownTagQueryKeyword("hasAny"))
+        assertParseFails("statusAll(bleed)", with: .unknownTagQueryKeyword("statusAll"))
+        assertParseFails("usesAll(magical)", with: .unknownTagQueryKeyword("usesAll"))
+        assertParseFails("holdsAll(key)", with: .unknownTagQueryKeyword("holdsAll"))
         assertParseFails("poisoned(a)", with: .unknownTagQueryKeyword("poisoned"))
     }
 
@@ -159,14 +163,14 @@ final class ParserTests: XCTestCase {
     func testPrintingIsCanonical() throws {
         XCTAssertEqual(try printCondition(parseCondition("  hp    >    target.hp  ")), "hp > target.hp")
         XCTAssertEqual(try printCondition(parseCondition("hp% > 10%")), "hp% > 10%")
-        XCTAssertEqual(try printCondition(parseCondition("  hasAny( Healing )  ")), "hasAny(Healing)")
+        XCTAssertEqual(try printCondition(parseCondition("  statusAny( Healing )  ")), "statusAny(Healing)")
         XCTAssertEqual(
-            try printCondition(parseCondition("hp > 10&&!hasAny(Healing)")),
-            "hp > 10 && !hasAny(Healing)"
+            try printCondition(parseCondition("hp > 10&&!statusAny(Healing)")),
+            "hp > 10 && !statusAny(Healing)"
         )
         XCTAssertEqual(
-            try printCondition(parseCondition("holdsAll(magic.fire,magic.ice)")),
-            "holdsAll(magic.fire, magic.ice)"
+            try printCondition(parseCondition("holds(magic.fire,magic.ice)")),
+            "holds(magic.fire, magic.ice)"
         )
     }
 
@@ -175,22 +179,22 @@ final class ParserTests: XCTestCase {
             "hp > target.hp",
             "hp% > 10%",
             "hp == 40",
-            "!hasAny(Healing)",
-            "hasAny(Dieing)",
-            "hp > 10 && !hasAny(Healing)",
-            "hp < 5 || hasAny(Healing) && hp > 2",
+            "!statusAny(Healing)",
+            "statusAny(Dieing)",
+            "hp > 10 && !statusAny(Healing)",
+            "hp < 5 || statusAny(Healing) && hp > 2",
             "hp >= 5 && hp <= 100",
-            "!hasAny(Healing) && !hasAny(Dieing)",
+            "!statusAny(Healing) && !statusAny(Dieing)",
             "target.hp < 5",
             "self.hp% < hp%",
-            "hasAny(bleed)",
-            "hasAll(bleed, burning)",
+            "statusAny(bleed)",
+            "status(bleed, burning)",
             "usesAny(magical)",
-            "usesAll(some.ability, some.other-ability)",
+            "uses(some.ability, some.other-ability)",
             "holdsAny(key)",
             "holdsAny(magic.fire, magic.ice)",
-            "!holdsAll(key.gold, key.silver)",
-            "target.hasAny(bleed)",
+            "!holds(key.gold, key.silver)",
+            "target.statusAny(bleed)",
             "threat > 0",
             "target.threat == 0",
         ]
@@ -274,11 +278,11 @@ final class ParserTests: XCTestCase {
         assertCompileFails("has.bleed", with: .invalidSyntax(reason: "Unknown stat: has"))
         assertCompileFails(
             "hp",
-            with: .invalidSyntax(reason: "A clause without an operator must end in a tag query such as `hasAny(bleed)`")
+            with: .invalidSyntax(reason: "A clause without an operator must end in a tag query such as `statusAny(bleed)`")
         )
         assertCompileFails(
             "target",
-            with: .invalidSyntax(reason: "A clause without an operator must end in a tag query such as `hasAny(bleed)`")
+            with: .invalidSyntax(reason: "A clause without an operator must end in a tag query such as `statusAny(bleed)`")
         )
     }
 
@@ -291,17 +295,17 @@ final class ParserTests: XCTestCase {
             try interpretStringCondition("!usesAny(magical)") as RPConditional<TestRPSpace>.Predicate
         )
         XCTAssertNoThrow(
-            try interpretStringCondition("!holdsAll(key)") as RPConditional<TestRPSpace>.Predicate
+            try interpretStringCondition("!holds(key)") as RPConditional<TestRPSpace>.Predicate
         )
     }
 
     func testTagQueriesMustEndTheirChain() {
         assertCompileFails(
-            "hasAny(bleed).hp > 1",
+            "statusAny(bleed).hp > 1",
             with: .invalidSyntax(reason: "A tag query must end its chain")
         )
         XCTAssertNoThrow(
-            try interpretStringCondition("target.hasAny(bleed)") as RPConditional<TestRPSpace>.Predicate
+            try interpretStringCondition("target.statusAny(bleed)") as RPConditional<TestRPSpace>.Predicate
         )
         XCTAssertNoThrow(
             try interpretStringCondition("self.holdsAny(key)") as RPConditional<TestRPSpace>.Predicate
@@ -428,7 +432,7 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(try neitherTooHighNorTooLow(context(enemy.id), rpSpace), false)
 
         let neitherHealingNorDieing: RPConditional<TestRPSpace>.Predicate =
-            try interpretStringCondition("!hasAny(Healing) && !hasAny(Dieing)")
+            try interpretStringCondition("!statusAny(Healing) && !statusAny(Dieing)")
         XCTAssertEqual(try neitherHealingNorDieing(context(body.id), rpSpace), true)
     }
 
@@ -439,10 +443,10 @@ final class ParserTests: XCTestCase {
         rpSpace.addBody(body)
         rpSpace.addBody(enemy)
 
-        let healingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   hasAny(Healing)   ")
-        let healingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("  !  hasAny( Healing )  ")
-        let dyingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   hasAny(Dieing)   ")
-        let dyingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("  !hasAny(Dieing)  ")
+        let healingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   statusAny(Healing)   ")
+        let healingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("  !  statusAny( Healing )  ")
+        let dyingQuery: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("   statusAny(Dieing)   ")
+        let dyingQuery2: RPConditional<TestRPSpace>.Predicate = try interpretStringCondition("  !statusAny(Dieing)  ")
 
         let statusEffect = RPStatusEffect<TestRPSpace>(
             code: "Healing",
@@ -517,11 +521,11 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(try anyQuery(context(carrier.id), rpSpace), true)
 
         let allQuery: RPConditional<TestRPSpace>.Predicate =
-            try interpretStringCondition("holdsAll(magic.fire, magic.ice)")
+            try interpretStringCondition("holds(magic.fire, magic.ice)")
         XCTAssertEqual(try allQuery(context(carrier.id), rpSpace), false)
 
         let negatedAll: RPConditional<TestRPSpace>.Predicate =
-            try interpretStringCondition("!holdsAll(magic.fire, magic.ice)")
+            try interpretStringCondition("!holds(magic.fire, magic.ice)")
         XCTAssertEqual(try negatedAll(context(carrier.id), rpSpace), true)
 
         rpSpace.modifyBody(id: carrier.id) { e, _ in
@@ -543,11 +547,11 @@ final class ParserTests: XCTestCase {
         rpSpace.modifyBody(id: enemy.id) { e, _ in e.applyStatusEffect(statusEffect) }
 
         let predicate: RPConditional<TestRPSpace>.Predicate =
-            try interpretStringCondition("target.hasAny(Healing)")
+            try interpretStringCondition("target.statusAny(Healing)")
         XCTAssertEqual(try predicate(context(body.id), rpSpace), true)
 
         let allQuery: RPConditional<TestRPSpace>.Predicate =
-            try interpretStringCondition("target.hasAll(Healing, Dieing)")
+            try interpretStringCondition("target.status(Healing, Dieing)")
         XCTAssertEqual(try allQuery(context(body.id), rpSpace), false)
     }
 }
