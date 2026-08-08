@@ -1,7 +1,7 @@
 /// Characters that terminate a token: whitespace, chain separators,
 /// conjunctions and comparison operators.
 private func isTokenTerminator(_ c: Character) -> Bool {
-    c.isWhitespace || ".&|,><=!".contains(c)
+    c.isWhitespace || ".&|,><=!()".contains(c)
 }
 
 struct ConditionTokenParser: ConditionParserPrinter {
@@ -11,6 +11,15 @@ struct ConditionTokenParser: ConditionParserPrinter {
             throw ConditionSyntaxError.expectedToken
         }
         input.removeFirst(body.count)
+        if let (domain, mode) = Self.tagQueryKeywords[String(body)] {
+            guard input.first == "(" else {
+                throw ConditionSyntaxError.expectedTagList(String(body))
+            }
+            return .tagQuery(domain, mode, try Self.parseTagList(&input))
+        }
+        if input.first == "(" {
+            throw ConditionSyntaxError.unknownTagQueryKeyword(String(body))
+        }
         return try Self.classify(String(body))
     }
 
@@ -18,12 +27,41 @@ struct ConditionTokenParser: ConditionParserPrinter {
         input.insert(contentsOf: Self.text(for: output), at: input.startIndex)
     }
 
+    static let tagQueryKeywords: [String: (ConditionToken.TagDomain, ConditionToken.TagMode)] = [
+        "hasAny": (.has, .any),
+        "hasAll": (.has, .all),
+        "usesAny": (.uses, .any),
+        "usesAll": (.uses, .all),
+        "holdsAny": (.holds, .any),
+        "holdsAll": (.holds, .all),
+    ]
+
+    static func parseTagList(_ input: inout Substring) throws -> [String] {
+        input.removeFirst()
+        var tags: [String] = []
+        while true {
+            let raw = input.prefix(while: { $0 != "," && $0 != ")" && $0 != "(" })
+            input.removeFirst(raw.count)
+            guard let separator = input.first, separator != "(" else {
+                throw ConditionSyntaxError.unterminatedTagList
+            }
+            input.removeFirst()
+            var tag = raw
+            while let first = tag.first, first.isWhitespace { tag.removeFirst() }
+            while let last = tag.last, last.isWhitespace { tag.removeLast() }
+            guard !tag.isEmpty, !tag.contains(where: \.isWhitespace) else {
+                throw ConditionSyntaxError.malformedTag(String(raw))
+            }
+            tags.append(String(tag))
+            if separator == ")" {
+                return tags
+            }
+        }
+    }
+
     static func classify(_ body: String) throws -> ConditionToken {
         if body == "target" { return .target }
         if body == "self" { return .oneself }
-        if body == "has" { return .has }
-        if body == "uses" { return .uses }
-        if body == "holds" { return .holds }
         if body == "threat" { return .threat }
         if let value = RPValue(body) {
             return .value(value)
@@ -47,12 +85,8 @@ struct ConditionTokenParser: ConditionParserPrinter {
             return "target"
         case .oneself:
             return "self"
-        case .has:
-            return "has"
-        case .uses:
-            return "uses"
-        case .holds:
-            return "holds"
+        case let .tagQuery(domain, mode, tags):
+            return "\(domain.rawValue)\(mode.rawValue)(\(tags.joined(separator: ", ")))"
         case .threat:
             return "threat"
         case let .keyword(name, usePercent):

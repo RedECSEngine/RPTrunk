@@ -16,36 +16,13 @@ func compileOperand<RP: RPSpace>(_ operand: ConditionOperand) throws -> [ParserR
                 throw ConditionalInterpretationError.invalidSyntax(reason: "`self` can only start a chain")
             }
             evaluators.append(.evaluationFunction(f: getInitiator()))
-        case .has:
-            guard index + 1 < operand.tokens.count,
-                  case let .keyword(name, usePercent: false) = operand.tokens[index + 1]
-            else {
+        case let .tagQuery(domain, mode, tags):
+            guard index == operand.tokens.count - 1 else {
                 throw ConditionalInterpretationError.invalidSyntax(
-                    reason: "`has.` must be followed by a status tag, e.g. `has.bleed`"
+                    reason: "A tag query must end its chain"
                 )
             }
-            evaluators.append(.evaluationFunction(f: getStatus(name)))
-            index += 1
-        case .uses:
-            guard index + 1 < operand.tokens.count,
-                  case let .keyword(name, usePercent: false) = operand.tokens[index + 1]
-            else {
-                throw ConditionalInterpretationError.invalidSyntax(
-                    reason: "`uses.` must be followed by an ability tag, e.g. `uses.magical`"
-                )
-            }
-            evaluators.append(.evaluationFunction(f: getUsesAbilityTag(name)))
-            index += 1
-        case .holds:
-            guard index + 1 < operand.tokens.count,
-                  case let .keyword(name, usePercent: false) = operand.tokens[index + 1]
-            else {
-                throw ConditionalInterpretationError.invalidSyntax(
-                    reason: "`holds.` must be followed by an item tag, e.g. `holds.key`"
-                )
-            }
-            evaluators.append(.evaluationFunction(f: getHoldsItemTag(name)))
-            index += 1
+            evaluators.append(.evaluationFunction(f: getTagQuery(domain, mode, tags)))
         case .threat:
             evaluators.append(.evaluationFunction(f: getThreat()))
         case let .keyword(name, usePercent):
@@ -69,7 +46,7 @@ func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPCondition
     if let comparison = clause.comparison {
         guard !clause.isNegated else {
             throw ConditionalInterpretationError.invalidSyntax(
-                reason: "`!` negates a `has.`, `uses.` or `holds.` tag query, not a comparison"
+                reason: "`!` negates a tag query, not a comparison"
             )
         }
         let op = comparison.op
@@ -87,12 +64,9 @@ func compileClause<RP: RPSpace>(_ clause: ConditionClause) throws -> RPCondition
         }
     }
 
-    switch (clause.lhs.tokens.first, clause.lhs.tokens.count) {
-    case (.has, 2), (.uses, 2), (.holds, 2):
-        break
-    default:
+    guard case .tagQuery = clause.lhs.tokens.last else {
         throw ConditionalInterpretationError.invalidSyntax(
-            reason: "A clause without an operator must be a `has.`, `uses.` or `holds.` tag query"
+            reason: "A clause without an operator must end in a tag query such as `hasAny(bleed)`"
         )
     }
     let isNegated = clause.isNegated
