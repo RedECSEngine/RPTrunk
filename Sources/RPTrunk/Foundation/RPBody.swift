@@ -346,8 +346,48 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
         statusEffects.values.contains { $0.tags.contains(code) }
     }
 
-    public func usesAnyAbility(tagged tag: RPAbilityTag) -> Bool {
-        executableAbilities.values.contains { $0.ability.tags.contains(tag) }
+    public func hasAnyStatus(tagged tags: Set<RPStatusTag>) -> Bool {
+        statusEffects.values.contains { $0.tags.contains(where: tags.contains) }
+    }
+
+    public func hasAllStatuses(tagged tags: Set<RPStatusTag>) -> Bool {
+        var remaining = tags
+        for effect in statusEffects.values {
+            remaining.subtract(effect.tags)
+            if remaining.isEmpty { return true }
+        }
+        return remaining.isEmpty
+    }
+
+    public func usesAnyAbility(tagged tags: Set<RPAbilityTag>) -> Bool {
+        executableAbilities.values.contains { !$0.ability.tags.isDisjoint(with: tags) }
+    }
+
+    public func usesAllAbilities(tagged tags: Set<RPAbilityTag>) -> Bool {
+        var remaining = tags
+        for ability in executableAbilities.values {
+            remaining.subtract(ability.ability.tags)
+            if remaining.isEmpty { return true }
+        }
+        return remaining.isEmpty
+    }
+
+    public func holdsAnyItem(tagged tags: Set<RPItemTag>) -> Bool {
+        inventory.contains { !$0.tags.isDisjoint(with: tags) }
+            || equipment.wornItems.contains { !$0.tags.isDisjoint(with: tags) }
+    }
+
+    public func holdsAllItems(tagged tags: Set<RPItemTag>) -> Bool {
+        var remaining = tags
+        for item in inventory {
+            remaining.subtract(item.tags)
+            if remaining.isEmpty { return true }
+        }
+        for item in equipment.wornItems {
+            remaining.subtract(item.tags)
+            if remaining.isEmpty { return true }
+        }
+        return remaining.isEmpty
     }
 }
 

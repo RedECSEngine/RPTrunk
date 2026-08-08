@@ -9,14 +9,15 @@ final class TargetingLanguageTests: XCTestCase {
         let strings = [
             "enemy sort: threat.highest",
             "friendly when: hp% < 100% sort: hp%.lowest",
-            "when: hp < 1 && !has.ko",
-            "friendly when: has.poison sort: hp.lowest",
+            "when: hp < 1 && !statusAny(ko)",
+            "friendly when: statusAny(poison) sort: hp.lowest",
+            "friendly when: status(poison, bleed) sort: hp.lowest",
             "friendly sort: any",
             "all sort: random",
             "initiator",
             "allyTeam",
             "friendly when: self.hp% < hp%",
-            "friendly when: uses.magical sort: hp%.lowest, threat.highest",
+            "friendly when: usesAny(magical) sort: hp%.lowest, threat.highest",
         ]
         for string in strings {
             let parsed = try Targeting.fromString(string)
@@ -144,7 +145,7 @@ final class TargetingLanguageTests: XCTestCase {
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-weak"])
     }
 
-    func testHasPrefixFiltersByStatusTag() throws {
+    func testStatusAnyFiltersCandidatesByStatusTag() throws {
         var space = makeTeam(hp: ["healer": 10, "ally-clean": 10, "ally-poisoned": 10])
         space.modifyBody(id: "ally-poisoned") { body, _ in
             body.applyStatusEffect(RPStatusEffect<TestRPSpace>(
@@ -154,11 +155,11 @@ final class TargetingLanguageTests: XCTestCase {
                 charges: nil
             ))
         }
-        let targeting = try Targeting.fromString("friendly when: has.poison sort: hp.lowest")
+        let targeting = try Targeting.fromString("friendly when: statusAny(poison) sort: hp.lowest")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-poisoned"])
     }
 
-    func testUsesPrefixQueriesExecutableAbilityTags() throws {
+    func testUsesAnyFiltersCandidatesByExecutableAbilityTag() throws {
         var space = makeTeam(hp: ["healer": 10, "ally-caster": 10, "ally-brute": 10])
         space.modifyBody(id: "ally-caster") { body, _ in
             body.addExecutableAbility(
@@ -166,7 +167,7 @@ final class TargetingLanguageTests: XCTestCase {
                 conditional: .always
             )
         }
-        let targeting = try Targeting.fromString("friendly when: uses.magical")
+        let targeting = try Targeting.fromString("friendly when: usesAny(magical)")
         XCTAssertEqual(targeting.getValidTargets(for: "healer", in: space), ["ally-caster"])
     }
 }

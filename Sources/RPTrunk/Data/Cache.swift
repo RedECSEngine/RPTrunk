@@ -154,6 +154,7 @@ open class RPCache<RP: RPSpace> {
             var item = RPItem<RP>(
                 code: code,
                 displayName: data.displayName,
+                tags: Set(data.tags ?? []),
                 maximumStack: data.maximumStack,
                 fragments: fragments,
                 ability: ability,
