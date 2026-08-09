@@ -93,6 +93,24 @@ final class BodyTests: XCTestCase {
         XCTAssertEqual(rpSpace.bodies[body.id]!.getPendingExecutableEvents(in: rpSpace).count, 1)
     }
 
+    func test_ability_priority_follows_the_order_abilities_were_added() {
+        for code in ["First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth"] {
+            let ability = RPAbility<TestRPSpace>(
+                code: code,
+                fragments: [RPFragment(targetType: RPTargeting(.oneself))]
+            )
+            rpSpace.bodies[body.id]?.addExecutableAbility(ability, conditional: .always)
+        }
+
+        let events = rpSpace.bodies[body.id]!.getPendingExecutableEvents(in: rpSpace)
+
+        XCTAssertEqual(events.first?.ability.code, "First")
+        XCTAssertEqual(
+            rpSpace.bodies[body.id]!.orderedExecutableAbilities.map(\.ability.code),
+            ["First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth"]
+        )
+    }
+
     func test_status_effects_should_be_able_to_remove_status_effect_by_name() {
         let se = RPStatusEffect<TestRPSpace>(code: "Death", tags: ["KO"], duration: nil, charges: 1)
         body.applyStatusEffect(se)

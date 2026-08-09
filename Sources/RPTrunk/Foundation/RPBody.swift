@@ -29,6 +29,7 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     public var metadata: RP.BodyMetadata?
 
     public internal(set) var executableAbilities: [String: RPActiveAbility<RP>] = [:]
+    public internal(set) var abilityOrder: [String] = []
     public internal(set) var statusEffects: [String: RPActiveStatusEffect<RP>] = [:]
     public internal(set) var triggers: [RPTrigger<RP>] = []
     public internal(set) var triggerCooldowns: [RPReferenceCode: RPTimeIncrement] = [:]
@@ -92,7 +93,7 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
             return []
         }
 
-        return executableAbilities.values
+        return orderedExecutableAbilities
             .filter { $0.canExecute(in: rpSpace) }
     }
 
@@ -129,7 +130,14 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
 
     public mutating func addExecutableAbility(_ ability: RPAbility<RP>, conditional: RPConditional<RP>) {
         let activeAbility = RPActiveAbility<RP>(bodyId: id, ability: ability, conditional: conditional)
+        if executableAbilities[ability.code] == nil {
+            abilityOrder.append(ability.code)
+        }
         executableAbilities[ability.code] = activeAbility
+    }
+
+    public var orderedExecutableAbilities: [RPActiveAbility<RP>] {
+        abilityOrder.compactMap { executableAbilities[$0] }
     }
 
     public mutating func addTrigger(_ trigger: RPTrigger<RP>) {
@@ -281,7 +289,7 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
             return []
         }
 
-        let viable = executableAbilities.values.filter {
+        let viable = orderedExecutableAbilities.filter {
             $0.wouldExecute(in: rpSpace)
                 && $0.predictEvents(in: rpSpace).first?.targets.isEmpty == false
         }
