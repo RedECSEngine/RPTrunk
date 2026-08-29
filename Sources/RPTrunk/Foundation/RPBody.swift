@@ -17,7 +17,7 @@ public struct RPBody<RP: RPSpace>: RPTemporal, Codable {
     public var teamId: RPTeamId?
 
     public var currentTick: RPTimeIncrement = 0
-    public var globalCooldown: RPTimeIncrement = 2500
+    public var globalCooldown: RPTimeIncrement = 500
     public var maximumTick: RPTimeIncrement { globalCooldown }
 
     public var targetingRange: Double = 1

@@ -47,6 +47,8 @@ public struct RPActiveItem<RP: RPSpace>: RPTemporal, Codable, Equatable {
     public var stats: RP.Stats { item.stats }
     public var equipmentSlotCode: RPEquipmentSlotCode? { item.equipmentSlotCode }
     public var isEquippable: Bool { item.equipmentSlotCode != nil }
+    
+    public var metadata: RP.ItemMetadata? { item.metadata }
 
     public init(
         item: RPItem<RP>,
