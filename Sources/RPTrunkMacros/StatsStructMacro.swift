@@ -167,11 +167,11 @@ extension StatsStructMacro: MemberMacro {
         let dynamicKeyEntries = names
             .map { "\"\($0)\": \\.\($0)," }
             .joined(separator: "\n    ")
-        let keyPathEntries = names
-            .map { "\\.\($0)," }
-            .joined(separator: "\n    ")
         let literalAssignments = names
             .map { "\($0) = value" }
+            .joined(separator: "\n    ")
+        let absoluteAssignments = names
+            .map { "result.\($0) = abs(result.\($0))" }
             .joined(separator: "\n    ")
         func combining(_ op: String) -> String {
             names
@@ -191,13 +191,23 @@ extension StatsStructMacro: MemberMacro {
             ]
             """,
             """
-            nonisolated(unsafe) \(raw: acl)static let numericAndComparableKeys: [WritableKeyPath<Self, Int>] = [
-                \(raw: keyPathEntries)
-            ]
-            """,
-            """
             \(raw: acl)init(integerLiteral value: Int) {
                 \(raw: literalAssignments)
+            }
+            """,
+            """
+            \(raw: acl)init?<T: BinaryInteger>(exactly source: T) {
+                guard let value = Int(exactly: source) else {
+                    return nil
+                }
+                self.init(integerLiteral: value)
+            }
+            """,
+            """
+            \(raw: acl)var magnitude: Self {
+                var result = self
+                \(raw: absoluteAssignments)
+                return result
             }
             """,
             """
@@ -219,6 +229,11 @@ extension StatsStructMacro: MemberMacro {
                 var result = lhs
                 \(raw: combining("*"))
                 return result
+            }
+            """,
+            """
+            \(raw: acl)static func *= (lhs: inout Self, rhs: Self) {
+                lhs = lhs * rhs
             }
             """,
             """

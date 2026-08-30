@@ -35,14 +35,23 @@ final class StatsStructMacroTests: XCTestCase {
                     "damage": \\.damage,
                 ]
 
-                nonisolated(unsafe) public static let numericAndComparableKeys: [WritableKeyPath<Self, Int>] = [
-                    \\.hp,
-                    \\.damage,
-                ]
-
                 public init(integerLiteral value: Int) {
                     hp = value
                     damage = value
+                }
+
+                public init?<T: BinaryInteger>(exactly source: T) {
+                    guard let value = Int(exactly: source) else {
+                        return nil
+                    }
+                    self.init(integerLiteral: value)
+                }
+
+                public var magnitude: Self {
+                    var result = self
+                    result.hp = abs(result.hp)
+                    result.damage = abs(result.damage)
+                    return result
                 }
 
                 public static func + (lhs: Self, rhs: Self) -> Self {
@@ -64,6 +73,10 @@ final class StatsStructMacroTests: XCTestCase {
                     result.hp *= rhs.hp
                     result.damage *= rhs.damage
                     return result
+                }
+
+                public static func *= (lhs: inout Self, rhs: Self) {
+                    lhs = lhs * rhs
                 }
 
                 public static func < (lhs: Self, rhs: Self) -> Bool {
@@ -104,12 +117,21 @@ final class StatsStructMacroTests: XCTestCase {
                     "hp": \\.hp,
                 ]
 
-                nonisolated(unsafe) static let numericAndComparableKeys: [WritableKeyPath<Self, Int>] = [
-                    \\.hp,
-                ]
-
                 init(integerLiteral value: Int) {
                     hp = value
+                }
+
+                init?<T: BinaryInteger>(exactly source: T) {
+                    guard let value = Int(exactly: source) else {
+                        return nil
+                    }
+                    self.init(integerLiteral: value)
+                }
+
+                var magnitude: Self {
+                    var result = self
+                    result.hp = abs(result.hp)
+                    return result
                 }
 
                 static func + (lhs: Self, rhs: Self) -> Self {
@@ -128,6 +150,10 @@ final class StatsStructMacroTests: XCTestCase {
                     var result = lhs
                     result.hp *= rhs.hp
                     return result
+                }
+
+                static func *= (lhs: inout Self, rhs: Self) {
+                    lhs = lhs * rhs
                 }
 
                 static func < (lhs: Self, rhs: Self) -> Bool {
