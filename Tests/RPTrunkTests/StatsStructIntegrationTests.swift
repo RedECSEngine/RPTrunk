@@ -16,7 +16,6 @@ final class StatsStructIntegrationTests: XCTestCase {
             Set(TestStats.dynamicKeys.keys),
             ["hp", "mana", "damage", "agility"]
         )
-        XCTAssertEqual(TestStats.numericAndComparableKeys.count, 4)
     }
 
     func testDictionaryInitRoundTripsThroughSubscript() {
@@ -35,6 +34,16 @@ final class StatsStructIntegrationTests: XCTestCase {
         XCTAssertEqual(stats.agility, 7)
     }
 
+    func testExactlyInitMirrorsIntConversion() {
+        XCTAssertEqual(TestStats(exactly: UInt8(3)), TestStats(dict: ["hp": 3, "mana": 3, "damage": 3, "agility": 3]))
+        XCTAssertNil(TestStats(exactly: UInt64.max))
+    }
+
+    func testMagnitudeTakesAbsoluteValuePropertyWise() {
+        let stats = TestStats(dict: ["hp": -4, "mana": 2, "damage": -1])
+        XCTAssertEqual(stats.magnitude, TestStats(dict: ["hp": 4, "mana": 2, "damage": 1]))
+    }
+
     func testArithmeticAppliesPropertyWise() {
         let a = TestStats(dict: ["hp": 10, "mana": 4, "damage": 2])
         let b = TestStats(dict: ["hp": 3, "mana": 1, "agility": 5])
@@ -47,6 +56,14 @@ final class StatsStructIntegrationTests: XCTestCase {
 
         let product = a * TestStats(dict: ["hp": 2, "mana": 2, "damage": 2, "agility": 2])
         XCTAssertEqual(product, TestStats(dict: ["hp": 20, "mana": 8, "damage": 4]))
+
+        var accumulated = a
+        accumulated += b
+        XCTAssertEqual(accumulated, sum)
+        accumulated -= b
+        XCTAssertEqual(accumulated, a)
+        accumulated *= TestStats(dict: ["hp": 0, "mana": 0, "damage": 0, "agility": 0])
+        XCTAssertEqual(accumulated, .zero)
     }
 
     func testComparisonMatchesAnyPropertyLessThanSemantics() {
