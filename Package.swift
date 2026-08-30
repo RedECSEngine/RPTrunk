@@ -1,5 +1,6 @@
 // swift-tools-version:6.2
 
+import CompilerPluginSupport
 import PackageDescription
 
 let package = Package(
@@ -18,13 +19,31 @@ let package = Package(
             targets: ["RPTrunk"]
         ),
     ],
+    dependencies: [
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.1"),
+    ],
     targets: [
+        .macro(
+            name: "RPTrunkMacros",
+            dependencies: [
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+            ]
+        ),
         .target(
-            name: "RPTrunk"
+            name: "RPTrunk",
+            dependencies: ["RPTrunkMacros"]
         ),
         .testTarget(
             name: "RPTrunkTests",
             dependencies: ["RPTrunk"]
+        ),
+        .testTarget(
+            name: "RPTrunkMacrosTests",
+            dependencies: [
+                "RPTrunkMacros",
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+            ]
         ),
     ],
     swiftLanguageModes: [.v5]
