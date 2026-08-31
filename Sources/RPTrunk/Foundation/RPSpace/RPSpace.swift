@@ -216,16 +216,8 @@ public extension RPSpace where Self: AnyObject {
 }
 
 extension RPSpace {
-    public func allTeamedBodyIds() -> [RPBodyId] {
-        var seen: Set<RPBodyId> = []
-        return allTeams()
-            .compactMap(teamById)
-            .flatMap(\.bodies)
-            .filter { seen.insert($0).inserted }
-    }
-
     public mutating func tick(_ moment: RPMoment) {
-        allTeamedBodyIds()
+        Array(allBodies())
             .forEach {
                 modifyBody(id: $0) { e, _ in
                     e.tick(moment)
@@ -244,13 +236,13 @@ extension RPSpace {
     /// their per-tick events are never collected, so only the ability's initial
     /// application is felt.
     public func getAllPendingStatusEffectEvents() -> [RPEvent<Self>] {
-        allTeamedBodyIds()
+        allBodies()
             .compactMap(bodyById)
             .flatMap { $0.getPendingStatusEffectEvents(in: self) }
     }
 
     public func getAllPendingExecutableEvents() -> [RPEvent<Self>] {
-        allTeamedBodyIds()
+        allBodies()
             .compactMap(bodyById)
             .flatMap { $0.getPendingExecutableEvents(in: self) }
     }
@@ -276,7 +268,7 @@ extension RPSpace {
     public func triggerCandidates(
         for result: RPEventResult<Self>
     ) -> [RPTriggerCandidate<Self>] {
-        allTeamedBodyIds().sorted().flatMap { ownerId -> [RPTriggerCandidate<Self>] in
+        allBodies().sorted().flatMap { ownerId -> [RPTriggerCandidate<Self>] in
             guard let owner = bodyById(ownerId) else { return [] }
             return owner.allTriggers.compactMap { source, trigger in
                 guard owner.isTriggerReady(source, trigger),
