@@ -1,4 +1,8 @@
-import Foundation // TODO: Use foundation essentials
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 @dynamicMemberLookup
 public struct RPBody<RP: RPSpace>: RPTemporal, Codable {

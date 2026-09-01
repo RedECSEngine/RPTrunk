@@ -1,6 +1,13 @@
-import Foundation // TODO: Use foundation essentials
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
-open class RPCache<RP: RPSpace> {
+open class RPCache<RP: RPSpace>: RPCacheProvidable, Equatable {
+    public static func == (lhs: RPCache<RP>, rhs: RPCache<RP>) -> Bool {
+        return lhs === rhs
+    }
     public enum CacheError: Error {
         case notFound(String)
         case invalidFormat(String)
@@ -12,6 +19,7 @@ open class RPCache<RP: RPSpace> {
     public var statusEffects: [RPReferenceCode: RPStatusEffect<RP>] = [:]
     public var bodies: [RPReferenceCode: RPBody<RP>] = [:]
     public var items: [RPReferenceCode: RPItem<RP>] = [:]
+    public var lootTables: [RPReferenceCode: RPLootTable<RP>] = [:]
 
     public var defaultBody: RPBody<RP>?
 
@@ -24,6 +32,41 @@ open class RPCache<RP: RPSpace> {
         try loadDefaultBody(data.defaultBody)
         try loadBodies(data.bodies ?? [:])
         try loadItems(data.items ?? [:])
+        try loadLootTables(data.lootTables ?? [:])
+    }
+
+    public func loadLootTables(_ lootTables: [RPReferenceCode: RPLootTableJSON<RP>]) throws {
+        try lootTables.forEach { (code, data) in
+            let items: [RPLootTableItem<RP>] = try (data.items ?? []).map { entry in
+                let lower = entry.amountMin ?? 1
+                let upper = max(lower, entry.amountMax ?? lower) + 1
+                return RPLootTableItem(
+                    itemCode: entry.itemCode,
+                    chance: entry.chance ?? RPChance.certain,
+                    amount: lower ..< upper,
+                    kind: try entry.variation.map { .variant(try buildLootVariation($0)) } ?? .fixed
+                )
+            }
+            self.lootTables[code] = RPLootTable(
+                code: code,
+                items: items,
+                maxItemsDropped: data.maxItemsDropped ?? items.count
+            )
+        }
+    }
+
+    private func buildLootVariation(_ data: RPLootVariationJSON<RP>) throws -> RPLootVariation<RP> {
+        let fragments: [FragmentVariation<RP>] = try (data.fragments ?? []).map { variation in
+            FragmentVariation(
+                fragment: RPFragment(flattenedFrom: try buildFragments(variation.fragment)),
+                variableStats: variation.variableStats,
+                chance: variation.chance ?? RPChance.certain
+            )
+        }
+        return RPLootVariation(
+            fragments: fragments,
+            maximumFragments: data.maximumFragments ?? fragments.count
+        )
     }
 
     public func loadAbilities(_ abilities: [RPReferenceCode: RPAbilityJSON<RP>]) throws {
@@ -222,31 +265,82 @@ open class RPCache<RP: RPSpace> {
         return .always
     }
 
-    public func getAbility(_ name: String) throws -> RPAbility<RP> {
-        if let ability = abilities[name] {
+    public func getAbility(_ code: RPReferenceCode) throws -> RPAbility<RP> {
+        if let ability = abilities[code] {
             return ability
         }
-        throw RPCache.CacheError.notFound(name)
+        throw RPCache.CacheError.notFound(code)
     }
 
-    public func getStatusEffect(_ name: String) throws -> RPFragment<RP> {
-        if let se = statusEffects[name] {
+    public func getStatusEffect(_ code: RPReferenceCode) throws -> RPFragment<RP> {
+        if let se = statusEffects[code] {
             return RPFragment<RP>(statusEffects: [se])
         }
-        throw RPCache.CacheError.notFound(name)
+        throw RPCache.CacheError.notFound(code)
     }
 
-    public func getFragment(_ name: String) throws -> RPFragment<RP> {
+    public func getFragment(_ code: RPReferenceCode) throws -> RPFragment<RP> {
         // TODO: expand this function to try other types of fragments before throwing an error
-        guard let se = try? getStatusEffect(name) else {
-            throw RPCache.CacheError.notFound(name)
+        guard let se = try? getStatusEffect(code) else {
+            throw RPCache.CacheError.notFound(code)
         }
         return se
     }
+    
+    public func getLootTable(_ code: RPReferenceCode) throws -> RPLootTable<RP> {
+        guard let lootTable = lootTables[code] else {
+            throw RPCache.CacheError.notFound(code)
+        }
+        return lootTable
+    }
 
-    public func newBody(_ name: String) throws -> RPBody<RP> {
-        guard var body = bodies[name] else {
-            throw RPCache.CacheError.notFound(name)
+    public func lootResult(forLootTableCode code: RPReferenceCode) -> RPLootResult<RP>? {
+        guard let table = try? getLootTable(code) else {
+            return nil
+        }
+        var items: [RPActiveItem<RP>] = []
+        for entry in table.items {
+            guard items.count < table.maxItemsDropped else { break }
+            guard RP.rollTriggerChance(entry.chance) else { continue }
+            guard var item = try? getItem(entry.itemCode) else { continue }
+            if case let .variant(variation) = entry.kind {
+                item.fragments += Self.rolledFragments(variation)
+            }
+            let amount = entry.amount.lowerBound
+                + RP.rollRandom(upperBound: max(1, entry.amount.count))
+            items.append(RPActiveItem(item: item, amount: amount))
+        }
+        return RPLootResult(items: items)
+    }
+
+    private static func rolledFragments(_ variation: RPLootVariation<RP>) -> [RPFragment<RP>] {
+        var rolled: [RPFragment<RP>] = []
+        for candidate in variation.fragments {
+            guard rolled.count < variation.maximumFragments else { break }
+            guard RP.rollTriggerChance(candidate.chance) else { continue }
+            var fragment = candidate.fragment
+            if let ceiling = candidate.variableStats {
+                fragment.stats = (fragment.stats ?? .zero) + rolledStats(upTo: ceiling)
+            }
+            rolled.append(fragment)
+        }
+        return rolled
+    }
+
+    private static func rolledStats(upTo ceiling: RP.Stats) -> RP.Stats {
+        var rolled = RP.Stats.zero
+        for key in RP.Stats.dynamicKeys.keys.sorted() {
+            let bound = ceiling[key]
+            guard bound != 0 else { continue }
+            let magnitude = RP.rollRandom(upperBound: abs(bound) + 1)
+            rolled[key] = bound < 0 ? -magnitude : magnitude
+        }
+        return rolled
+    }
+
+    public func newBody(_ code: RPReferenceCode) throws -> RPBody<RP> {
+        guard var body = bodies[code] else {
+            throw RPCache.CacheError.notFound(code)
         }
         body.id = UUID().uuidString
         return body

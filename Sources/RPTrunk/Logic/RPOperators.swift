@@ -1,4 +1,3 @@
-
 public enum RPConditionalOperator: String, CaseIterable {
     case greaterThan = ">"
     case lessThan = "<"

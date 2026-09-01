@@ -1,4 +1,3 @@
-
 public struct RPAbility<RP: RPSpace>: RPFragmentContainer, Codable {
     public var code: RPReferenceCode
     public var displayName: String

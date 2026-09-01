@@ -1,4 +1,3 @@
-
 public enum RPConditional<RP: RPSpace>: Codable {
     private enum CodingKeys: String, CodingKey {
         case rawValue

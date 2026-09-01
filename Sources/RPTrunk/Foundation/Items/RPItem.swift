@@ -1,3 +1,9 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
 public struct RPItem<RP: RPSpace>: RPFragmentContainer, Codable, Equatable {
     public var code: RPReferenceCode
     public var displayName: String

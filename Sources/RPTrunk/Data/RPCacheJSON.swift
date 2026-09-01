@@ -4,6 +4,7 @@ public struct RPCacheJSON<RP: RPSpace>: Codable, Equatable {
         case abilities = "Abilities"
         case bodies = "Bodies"
         case items = "Items"
+        case lootTables = "Loot Tables"
         case defaultBody = "Default Body"
     }
 
@@ -11,6 +12,7 @@ public struct RPCacheJSON<RP: RPSpace>: Codable, Equatable {
     public var statusEffects: [String: RPStatusEffectJSON<RP>]?
     public var bodies: [String: RPBodyJSON<RP>]?
     public var items: [String: RPItemJSON<RP>]?
+    public var lootTables: [String: RPLootTableJSON<RP>]?
     public var defaultBody: RPBodyJSON<RP>?
 }
 

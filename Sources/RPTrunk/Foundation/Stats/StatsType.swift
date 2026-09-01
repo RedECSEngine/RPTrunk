@@ -1,4 +1,3 @@
-
 public protocol StatsType: Numeric, Comparable, Codable, CustomStringConvertible {
     /// all stored properties should have default values
     init()

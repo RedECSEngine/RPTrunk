@@ -37,11 +37,11 @@ public protocol RPSpace: Codable {
 
     func copy() -> Self
 
-    static func rollTriggerChance(_ percent: RPValue) -> Bool
-
     /// Chance is currently represented as an integer out of 10,000
     /// (`RPChance.certain`), so `rollTriggerChance` draws through this
     /// with that upper bound.
+    static func rollTriggerChance(_ percent: RPValue) -> Bool
+
     static func rollRandom(upperBound: Int) -> Int
 
     static func additionalEvents(
@@ -72,6 +72,8 @@ public protocol RPSpace: Codable {
         for eventResult: RPEventResult<Self>,
         in rpSpace: Self
     ) -> [RPThreatChange]
+    
+    var cache: RPCache<Self>? { get }
 
     func position(forBodyId id: RPBodyId) -> (x: Double, y: Double)
 
@@ -369,6 +371,10 @@ public struct RPItemTransfer: Codable, Equatable {
 }
 
 extension RPSpace {
+    public func getLootResult(forLootTableCode code: RPReferenceCode) -> RPLootResult<Self>? {
+        cache?.lootResult(forLootTableCode: code)
+    }
+    
     @discardableResult
     public mutating func receiveItem(
         _ incoming: ActiveItem,

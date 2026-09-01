@@ -1,3 +1,9 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
 public struct RPEventResult<RP: RPSpace>: Equatable, Codable {
     public let event: RPEvent<RP>
     public let effects: [RPConflictResult<RP>]

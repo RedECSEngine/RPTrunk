@@ -1,3 +1,9 @@
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
 public struct RPTeam<RP: RPSpace>: Codable, Equatable {
     public var id: RPTeamId = UUID().uuidString
     public private(set) var bodies: Set<RPBodyId> = []

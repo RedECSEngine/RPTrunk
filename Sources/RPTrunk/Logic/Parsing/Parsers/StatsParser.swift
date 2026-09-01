@@ -1,11 +1,3 @@
-//
-//  StatsParser.swift
-//
-//
-//  Created by Kyle Newsome on 2021-05-31.
-//
-
-
 func getStat<RP: RPSpace>(_ stat: String, usePercent: Bool) -> (ParserResultType<RP>, RPConditionContext, RP) -> ParserResultType<RP> {
     { input, _, rpSpace in
         if case let .bodyResult(e) = input,

@@ -1,11 +1,4 @@
 //
-//  TargetParser.swift
-//
-//
-//  Created by Kyle Newsome on 2021-05-31.
-//
-
-
 func getTarget<RP: RPSpace>(
     _ input: ParserResultType<RP>,
     _ context: RPConditionContext,
