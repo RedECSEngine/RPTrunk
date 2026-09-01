@@ -36,7 +36,7 @@ public struct RPLootResult<RP: RPSpace>: Codable, Equatable, Sendable {
     }
 }
 
-public struct FragmentVariation<RP: RPSpace>: Codable, Equatable, Sendable {
+public struct RPFragmentVariation<RP: RPSpace>: Codable, Equatable, Sendable {
     public var fragment: RPFragment<RP>
     public var variableStats: RP.Stats?
     public var chance: Int
@@ -49,10 +49,10 @@ public struct FragmentVariation<RP: RPSpace>: Codable, Equatable, Sendable {
 }
 
 public struct RPLootVariation<RP: RPSpace>: Codable, Equatable, Sendable {
-    public var fragments: [FragmentVariation<RP>]
+    public var fragments: [RPFragmentVariation<RP>]
     public var maximumFragments: Int
 
-    public init(fragments: [FragmentVariation<RP>], maximumFragments: Int) {
+    public init(fragments: [RPFragmentVariation<RP>], maximumFragments: Int) {
         self.fragments = fragments
         self.maximumFragments = maximumFragments
     }

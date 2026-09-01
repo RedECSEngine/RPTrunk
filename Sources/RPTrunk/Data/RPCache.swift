@@ -56,8 +56,8 @@ open class RPCache<RP: RPSpace>: RPCacheProvidable, Equatable {
     }
 
     private func buildLootVariation(_ data: RPLootVariationJSON<RP>) throws -> RPLootVariation<RP> {
-        let fragments: [FragmentVariation<RP>] = try (data.fragments ?? []).map { variation in
-            FragmentVariation(
+        let fragments: [RPFragmentVariation<RP>] = try (data.fragments ?? []).map { variation in
+            RPFragmentVariation(
                 fragment: RPFragment(flattenedFrom: try buildFragments(variation.fragment)),
                 variableStats: variation.variableStats,
                 chance: variation.chance ?? RPChance.certain
