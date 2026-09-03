@@ -181,6 +181,12 @@ extension StatsStructMacro: MemberMacro {
         let lessThan = names
             .map { "lhs.\($0) < rhs.\($0)" }
             .joined(separator: "\n        || ")
+        let definitionProperties = names
+            .map { "\(acl)var \($0): String?" }
+            .joined(separator: "\n    ")
+        let definitionCells = names
+            .map { "if let \($0) { cells[\"\($0)\"] = \($0) }" }
+            .joined(separator: "\n        ")
 
         return [
             "\(raw: acl)init() {}",
@@ -239,6 +245,24 @@ extension StatsStructMacro: MemberMacro {
             """
             \(raw: acl)static func < (lhs: Self, rhs: Self) -> Bool {
                 \(raw: lessThan)
+            }
+            """,
+            """
+            \(raw: acl)struct ItemDefinition<Metadata: Codable & Equatable & Sendable>: RPItemDefining {
+                \(raw: acl)var code: String
+                \(raw: acl)var displayName: String?
+                \(raw: acl)var tags: String?
+                \(raw: acl)var equipmentSlotCode: String?
+                \(raw: acl)var maxNumberOfOptionalStats: Int?
+                \(raw: acl)var metadata: Metadata?
+
+                \(raw: definitionProperties)
+
+                \(raw: acl)var statCells: [String: String] {
+                    var cells: [String: String] = [:]
+                    \(raw: definitionCells)
+                    return cells
+                }
             }
             """,
         ]

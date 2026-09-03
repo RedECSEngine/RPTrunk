@@ -85,7 +85,8 @@ final class BodyTests: XCTestCase {
         XCTAssertTrue(rpSpace.bodies[body.id]!.executableAbilities["Strike"]!.canExecute(in: rpSpace))
         XCTAssertTrue(rpSpace.bodies[body.id]!.getPendingExecutableEvents(in: rpSpace).isEmpty)
 
-        rpSpace.tick(RPMoment(delta: 2499))
+        let cooldown = rpSpace.bodies[body.id]!.globalCooldown
+        rpSpace.tick(RPMoment(delta: cooldown - 1))
         XCTAssertTrue(rpSpace.bodies[body.id]!.getPendingExecutableEvents(in: rpSpace).isEmpty)
 
         rpSpace.tick(RPMoment(delta: 1))

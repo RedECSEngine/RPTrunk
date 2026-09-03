@@ -20,6 +20,7 @@ open class RPCache<RP: RPSpace>: RPCacheProvidable, Equatable {
     public var bodies: [RPReferenceCode: RPBody<RP>] = [:]
     public var items: [RPReferenceCode: RPItem<RP>] = [:]
     public var lootTables: [RPReferenceCode: RPLootTable<RP>] = [:]
+    public var lootTableItems: [RPReferenceCode: RPLootTableItem<RP>] = [:]
 
     public var defaultBody: RPBody<RP>?
 
@@ -40,11 +41,15 @@ open class RPCache<RP: RPSpace>: RPCacheProvidable, Equatable {
             let items: [RPLootTableItem<RP>] = try (data.items ?? []).map { entry in
                 let lower = entry.amountMin ?? 1
                 let upper = max(lower, entry.amountMax ?? lower) + 1
+                let optional = try (entry.optionalVariations ?? []).map(buildFragmentVariation)
                 return RPLootTableItem(
                     itemCode: entry.itemCode,
                     chance: entry.chance ?? RPChance.certain,
                     amount: lower ..< upper,
-                    kind: try entry.variation.map { .variant(try buildLootVariation($0)) } ?? .fixed
+                    requiredVariations: try (entry.requiredVariations ?? [])
+                        .map(buildFragmentVariation),
+                    optionalVariations: optional,
+                    maxNumberOfOptionalStats: entry.maxNumberOfOptionalStats ?? optional.count
                 )
             }
             self.lootTables[code] = RPLootTable(
@@ -55,17 +60,13 @@ open class RPCache<RP: RPSpace>: RPCacheProvidable, Equatable {
         }
     }
 
-    private func buildLootVariation(_ data: RPLootVariationJSON<RP>) throws -> RPLootVariation<RP> {
-        let fragments: [RPFragmentVariation<RP>] = try (data.fragments ?? []).map { variation in
-            RPFragmentVariation(
-                fragment: RPFragment(flattenedFrom: try buildFragments(variation.fragment)),
-                variableStats: variation.variableStats,
-                chance: variation.chance ?? RPChance.certain
-            )
-        }
-        return RPLootVariation(
-            fragments: fragments,
-            maximumFragments: data.maximumFragments ?? fragments.count
+    func buildFragmentVariation(
+        _ data: FragmentVariationJSON<RP>
+    ) throws -> RPFragmentVariation<RP> {
+        RPFragmentVariation(
+            fragment: RPFragment(flattenedFrom: try buildFragments(data.fragment)),
+            variableStats: data.variableStats,
+            chance: data.chance ?? RPChance.certain
         )
     }
 
@@ -303,9 +304,7 @@ open class RPCache<RP: RPSpace>: RPCacheProvidable, Equatable {
             guard items.count < table.maxItemsDropped else { break }
             guard RP.rollTriggerChance(entry.chance) else { continue }
             guard var item = try? getItem(entry.itemCode) else { continue }
-            if case let .variant(variation) = entry.kind {
-                item.fragments += Self.rolledFragments(variation)
-            }
+            item.fragments += Self.rolledFragments(entry)
             let amount = entry.amount.lowerBound
                 + RP.rollRandom(upperBound: max(1, entry.amount.count))
             items.append(RPActiveItem(item: item, amount: amount))
@@ -313,18 +312,25 @@ open class RPCache<RP: RPSpace>: RPCacheProvidable, Equatable {
         return RPLootResult(items: items)
     }
 
-    private static func rolledFragments(_ variation: RPLootVariation<RP>) -> [RPFragment<RP>] {
-        var rolled: [RPFragment<RP>] = []
-        for candidate in variation.fragments {
-            guard rolled.count < variation.maximumFragments else { break }
+    private static func rolledFragments(_ entry: RPLootTableItem<RP>) -> [RPFragment<RP>] {
+        var rolled = entry.requiredVariations.map(rolledFragment)
+        var pool = entry.optionalVariations
+        var taken = 0
+        while taken < entry.maxNumberOfOptionalStats, !pool.isEmpty {
+            let candidate = pool.remove(at: RP.rollRandom(upperBound: pool.count))
             guard RP.rollTriggerChance(candidate.chance) else { continue }
-            var fragment = candidate.fragment
-            if let ceiling = candidate.variableStats {
-                fragment.stats = (fragment.stats ?? .zero) + rolledStats(upTo: ceiling)
-            }
-            rolled.append(fragment)
+            rolled.append(rolledFragment(candidate))
+            taken += 1
         }
         return rolled
+    }
+
+    private static func rolledFragment(_ variation: RPFragmentVariation<RP>) -> RPFragment<RP> {
+        var fragment = variation.fragment
+        if let ceiling = variation.variableStats {
+            fragment.stats = (fragment.stats ?? .zero) + rolledStats(upTo: ceiling)
+        }
+        return fragment
     }
 
     private static func rolledStats(upTo ceiling: RP.Stats) -> RP.Stats {

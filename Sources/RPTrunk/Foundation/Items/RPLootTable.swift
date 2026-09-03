@@ -11,20 +11,27 @@ public struct RPLootTable<RP: RPSpace>: Codable, Equatable, Sendable {
 }
 
 public struct RPLootTableItem<RP: RPSpace>: Codable, Equatable, Sendable {
-    public enum Kind: Codable, Equatable, Sendable {
-        case fixed
-        case variant(RPLootVariation<RP>)
-    }
     public var itemCode: RPReferenceCode
     public var chance: Int
     public var amount: Range<Int>
-    public var kind: Kind
+    public var requiredVariations: [RPFragmentVariation<RP>]
+    public var optionalVariations: [RPFragmentVariation<RP>]
+    public var maxNumberOfOptionalStats: Int
 
-    public init(itemCode: RPReferenceCode, chance: Int, amount: Range<Int>, kind: Kind) {
+    public init(
+        itemCode: RPReferenceCode,
+        chance: Int = RPChance.certain,
+        amount: Range<Int> = 1 ..< 2,
+        requiredVariations: [RPFragmentVariation<RP>] = [],
+        optionalVariations: [RPFragmentVariation<RP>] = [],
+        maxNumberOfOptionalStats: Int = 0
+    ) {
         self.itemCode = itemCode
         self.chance = chance
         self.amount = amount
-        self.kind = kind
+        self.requiredVariations = requiredVariations
+        self.optionalVariations = optionalVariations
+        self.maxNumberOfOptionalStats = maxNumberOfOptionalStats
     }
 }
 
@@ -45,15 +52,5 @@ public struct RPFragmentVariation<RP: RPSpace>: Codable, Equatable, Sendable {
         self.fragment = fragment
         self.variableStats = variableStats
         self.chance = chance
-    }
-}
-
-public struct RPLootVariation<RP: RPSpace>: Codable, Equatable, Sendable {
-    public var fragments: [RPFragmentVariation<RP>]
-    public var maximumFragments: Int
-
-    public init(fragments: [RPFragmentVariation<RP>], maximumFragments: Int) {
-        self.fragments = fragments
-        self.maximumFragments = maximumFragments
     }
 }

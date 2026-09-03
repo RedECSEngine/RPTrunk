@@ -8,12 +8,9 @@ public struct RPLootTableItemJSON<RP: RPSpace>: Codable, Equatable {
     public var chance: RPValue?
     public var amountMin: Int?
     public var amountMax: Int?
-    public var variation: RPLootVariationJSON<RP>?
-}
-
-public struct RPLootVariationJSON<RP: RPSpace>: Codable, Equatable {
-    public var maximumFragments: Int?
-    public var fragments: [FragmentVariationJSON<RP>]?
+    public var requiredVariations: [FragmentVariationJSON<RP>]?
+    public var optionalVariations: [FragmentVariationJSON<RP>]?
+    public var maxNumberOfOptionalStats: Int?
 }
 
 public struct FragmentVariationJSON<RP: RPSpace>: Codable, Equatable {
