@@ -20,9 +20,9 @@ public struct RPItemDefinitionStatVariation: Equatable, Sendable {
 
     public init(parsing cell: String) throws {
         var text = Self.trimmed(Substring(cell))
-        var isRequired = false
-        if text.hasSuffix("!") {
-            isRequired = true
+        var isRequired = true
+        if text.hasSuffix("?") {
+            isRequired = false
             text = Self.trimmed(text.dropLast())
         }
         guard !text.isEmpty else { throw RPItemDefinitionStatVariationError.empty }

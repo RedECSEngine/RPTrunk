@@ -16,38 +16,38 @@ private struct RawItemDefinition: RPItemDefining {
 }
 
 final class ItemDefinitionStatVariationTests: XCTestCase {
-    func testBareNumberIsAnOptionalDegenerateRange() throws {
+    func testBareNumberIsARequiredFixedValue() throws {
         let variation = try RPItemDefinitionStatVariation(parsing: "5")
         XCTAssertEqual(variation.lowerBound, 5)
         XCTAssertEqual(variation.upperBound, 5)
-        XCTAssertFalse(variation.isRequired)
+        XCTAssertTrue(variation.isRequired)
         XCTAssertTrue(variation.isFixed)
         XCTAssertEqual(variation.ceiling, 0)
     }
 
-    func testRangeIsOptional() throws {
+    func testRangeIsRequired() throws {
         let variation = try RPItemDefinitionStatVariation(parsing: "1-2")
         XCTAssertEqual(variation.lowerBound, 1)
         XCTAssertEqual(variation.upperBound, 2)
-        XCTAssertFalse(variation.isRequired)
+        XCTAssertTrue(variation.isRequired)
         XCTAssertFalse(variation.isFixed)
         XCTAssertEqual(variation.ceiling, 1)
     }
 
-    func testBangMakesItRequired() throws {
-        let ranged = try RPItemDefinitionStatVariation(parsing: "5-10!")
-        XCTAssertTrue(ranged.isRequired)
+    func testQuestionMarkMakesItOptional() throws {
+        let ranged = try RPItemDefinitionStatVariation(parsing: "5-10?")
+        XCTAssertFalse(ranged.isRequired)
         XCTAssertFalse(ranged.isFixed)
         XCTAssertEqual(ranged.ceiling, 5)
 
-        let bare = try RPItemDefinitionStatVariation(parsing: "1!")
-        XCTAssertTrue(bare.isRequired)
+        let bare = try RPItemDefinitionStatVariation(parsing: "1?")
+        XCTAssertFalse(bare.isRequired)
         XCTAssertTrue(bare.isFixed)
     }
 
     func testSurroundingWhitespaceIsTolerated() throws {
         XCTAssertEqual(try RPItemDefinitionStatVariation(parsing: " 1 - 2 ").upperBound, 2)
-        XCTAssertTrue(try RPItemDefinitionStatVariation(parsing: " 3 ! ").isRequired)
+        XCTAssertFalse(try RPItemDefinitionStatVariation(parsing: " 3 ? ").isRequired)
     }
 
     func testALeadingMinusBelongsToTheLowerBound() throws {
@@ -76,10 +76,10 @@ final class ItemDefinitionLoadingTests: XCTestCase {
             displayName: "Blade",
             equipmentSlotCode: "weapon",
             maxNumberOfOptionalStats: 1,
-            hp: "10!",
-            mana: "1-2",
-            damage: "5-10!",
-            agility: "5"
+            hp: "10",
+            mana: "1-2?",
+            damage: "5-10",
+            agility: "5?"
         )
     }
 
@@ -90,7 +90,7 @@ final class ItemDefinitionLoadingTests: XCTestCase {
         let item = try cache.getItem("blade")
         XCTAssertEqual(item.displayName, "Blade")
         XCTAssertEqual(item.equipmentSlotCode, "weapon")
-        XCTAssertEqual(item.stats.hp, 10, "a bare number with ! is fixed on the item")
+        XCTAssertEqual(item.stats.hp, 10, "a bare number with no marker is fixed on the item")
         XCTAssertEqual(item.stats.damage, 0, "a required range is not on the base item")
 
         let drop = try XCTUnwrap(cache.lootTableItems["blade"])
