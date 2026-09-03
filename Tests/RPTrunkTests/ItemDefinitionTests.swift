@@ -102,6 +102,51 @@ final class ItemDefinitionLoadingTests: XCTestCase {
         XCTAssertEqual(drop.optionalVariations.count, 2, "agility and mana are optional")
     }
 
+    func testOptionalVariationsCarryTheirOwnStatInSortedKeyOrder() throws {
+        let cache = RPCache<TestRPSpace>()
+        try cache.loadItemDefinitions([blade()])
+        let drop = try XCTUnwrap(cache.lootTableItems["blade"])
+
+        XCTAssertEqual(drop.optionalVariations.count, 2)
+
+        var agilityOnly = TestStats.zero
+        agilityOnly.agility = 5
+        let agility = drop.optionalVariations[0]
+        XCTAssertEqual(
+            agility.fragment.stats, agilityOnly,
+            "variations follow sorted stat-key order, so agility comes first, and it touches no other stat"
+        )
+
+        var manaOnly = TestStats.zero
+        manaOnly.mana = 1
+        let mana = drop.optionalVariations[1]
+        XCTAssertEqual(
+            mana.fragment.stats, manaOnly,
+            "mana sorts after agility, and it touches no other stat"
+        )
+    }
+
+    func testABareNumberHasNothingToRollButARangeCarriesACeiling() throws {
+        let cache = RPCache<TestRPSpace>()
+        try cache.loadItemDefinitions([blade()])
+        let drop = try XCTUnwrap(cache.lootTableItems["blade"])
+
+        let agility = drop.optionalVariations[0]
+        XCTAssertEqual(agility.fragment.stats?.agility, 5, "agility 5 is the whole value")
+        XCTAssertNil(
+            agility.variableStats,
+            "a degenerate range carries no ceiling at all, so rolledStats is skipped rather than rolling 0...0"
+        )
+        XCTAssertEqual(agility.chance, RPChance.certain)
+
+        var manaCeiling = TestStats.zero
+        manaCeiling.mana = 1
+        let mana = drop.optionalVariations[1]
+        XCTAssertEqual(mana.fragment.stats?.mana, 1, "mana 1-2 lands as base 1")
+        XCTAssertEqual(mana.variableStats, manaCeiling, "plus a ceiling of 1, so it rolls 1...2")
+        XCTAssertEqual(mana.chance, RPChance.certain)
+    }
+
     func testTagsAreSplitOnCommas() throws {
         let cache = RPCache<TestRPSpace>()
         var definition = blade()
