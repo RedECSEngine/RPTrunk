@@ -7,6 +7,20 @@ issue lives in the repo where its *symptom* is felt.
 
 ## Open
 
+### Tests: `test_global_cooldown_gates_actions_even_when_the_ability_is_ready` fails
+- **Where:** `Tests/RPTrunkTests/BodyTests.swift:89`.
+- **Symptom:** `swift test` is red on this one assertion — 148 tests run, 1
+  failure.
+- **Cause:** pre-existing, and newly *visible* rather than newly broken. The
+  whole test target stopped compiling when `f564c0d` ("Basic loot table support
+  and other cleanup") removed the `RPSpaceDictionary` protocol that
+  `TestRPSpace` conformed to, so nothing in `Tests/` had run since. Restoring
+  that conformance surfaced this assertion, which had drifted from the global
+  cooldown's current behaviour in the meantime.
+- **Fix direction:** decide what the global cooldown should do when an ability
+  is otherwise ready, then fix either the gate or the assertion. Nothing else
+  in the suite depends on it.
+
 ### Tests: `testPeriodicStatusEffectEventsAndDecay` is stale and fails
 - **Where:** `Tests/RPTrunkTests/StatusEffectsTests.swift:37`.
 - **Symptom:** `swift test` is red — one failure, `XCTAssertEqual failed:

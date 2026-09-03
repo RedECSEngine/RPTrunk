@@ -1,6 +1,6 @@
 import RPTrunk
 
-public struct TestRPSpace: RPSpaceDictionary, Equatable {
+public struct TestRPSpace: RPSpace, Equatable {
     
     public typealias Stats = TestStats
     
@@ -19,7 +19,67 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
     public var pendingGameMasterEvents: [RPEvent<TestRPSpace>] = []
     public var positions: [RPBodyId: TestPosition] = [:]
 
+    public var cache: RPCache<TestRPSpace>? = nil
+
+    enum CodingKeys: CodingKey {
+        case bodies
+        case teams
+        case pendingGameMasterEvents
+        case positions
+    }
+
     public init() {}
+
+    public func bodyById(_ id: RPBodyId) -> Body? {
+        bodies[id]
+    }
+
+    public func teamById(_ id: RPTeamId) -> Team? {
+        teams[id]
+    }
+
+    public func allBodies() -> Dictionary<RPBodyId, Body>.Keys {
+        bodies.keys
+    }
+
+    public func allTeams() -> Dictionary<RPTeamId, Team>.Keys {
+        teams.keys
+    }
+
+    public func allPendingGameMasterEvents() -> [RPEvent<TestRPSpace>] {
+        pendingGameMasterEvents
+    }
+
+    public mutating func addBody(_ body: Body) {
+        assert(bodies[body.id] == nil, "attempting to add body that already exists in this space")
+        bodies[body.id] = body
+    }
+
+    public mutating func setTeams(_ newTeams: [Team]) {
+        var teamDict: [RPTeamId: Team] = [:]
+        newTeams.forEach { teamDict[$0.id] = $0 }
+        teams = teamDict
+    }
+
+    public mutating func queueGameMasterEvent(_ event: RPEvent<TestRPSpace>) {
+        pendingGameMasterEvents.append(event)
+    }
+
+    public mutating func removeGameMasterEvent(id: RPEventId) {
+        pendingGameMasterEvents.removeAll { $0.id == id }
+    }
+
+    public mutating func modifyBody(id: RPBodyId, perform: (inout Body, TestRPSpace) -> Void) {
+        guard var body = bodies[id] else { return }
+        perform(&body, self)
+        bodies[id] = body
+    }
+
+    public mutating func modifyTeam(id: RPTeamId, perform: (inout Team, TestRPSpace) -> Void) {
+        guard var team = teams[id] else { return }
+        perform(&team, self)
+        teams[id] = team
+    }
 
     public func position(forBodyId id: RPBodyId) -> (x: Double, y: Double) {
         guard let position = positions[id] else { return (0, 0) }
@@ -47,6 +107,8 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
 
     nonisolated(unsafe) static var chanceRule: ((RPValue) -> Bool)?
 
+    nonisolated(unsafe) static var randomRule: ((Int) -> Int)?
+
     nonisolated(unsafe) static var additionalEventsRule: (
         (RPEventResult<TestRPSpace>, TestRPSpace) -> [RPEvent<TestRPSpace>]
     )?
@@ -59,6 +121,7 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
         threatRule = nil
         conflictRule = nil
         chanceRule = nil
+        randomRule = nil
         additionalEventsRule = nil
         shouldCheckRule = nil
         willTargetRule = nil
@@ -76,6 +139,13 @@ public struct TestRPSpace: RPSpaceDictionary, Equatable {
             return chanceRule(percent)
         }
         return percent >= RPChance.certain
+    }
+
+    public static func rollRandom(upperBound: Int) -> Int {
+        if let randomRule {
+            return randomRule(upperBound)
+        }
+        return Int.random(in: 0 ..< upperBound)
     }
 
     public static func additionalEvents(

@@ -83,6 +83,29 @@ final class StatsStructMacroTests: XCTestCase {
                     lhs.hp < rhs.hp
                         || lhs.damage < rhs.damage
                 }
+
+                public struct ItemDefinition<Metadata: Codable & Equatable & Sendable>: RPItemDefining {
+                    public var code: String
+                    public var displayName: String?
+                    public var tags: String?
+                    public var equipmentSlotCode: String?
+                    public var maxNumberOfOptionalStats: Int?
+                    public var metadata: Metadata?
+
+                    public var hp: String?
+                    public var damage: String?
+
+                    public var statCells: [String: String] {
+                        var cells: [String: String] = [:]
+                        if let hp {
+                            cells["hp"] = hp
+                        }
+                        if let damage {
+                            cells["damage"] = damage
+                        }
+                        return cells
+                    }
+                }
             }
 
             extension Stats: StatsType {
@@ -158,6 +181,25 @@ final class StatsStructMacroTests: XCTestCase {
 
                 static func < (lhs: Self, rhs: Self) -> Bool {
                     lhs.hp < rhs.hp
+                }
+
+                struct ItemDefinition<Metadata: Codable & Equatable & Sendable>: RPItemDefining {
+                    var code: String
+                    var displayName: String?
+                    var tags: String?
+                    var equipmentSlotCode: String?
+                    var maxNumberOfOptionalStats: Int?
+                    var metadata: Metadata?
+
+                    var hp: String?
+
+                    var statCells: [String: String] {
+                        var cells: [String: String] = [:]
+                        if let hp {
+                            cells["hp"] = hp
+                        }
+                        return cells
+                    }
                 }
             }
 
